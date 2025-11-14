@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Explorer.Stakeholders.API.Dtos
 {
-    internal class PersonProfileDto
+    public class PersonProfileDto
     {
         public long UserId { get; set; }
         public string Name { get; set; }

@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Explorer.Stakeholders.API.Dtos
 {
-    internal class UpdatePersonProfileDto
+    public class UpdatePersonProfileDto
     {
+        public string? Biography { get; set; }
+        public string? Motto { get; set; }
+        public string? ProfileImageUrl { get; set; }
     }
 }
