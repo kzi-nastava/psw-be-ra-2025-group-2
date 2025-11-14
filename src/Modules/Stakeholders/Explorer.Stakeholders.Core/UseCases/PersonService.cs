@@ -24,6 +24,8 @@ namespace Explorer.Stakeholders.Core.UseCases
         public PersonProfileDto GetProfile(long userId)
         {
             var person = _repo.GetByUserId(userId);
+            if (person == null)
+                throw new KeyNotFoundException($"Person with userId {userId} not found");
             return _mapper.Map<PersonProfileDto>(person);
         }
 
@@ -33,10 +35,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             if (person == null) throw new Exception("Person not found");
 
-            // Map ONLY updatable fields
-            person.Biography = dto.Biography;
-            person.Motto = dto.Motto;
-            person.ProfileImageUrl = dto.ProfileImageUrl;
+            _mapper.Map(dto, person);
 
             _repo.Update(person);
             return _mapper.Map<PersonProfileDto>(person);
