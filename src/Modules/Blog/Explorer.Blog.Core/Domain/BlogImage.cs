@@ -11,6 +11,8 @@ namespace Explorer.Blog.Core.Domain
     {
         public string Url { get; }
 
+        private BlogImage() { }
+
         public BlogImage(string url)
         {
             if (string.IsNullOrWhiteSpace(url))

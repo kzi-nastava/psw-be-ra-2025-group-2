@@ -18,6 +18,7 @@ namespace Explorer.Blog.Core.Domain
         private readonly List<BlogImage> _images = new();
         public IReadOnlyCollection<BlogImage> Images => _images.AsReadOnly();
 
+        private BlogPost() { }
         public BlogPost(string title, string description, long authorId, List<BlogImage>? images = null)
         {
             Title = title;
