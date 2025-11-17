@@ -24,7 +24,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public TourDto Create(CreateTourDto dto) 
         {
-            var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
+            var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
         }

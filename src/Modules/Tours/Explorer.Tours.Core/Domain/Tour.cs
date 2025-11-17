@@ -22,18 +22,23 @@ public class Tour : Entity
     public List<string> Tags { get; private set; } = new();
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
+    public long AuthorId { get; private set; }
 
-    public Tour(string name, string description, int difficulty, IEnumerable<string>? tags = null)
+    public Tour() { }
+
+    public Tour(string name, string description, int difficulty, long authorId, IEnumerable<string>? tags = null)
     {
         if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("Name is required.", nameof(name));
         if(string.IsNullOrEmpty(description)) throw new ArgumentNullException("Description is required.", nameof(description));
         if(difficulty<1 || difficulty>5) throw new ArgumentOutOfRangeException("Difficulty must be between 1 and 5.", nameof(difficulty));
+        if (authorId <= 0) throw new ArgumentOutOfRangeException("AuthorId must be greater than 0.", nameof(authorId));
 
         Name = name;
         Description = description;
         Difficulty = difficulty;
-        
-        if(tags != null)
+        AuthorId = authorId;
+
+        if (tags != null)
         {
             Tags = tags.Select(t => t.Trim())
                         .Where(t => !string.IsNullOrWhiteSpace(t))
