@@ -10,6 +10,7 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
 {
     public interface IAuthorAwardsRepository
     {
+        public bool ExistsByYear(int year);
         public PagedResult<AuthorAwards> GetPaged(int page, int pageSize);
         public AuthorAwards Create(AuthorAwards awards);
         public AuthorAwards Update(AuthorAwards awards);
