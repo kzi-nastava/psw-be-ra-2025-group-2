@@ -2,7 +2,7 @@
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using System;
@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Explorer.Stakeholders.Core.UseCases
+namespace Explorer.Stakeholders.Core.UseCases.Administration
 {
     public class AuthorAwardsService : IAuthorAwardsService
     {
@@ -59,9 +59,6 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             if (awards.VotingStartDate < DateOnly.FromDateTime(DateTime.Today) || awards.VotingEndDate < DateOnly.FromDateTime(DateTime.Today))
                 throw new EntityValidationException("Invalid voting start dates.");
-
-            if (_awardsRepository.ExistsByYear(awards.Year))
-                throw new EntityValidationException($"An awards event already exists for the year {awards.Year}");
         }
     }
 }

@@ -16,7 +16,6 @@ public class StakeholdersContext : DbContext
         modelBuilder.HasDefaultSchema("stakeholders");
 
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
-        modelBuilder.Entity<AuthorAwards>().HasIndex(a => a.Year).IsUnique();
 
         ConfigureStakeholder(modelBuilder);
     }

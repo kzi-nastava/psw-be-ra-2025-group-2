@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Explorer.Stakeholders.API.Public
+namespace Explorer.Stakeholders.API.Public.Administration
 {
     public interface IAuthorAwardsService
     {

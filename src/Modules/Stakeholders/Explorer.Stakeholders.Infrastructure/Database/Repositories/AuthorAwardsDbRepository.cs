@@ -41,11 +41,6 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
             DbContext.SaveChanges();
         }
 
-        public bool ExistsByYear(int year)
-        {
-            return _dbSet.Any(x => x.Year == year);
-        }
-
         public PagedResult<AuthorAwards> GetPaged(int page, int pageSize)
         {
             var task = _dbSet.GetPagedById(page, pageSize);
