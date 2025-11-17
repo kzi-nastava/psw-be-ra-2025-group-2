@@ -1,0 +1,58 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AutoMapper;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+
+namespace Explorer.Tours.Core.UseCases.Administration
+{
+    public class TourService : ITourService
+    {
+        private readonly ITourRepository _tourRepository;
+        private readonly IMapper _mapper;
+
+        public TourService(ITourRepository tourRepository, IMapper mapper)
+        {
+            _tourRepository = tourRepository;
+            _mapper = mapper;
+        }
+
+        public TourDto Create(CreateTourDto dto) 
+        {
+            var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
+            _tourRepository.AddAsync(tour).Wait();
+            return _mapper.Map<TourDto>(tour);
+        }
+
+        public IEnumerable<TourDto> GetByAuthor(long authorId)
+        {
+            var tours = _tourRepository.GetByAuthorAsync(authorId).Result;
+            return _mapper.Map<IEnumerable<TourDto>>(tours);
+        }
+
+        public TourDto Update(long id, UpdateTourDto dto)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result ?? throw new Exception("Tour not found.");
+
+            tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
+            
+            _tourRepository.UpdateAsync(tour).Wait();
+
+            return _mapper.Map<TourDto>(tour);
+        }
+
+        public void Delete(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result ?? throw new Exception("Tour not found.");
+
+            if (tour.Status != TourStatus.Draft) throw new Exception("Only draft tours can be deleted.");
+
+            _tourRepository.DeleteAsync(tour).Wait();
+        }
+    }
+}
