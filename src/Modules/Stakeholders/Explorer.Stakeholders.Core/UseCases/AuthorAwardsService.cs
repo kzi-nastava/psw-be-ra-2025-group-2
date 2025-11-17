@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
@@ -33,12 +34,14 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public AuthorAwardsDto Update(AuthorAwardsDto awards)
         {
+            Validate(awards);
             var result = _awardsRepository.Update(_mapper.Map<AuthorAwards>(awards));
             return _mapper.Map<AuthorAwardsDto>(result);
         }
 
         public AuthorAwardsDto Create(AuthorAwardsDto awards)
         {
+            Validate(awards);
             var result = _awardsRepository.Create(_mapper.Map<AuthorAwards>(awards));
             return _mapper.Map<AuthorAwardsDto>(result);
         }
@@ -46,6 +49,19 @@ namespace Explorer.Stakeholders.Core.UseCases
         public void Delete(long id)
         {
             _awardsRepository.Delete(id);
+        }
+
+
+        private void Validate(AuthorAwardsDto awards)
+        {
+            if (awards.Year < DateTime.Today.Year)
+                throw new EntityValidationException("Invalid year.");
+
+            if (awards.VotingStartDate < DateOnly.FromDateTime(DateTime.Today) || awards.VotingEndDate < DateOnly.FromDateTime(DateTime.Today))
+                throw new EntityValidationException("Invalid voting start dates.");
+
+            if (_awardsRepository.ExistsByYear(awards.Year))
+                throw new EntityValidationException($"An awards event already exists for the year {awards.Year}");
         }
     }
 }
