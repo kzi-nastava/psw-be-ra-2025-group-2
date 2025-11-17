@@ -25,7 +25,7 @@ namespace Explorer.Blog.Core.UseCases
         public async Task<BlogPostDto> CreateAsync(CreateBlogPostDto dto)
         {
             var images = dto.ImageUrls?.Select(url => new BlogImage(url)).ToList();
-            var blogPost = new BlogPost(dto.Title, dto.Description, dto.AuthorId, images);
+            var blogPost = new BlogPost(dto.Title, dto.Description, dto.AuthorId, images, skipAuthorValidation: dto.AuthorId < 0);
             var created = await _repository.AddAsync(blogPost);
             return _mapper.Map<BlogPostDto>(created);
         }

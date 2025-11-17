@@ -19,7 +19,7 @@ namespace Explorer.Blog.Core.Domain
         public IReadOnlyCollection<BlogImage> Images => _images.AsReadOnly();
 
         private BlogPost() { }
-        public BlogPost(string title, string description, long authorId, List<BlogImage>? images = null)
+        public BlogPost(string title, string description, long authorId, List<BlogImage>? images = null, bool skipAuthorValidation = false)
         {
             Title = title;
             Description = description;
@@ -32,10 +32,10 @@ namespace Explorer.Blog.Core.Domain
                 _images.AddRange(images);
             }
 
-            Validate();
+            Validate(skipAuthorValidation);
         }
 
-        private void Validate()
+        private void Validate(bool skipAuthorValidation = false)
         {
             if (string.IsNullOrWhiteSpace(Title))
                 throw new ArgumentException("Title cannot be empty.");
@@ -43,7 +43,7 @@ namespace Explorer.Blog.Core.Domain
             if (string.IsNullOrWhiteSpace(Description))
                 throw new ArgumentException("Description cannot be empty.");
 
-            if (AuthorId <= 0)
+            if (!skipAuthorValidation && AuthorId <= 0)
                 throw new ArgumentException("Invalid author.");
         }
 

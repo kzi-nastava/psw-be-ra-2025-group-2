@@ -5,7 +5,7 @@ using Explorer.Blog.API.Dtos;
 namespace Explorer.API.Controllers.Tourist.Blog
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/blogpost")]
     public class BlogPostController : ControllerBase
     {
         private readonly IBlogPostService _service;
