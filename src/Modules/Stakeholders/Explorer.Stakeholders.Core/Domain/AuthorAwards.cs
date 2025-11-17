@@ -34,7 +34,7 @@ namespace Explorer.Stakeholders.Core.Domain
             if (string.IsNullOrWhiteSpace(Name)) throw new ArgumentException("Invalid awards name.");
             if (Year < DateTime.Today.Year) throw new ArgumentException("Invalid year");
             if (!Enum.IsDefined(typeof(AwardsState), State)) throw new ArgumentException("Invalid awards state.");
-            if (VotingStartDate.Year < DateTime.Today.Year || VotingEndDate.Year < DateTime.Today.Year) throw new ArgumentException("Invalid voting start date.");
+            if (VotingStartDate.Year < DateTime.Today.Year || VotingEndDate.Year < DateTime.Today.Year) throw new ArgumentException("Invalid voting date.");
             if (VotingStartDate > VotingEndDate) throw new ArgumentException("Invalid voting dates.");
         }
     }
