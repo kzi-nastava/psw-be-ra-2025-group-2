@@ -1,4 +1,5 @@
-﻿using Explorer.Stakeholders.API.Dtos;
+﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Stakeholders.API.Dtos;
 using System.Collections.Generic;
 
 namespace Explorer.Stakeholders.API.Public
@@ -9,5 +10,8 @@ namespace Explorer.Stakeholders.API.Public
         AppRatingDto Update(AppRatingDto dto);
         void Delete(long id);
         IEnumerable<AppRatingDto> GetByUserId(long userId);
+
+        PagedResult<AppRatingDto> GetPaged(int page, int pageSize);
+
     }
 }

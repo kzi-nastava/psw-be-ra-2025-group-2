@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
@@ -41,6 +42,16 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var ratings = _repository.GetByUserId(userId);
             return ratings.Select(r => _mapper.Map<AppRatingDto>(r)).ToList();
+        }
+
+
+        public PagedResult<AppRatingDto> GetPaged(int page, int pageSize)
+        {
+            var pagedEntities = _repository.GetPaged(page, pageSize);
+
+            var dtoList = _mapper.Map<List<AppRatingDto>>(pagedEntities.Results);
+
+            return new PagedResult<AppRatingDto>(dtoList, pagedEntities.TotalCount);
         }
     }
 }
