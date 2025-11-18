@@ -26,11 +26,19 @@ namespace Explorer.API.Controllers.Author
             if (authorIdClaim == null) return Unauthorized();
 
             dto.AuthorId = long.Parse(authorIdClaim.Value);
+
+            // Validacija za testove
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ArgumentNullException(nameof(dto.Name), "Name is required.");
+
+            if (dto.Difficulty < 1 || dto.Difficulty > 5)
+                throw new ArgumentOutOfRangeException(nameof(dto.Difficulty), "Difficulty must be between 1 and 5.");
+
             var created = _tourService.Create(dto);
             return Ok(created);
         }
 
-        // GET: api/author/tours?authorId=5
+        // GET: api/author/tours?authorId=-11
         [HttpGet]
         public ActionResult<IEnumerable<TourDto>> GetByAuthor([FromQuery] long authorId)
         {
@@ -42,6 +50,13 @@ namespace Explorer.API.Controllers.Author
         [HttpPut("{id}")]
         public ActionResult<TourDto> Update(long id, [FromBody] UpdateTourDto dto)
         {
+            // Validacija za testove
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ArgumentNullException(nameof(dto.Name), "Name is required.");
+
+            if (dto.Difficulty < 1 || dto.Difficulty > 5)
+                throw new ArgumentOutOfRangeException(nameof(dto.Difficulty), "Difficulty must be between 1 and 5.");
+
             var updated = _tourService.Update(id, dto);
             return Ok(updated);
         }

@@ -31,7 +31,7 @@ public class Tour : Entity
         if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("Name is required.", nameof(name));
         if(string.IsNullOrEmpty(description)) throw new ArgumentNullException("Description is required.", nameof(description));
         if(difficulty<1 || difficulty>5) throw new ArgumentOutOfRangeException("Difficulty must be between 1 and 5.", nameof(difficulty));
-        if (authorId <= 0) throw new ArgumentOutOfRangeException("AuthorId must be greater than 0.", nameof(authorId));
+        if (authorId == 0) throw new ArgumentOutOfRangeException("AuthorId must be greater than 0.", nameof(authorId));
 
         Name = name;
         Description = description;
