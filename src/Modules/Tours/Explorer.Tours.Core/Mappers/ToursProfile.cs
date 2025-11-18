@@ -9,6 +9,19 @@ public class ToursProfile : Profile
     public ToursProfile()
     {
         CreateMap<EquipmentDto, Equipment>().ReverseMap();
-        CreateMap<TouristObjectDto, TouristObject>().ReverseMap();
+        CreateMap<TouristObject, TouristObjectDto>()
+            .ForMember(
+                dest => dest.Category,
+                opt => opt.MapFrom(src => src.Category.ToString())
+            );
+
+        CreateMap<TouristObjectDto, TouristObject>()
+            .ForMember(
+                dest => dest.Category,
+                opt => opt.MapFrom(src => Enum.Parse<TouristObjectCategory>(src.Category))
+            );
     }
 }
+
+            
+        
