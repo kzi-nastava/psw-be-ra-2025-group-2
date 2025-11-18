@@ -8,7 +8,8 @@ namespace Explorer.Stakeholders.Core.Mappers
     {
         public AppRatingProfile()
         {
-            CreateMap<AppRatingDto, AppRating>().ReverseMap();
+            CreateMap<AppRating, AppRatingDto>();
+            CreateMap<AppRatingDto, AppRating>().ForMember(dest => dest.Id, opt => opt.Ignore());
         }
     }
 }

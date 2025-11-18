@@ -21,6 +21,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public AppRatingDto Create(AppRatingDto dto)
         {
+            dto.CreatedAt = DateTime.UtcNow; 
             var entity = _mapper.Map<AppRating>(dto);
             var result = _repository.Create(entity);
             return _mapper.Map<AppRatingDto>(result);
@@ -28,9 +29,22 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public AppRatingDto Update(AppRatingDto dto)
         {
-            var entity = _mapper.Map<AppRating>(dto);
-            var result = _repository.Update(entity);
-            return _mapper.Map<AppRatingDto>(result);
+            var existingRating = _repository.GetByUserId(dto.UserId).FirstOrDefault();
+
+            if (existingRating == null)
+            {
+                return Create(dto);
+            }
+            else
+            {
+                _mapper.Map(dto, existingRating);
+
+                existingRating.SetUpdatedAt();
+
+                var result = _repository.Update(existingRating);
+
+                return _mapper.Map<AppRatingDto>(result);
+            }
         }
 
         public void Delete(long id)
@@ -47,6 +61,18 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public PagedResult<AppRatingDto> GetPaged(int page, int pageSize)
         {
+
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
+            if (pageSize <= 0)
+            {
+                pageSize = 10;
+            }
+
+
             var pagedEntities = _repository.GetPaged(page, pageSize);
 
             var dtoList = _mapper.Map<List<AppRatingDto>>(pagedEntities.Results);

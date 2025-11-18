@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Tourist
 {
-    [Authorize(Policy = "authorPolicy")]
-    [Authorize(Policy = "touristPolicy")]
+    [Authorize(Roles = "author, tourist")]
+
     [Route("api/app-ratings")]
     [ApiController]
     public class AppRatingController : ControllerBase
@@ -28,11 +28,10 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(result);
         }
 
-        [HttpPut] 
+        [HttpPut]
         public ActionResult<AppRatingDto> Update([FromBody] AppRatingDto appRating)
         {
             appRating.UserId = User.PersonId();
-
             var result = _appRatingService.Update(appRating);
             return Ok(result);
         }

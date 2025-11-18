@@ -9,7 +9,7 @@ namespace Explorer.Stakeholders.API.Public
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            var claim = user.FindFirst("person_id"); 
+            var claim = user.FindFirst("personId"); 
             if (claim == null) throw new Exception("PersonId claim not found");
 
             return long.Parse(claim.Value);

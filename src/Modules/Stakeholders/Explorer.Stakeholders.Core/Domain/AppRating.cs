@@ -8,6 +8,8 @@ namespace Explorer.Stakeholders.Core.Domain
         public int Score { get; private set; }
         public string? Comment { get; private set; }
         public DateTime CreatedAt { get; private set; }
+        public DateTime? UpdatedAt { get; private set; } 
+
 
         public AppRating(long userId, int score, string? comment)
         {
@@ -17,6 +19,11 @@ namespace Explorer.Stakeholders.Core.Domain
             CreatedAt = DateTime.UtcNow;
 
             Validate();
+        }
+
+        public void SetUpdatedAt()
+        {
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void Update(int score, string? comment)
