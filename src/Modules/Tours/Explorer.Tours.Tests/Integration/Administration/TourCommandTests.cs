@@ -76,7 +76,7 @@ public class TourCommandTests : BaseToursIntegrationTest
         {
             Name = "Test Tour",
             Description = "Test description",
-            Difficulty = 6, // Invalid
+            Difficulty = 6,
             AuthorId = -11
         };
 
@@ -179,7 +179,7 @@ public class TourCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
 
-        Should.Throw<Exception>(() => controller.Delete(-12)); // assuming -12 is published
+        Should.Throw<Exception>(() => controller.Delete(-12)); 
     }
 
     private static TourController CreateController(IServiceScope scope, string authorId = "-11")
@@ -192,7 +192,7 @@ public class TourCommandTests : BaseToursIntegrationTest
                 {
                     User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
                     {
-                    new Claim("id", authorId) // ovde ide ID autora koji test koristi
+                    new Claim("id", authorId)
                     }, "TestAuth"))
                 }
             }

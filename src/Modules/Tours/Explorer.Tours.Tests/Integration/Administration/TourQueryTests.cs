@@ -15,20 +15,17 @@ public class TourQueryTests : BaseToursIntegrationTest
     [Fact]
     public void Retrieves_tours_by_author()
     {
-        // Arrange
+       
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // Act
         var result = ((ObjectResult)controller.GetByAuthor(-11).Result)?.Value as IEnumerable<TourDto>;
 
-        // Assert
         result.ShouldNotBeNull();
         var tourList = result.ToList();
-        tourList.Count.ShouldBe(2); // Autor -11 ima 3 ture
+        tourList.Count.ShouldBe(2); 
         tourList.ShouldAllBe(t => t.AuthorId == -11);
 
-        // Provera specifičnih tura
         tourList.ShouldContain(t => t.Name == "Fruska Gora Adventure");
         tourList.ShouldContain(t => t.Name == "Novi Sad City Tour");
     }
@@ -36,17 +33,17 @@ public class TourQueryTests : BaseToursIntegrationTest
     [Fact]
     public void Retrieves_tours_by_different_author()
     {
-        // Arrange
+        
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // Act
+        
         var result = ((ObjectResult)controller.GetByAuthor(-12).Result)?.Value as IEnumerable<TourDto>;
 
-        // Assert
+        
         result.ShouldNotBeNull();
         var tourList = result.ToList();
-        tourList.Count.ShouldBe(3); // Autor -12 ima 2 ture
+        tourList.Count.ShouldBe(3);
         tourList.ShouldAllBe(t => t.AuthorId == -12);
 
         tourList.ShouldContain(t => t.Name == "Dunav Kayaking");
@@ -56,29 +53,23 @@ public class TourQueryTests : BaseToursIntegrationTest
     [Fact]
     public void Retrieves_empty_list_for_author_without_tours()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // Act
         var result = ((ObjectResult)controller.GetByAuthor(-13).Result)?.Value as IEnumerable<TourDto>;
 
-        // Assert
         result.ShouldNotBeNull();
-        result.Count().ShouldBe(0); // Autor -13 nema ture
+        result.Count().ShouldBe(0); 
     }
 
     [Fact]
     public void Retrieved_tour_has_correct_properties()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // Act
         var result = ((ObjectResult)controller.GetByAuthor(-11).Result)?.Value as IEnumerable<TourDto>;
 
-        // Assert
         result.ShouldNotBeNull();
         var tour = result.FirstOrDefault(t => t.Name == "Novi Sad City Tour");
 

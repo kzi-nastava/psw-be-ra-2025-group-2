@@ -17,7 +17,7 @@ public class BaseToursIntegrationTest : BaseWebIntegrationTest<ToursTestFactory>
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // SQL fajlovi - izvršavaj u pravom redosledu
+        
         var sqlFiles = new[]
         {
         Path.Combine(AppContext.BaseDirectory, "TestData/a-delete.sql"),   // prvo očisti
