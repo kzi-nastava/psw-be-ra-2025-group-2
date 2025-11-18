@@ -36,7 +36,7 @@ namespace Explorer.Stakeholders.Core.Domain
 
         private void Validate()
         {
-            if (UserId <= 0)
+            if (UserId == 0)
                 throw new ArgumentException("Invalid UserId");
 
             if (Score < 1 || Score > 5)
