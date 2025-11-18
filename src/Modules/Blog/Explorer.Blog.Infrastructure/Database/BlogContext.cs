@@ -19,13 +19,17 @@ public class BlogContext : DbContext
             b.HasKey(x => x.Id);
 
             // Owned collection za BlogImage
-            b.OwnsMany(x => x.Images, img =>
+            b.OwnsMany(p => p.Images, img =>
             {
-                img.WithOwner().HasForeignKey("BlogPostId"); // FK na BlogPost
+                img.ToTable("BlogImages", "blog");
+                img.WithOwner().HasForeignKey("BlogPostId");
+                img.HasKey(i => i.Id);
+                img.Property(i => i.Id).ValueGeneratedOnAdd(); // EF generiše ID
                 img.Property(i => i.Url).IsRequired();
-                img.ToTable("BlogImages", "blog"); // opcionalno, zasebna tabela u blog šemi
-                img.HasKey("BlogPostId", "Url"); // composite key jer nema ID
             });
+
+
+
 
             b.Property(x => x.Title).IsRequired();
             b.Property(x => x.Description).IsRequired();

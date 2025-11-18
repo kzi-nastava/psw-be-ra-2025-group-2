@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
 using Explorer.Blog.Core.Domain;
 using Microsoft.EntityFrameworkCore;
+using Explorer.BuildingBlocks.Core.UseCases;
 
 namespace Explorer.Blog.Infrastructure.Database.Repositories
 {
@@ -27,14 +28,17 @@ namespace Explorer.Blog.Infrastructure.Database.Repositories
 
         public async Task<BlogPost?> GetByIdAsync(long id)
         {
-            return await _context.BlogPosts.FirstOrDefaultAsync(b => b.Id == id);
+            return await _context.BlogPosts
+         .Include(b => b.Images)
+         .FirstOrDefaultAsync(b => b.Id == id);
         }
 
         public async Task<IEnumerable<BlogPost>> GetByAuthorAsync(long authorId)
         {
             return await _context.BlogPosts
-                .Where(b => b.AuthorId == authorId)
-                .ToListAsync();
+        .Include(b => b.Images)
+        .Where(b => b.AuthorId == authorId)
+        .ToListAsync();
         }
 
         public async Task UpdateAsync(BlogPost blogPost)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.API.Dtos;
+using Explorer.BuildingBlocks.Core.UseCases;
 
 namespace Explorer.API.Controllers.Tourist.Blog
 {
@@ -24,7 +25,7 @@ namespace Explorer.API.Controllers.Tourist.Blog
         }
 
         // Dohvat bloga po ID
-        [HttpGet("{id}")]
+        [HttpGet("{id:long}")]
         public async Task<ActionResult<BlogPostDto>> GetById(long id)
         {
             var blog = await _service.GetByIdAsync(id);
@@ -45,8 +46,19 @@ namespace Explorer.API.Controllers.Tourist.Blog
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, UpdateBlogPostDto dto)
         {
-            await _service.UpdateAsync(id, dto);
-            return NoContent();
+            try
+            {
+                await _service.UpdateAsync(id, dto);
+                return NoContent();
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

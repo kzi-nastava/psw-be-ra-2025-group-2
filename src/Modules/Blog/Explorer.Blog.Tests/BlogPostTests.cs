@@ -1,58 +1,206 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Explorer.Blog.API.Dtos;
-using Explorer.Blog.API.Public;
-using Explorer.Blog.Core.Domain;
 using Explorer.Blog.Infrastructure.Database;
-using Explorer.Blog.Tests;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Explorer.Blog.Tests;
 
+[Collection("Sequential")]
 public class BlogPostTests : BaseBlogIntegrationTest
 {
-    public BlogPostTests(BlogTestFactory factory) : base(factory) { }
+    public BlogPostTests(BlogTestFactory factory) : base(factory)
+    {
+        SeedDatabase();
+    }
+
+    private void SeedDatabase()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
+
+        db.Database.EnsureCreated();
+        
+        ExecuteSqlFile(db, "TestData/a-delete.sql");
+        ExecuteSqlFile(db, "TestData/a-insert-blogposts.sql");
+    }
+
+    private void ExecuteSqlFile(BlogContext db, string fileName)
+    {
+        var projectPath = Directory.GetCurrentDirectory();
+        var sqlPath = Path.Combine(projectPath, fileName);
+
+        if (!File.Exists(sqlPath))
+        {
+            throw new FileNotFoundException($"❌ SQL fajl nije pronađen: {sqlPath}");
+        }
+
+        var sqlScript = File.ReadAllText(sqlPath);
+        db.Database.ExecuteSqlRaw(sqlScript);
+    }
 
     [Fact]
     public async Task Creates_blog_post_successfully()
-    {// Arrange
+    {
+        // Arrange
         var client = Factory.CreateClient();
-
         var request = new CreateBlogPostDto
         {
-            Title = "Test Title",
-            Description = "Test Desc",
-            AuthorId = -1, // samo neka vrednost, ne mora postojati Author
-            ImageUrls = new List<string> { "img1.png" }
+            Title = "New Valid Post Title",
+            Description = "Description with images.",
+            AuthorId = -1,
+            ImageUrls = new List<string> { "new_img_1.png", "new_img_2.png" }
         };
 
         // Act
         var response = await client.PostAsJsonAsync("/api/blogpost", request);
 
-        // Assert HTTP response
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        // Read result body
         var created = await response.Content.ReadFromJsonAsync<BlogPostDto>();
-        Assert.NotNull(created);
+        created.ShouldNotBeNull();
+        created.ImageUrls.Count.ShouldBe(2);
 
-        // Assert database changed
+        // Verify in database
         using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
 
-        // Dohvat bloga iz baze po ID-u
         var blogPost = db.BlogPosts
-            .Include(b => b.Images) // ako želiš da proveriš slike
-            .FirstOrDefault(p => p.Id == created!.Id);
+            .Include(b => b.Images)
+            .FirstOrDefault(p => p.Id == created.Id);
 
-        Assert.NotNull(blogPost);
-        Assert.Equal("Test Title", blogPost.Title);
-        Assert.Equal("Test Desc", blogPost.Description);
-        Assert.Equal(-1, blogPost.AuthorId);
+        blogPost.ShouldNotBeNull();
+        blogPost.Title.ShouldBe("New Valid Post Title");
+        blogPost.Images.Count.ShouldBe(2);
+    }
 
-        // Opcionalno: proveri slike
-        Assert.Single(blogPost.Images);
-        Assert.Equal("img1.png", blogPost.Images.First().Url);
+    [Fact]
+    public async Task Create_fails_on_empty_title()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+        var request = new CreateBlogPostDto
+        {
+            Title = "",
+            Description = "Valid Desc",
+            AuthorId = -1,
+            ImageUrls = new List<string>()
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/blogpost", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Get_blog_post_by_id_successfully()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/blogpost/-2");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var blogPost = await response.Content.ReadFromJsonAsync<BlogPostDto>();
+        blogPost.ShouldNotBeNull();
+        blogPost.Title.ShouldBe("Post for Updating and Reading");
+        blogPost.ImageUrls.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Get_blog_posts_by_author_successfully()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/blogpost/author/-21");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<List<BlogPostDto>>();
+        result.ShouldNotBeNull();
+        result.Count.ShouldBe(3);
+        result.ShouldAllBe(p => p.AuthorId == -21);
+    }
+
+    [Fact]
+    public async Task Updates_blog_post_successfully_and_replaces_images()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+        var updateRequest = new UpdateBlogPostDto
+        {
+            Title = "Updated Title OK",
+            Description = "New description content.",
+            ImageUrls = new List<string> { "new_image_a.png", "new_image_b.png", "new_image_c.png" }
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync("/api/blogpost/-2", updateRequest);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // Verify in database
+        using var scope = Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
+
+        var blogPost = db.BlogPosts
+            .Include(b => b.Images)
+            .FirstOrDefault(p => p.Id == -2);
+
+        blogPost.ShouldNotBeNull();
+        blogPost.Title.ShouldBe("Updated Title OK");
+        blogPost.Description.ShouldBe("New description content.");
+        blogPost.Images.Count.ShouldBe(3);
+        blogPost.Images.ShouldContain(i => i.Url == "new_image_a.png");
+    }
+
+    [Fact]
+    public async Task Update_fails_on_invalid_id()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+        var updateRequest = new UpdateBlogPostDto
+        {
+            Title = "Non-existent",
+            Description = "Should fail",
+            ImageUrls = new List<string>()
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync("/api/blogpost/9999", updateRequest);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Update_fails_on_empty_description()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+        var updateRequest = new UpdateBlogPostDto
+        {
+            Title = "Valid Title",
+            Description = "",
+            ImageUrls = new List<string>()
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync("/api/blogpost/-2", updateRequest);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 }

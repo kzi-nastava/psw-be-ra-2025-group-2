@@ -43,7 +43,7 @@ namespace Explorer.Blog.Core.Domain
             if (string.IsNullOrWhiteSpace(Description))
                 throw new ArgumentException("Description cannot be empty.");
 
-            if (!skipAuthorValidation && AuthorId <= 0)
+            if (!skipAuthorValidation && AuthorId == 0)
                 throw new ArgumentException("Invalid author.");
         }
 

@@ -7,9 +7,9 @@ using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Blog.Core.Domain
 {
-    public class BlogImage : ValueObject
+    public class BlogImage : Entity
     {
-        public string Url { get; }
+        public string Url { get; private set; }
 
         private BlogImage() { }
 
@@ -21,9 +21,5 @@ namespace Explorer.Blog.Core.Domain
             Url = url;
         }
 
-        protected override IEnumerable<object> GetEqualityComponents()
-        {
-            yield return Url;
-        }
     }
 }
