@@ -13,5 +13,7 @@ namespace Explorer.Stakeholders.API.Public
 
         PagedResult<AppRatingDto> GetPaged(int page, int pageSize);
 
+        PagedResult<AppRatingDto> GetPagedByUserId(long userId, int page, int pageSize);
+
     }
 }

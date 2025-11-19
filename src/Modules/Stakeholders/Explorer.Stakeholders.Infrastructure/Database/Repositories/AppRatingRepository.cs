@@ -1,6 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
-using Explorer.Stakeholders.Core;
 using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 
 
 namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
@@ -53,5 +53,15 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
             var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             return new PagedResult<AppRating>(items, totalCount);
         }
+
+
+        public PagedResult<AppRating> GetPagedByUserId(long userId, int page, int pageSize)
+        {
+            var query = _dbContext.AppRatings.Where(r => r.UserId == userId);
+            var totalCount = query.Count();
+            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            return new PagedResult<AppRating>(items, totalCount);
+        }
+
     }
 }

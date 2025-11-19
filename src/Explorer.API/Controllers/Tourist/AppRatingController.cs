@@ -1,12 +1,14 @@
-﻿using Explorer.Stakeholders.API.Dtos;
+﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 
 namespace Explorer.API.Controllers.Tourist
 {
-    [Authorize(Roles = "author, tourist")]
+    [Authorize(Roles = "author, tourist, administrator")]
 
     [Route("api/app-ratings")]
     [ApiController]
@@ -42,6 +44,30 @@ namespace Explorer.API.Controllers.Tourist
             _appRatingService.Delete(id);
             return Ok();
         }
+
+
+
+        [HttpGet]
+        public ActionResult<PagedResult<AppRatingDto>> GetRatingByRole(int page = 1, int pageSize = 10)
+        {
+            long userId = User.PersonId();
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (role == "tourist")
+            {
+                var result = _appRatingService.GetPagedByUserId(userId, page, pageSize);
+                return Ok(result);
+            }
+            else if (role == "administrator")
+            {
+                var result = _appRatingService.GetPaged(page, pageSize);
+                return Ok(result);
+            }
+
+            return Ok();
+        }
+
+
 
         [HttpGet("my-rating")]
         public ActionResult<IEnumerable<AppRatingDto>> GetMyRating()

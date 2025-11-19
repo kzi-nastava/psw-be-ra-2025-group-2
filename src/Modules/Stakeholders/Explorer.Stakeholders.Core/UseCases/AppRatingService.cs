@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -79,5 +80,19 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             return new PagedResult<AppRatingDto>(dtoList, pagedEntities.TotalCount);
         }
+
+        public PagedResult<AppRatingDto> GetPagedByUserId(long userId, int page, int pageSize)
+        {
+            if (page <= 0) page = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var pagedEntities = _repository.GetPagedByUserId(userId, page, pageSize);
+            var dtoList = _mapper.Map<List<AppRatingDto>>(pagedEntities.Results);
+
+            return new PagedResult<AppRatingDto>(dtoList, pagedEntities.TotalCount);
+        }
+
     }
+
+
 }

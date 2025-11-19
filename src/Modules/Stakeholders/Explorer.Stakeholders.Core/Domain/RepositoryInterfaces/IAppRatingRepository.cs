@@ -2,7 +2,7 @@
 using Explorer.Stakeholders.Core.Domain;
 using System.Collections.Generic;
 
-namespace Explorer.Stakeholders.Core
+namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
 {
     public interface IAppRatingRepository
     {
@@ -11,6 +11,8 @@ namespace Explorer.Stakeholders.Core
         void Delete(long id);
         IEnumerable<AppRating> GetByUserId(long userId);
         PagedResult<AppRating> GetPaged(int page, int pageSize);
+
+         PagedResult<AppRating> GetPagedByUserId(long userId, int page, int pageSize);
 
     }
 }
