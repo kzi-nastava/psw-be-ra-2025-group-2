@@ -34,8 +34,8 @@ namespace Explorer.Stakeholders.Core.Domain
             int boatScore,
             List<string> tags)
         {
-            if (touristId <= 0)
-                throw new ArgumentException("TouristId must be positive.", nameof(touristId));
+          //  if (touristId <= 0)
+            //    throw new ArgumentException("TouristId must be positive.", nameof(touristId));
 
             ValidateScore(walkingScore, nameof(walkingScore));
             ValidateScore(bicycleScore, nameof(bicycleScore));
