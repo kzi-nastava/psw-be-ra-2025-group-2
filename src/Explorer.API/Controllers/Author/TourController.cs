@@ -27,7 +27,6 @@ namespace Explorer.API.Controllers.Author
 
             dto.AuthorId = long.Parse(authorIdClaim.Value);
 
-            // Validacija za testove
             if (string.IsNullOrWhiteSpace(dto.Name))
                 throw new ArgumentNullException(nameof(dto.Name), "Name is required.");
 
@@ -46,11 +45,25 @@ namespace Explorer.API.Controllers.Author
             return Ok(tours);
         }
 
+        // GET: api/author/tours/{id}
+        [HttpGet("{id}")]
+        public ActionResult<TourDto> GetById(long id)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            var tour = _tourService.GetById(id, authorId);
+            if (tour == null) return NotFound();
+
+            return Ok(tour);
+        }
+
         // PUT: api/author/tours/{id}
         [HttpPut("{id}")]
         public ActionResult<TourDto> Update(long id, [FromBody] UpdateTourDto dto)
         {
-            // Validacija za testove
             if (string.IsNullOrWhiteSpace(dto.Name))
                 throw new ArgumentNullException(nameof(dto.Name), "Name is required.");
 

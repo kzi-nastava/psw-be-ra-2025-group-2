@@ -54,5 +54,13 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             _tourRepository.DeleteAsync(tour).Wait();
         }
+
+        public TourDto? GetById(long id, long authorId)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result;
+            if (tour == null || tour.AuthorId != authorId) return null;
+
+            return _mapper.Map<TourDto>(tour);
+        }
     }
 }

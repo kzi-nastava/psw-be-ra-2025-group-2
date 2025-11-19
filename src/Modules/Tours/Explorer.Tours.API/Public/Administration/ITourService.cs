@@ -11,6 +11,7 @@ namespace Explorer.Tours.API.Public.Administration
     {
         TourDto Create(CreateTourDto dto);
         IEnumerable<TourDto> GetByAuthor(long authorId);
+        TourDto? GetById(long id, long authorId);
         TourDto Update(long id, UpdateTourDto dto);
         void Delete(long id);
     }
