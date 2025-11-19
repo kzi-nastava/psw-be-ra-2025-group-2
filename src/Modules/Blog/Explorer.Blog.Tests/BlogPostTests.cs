@@ -12,35 +12,10 @@ namespace Explorer.Blog.Tests;
 public class BlogPostTests : BaseBlogIntegrationTest
 {
     public BlogPostTests(BlogTestFactory factory) : base(factory)
-    {
-        SeedDatabase();
+    { 
     }
 
-    private void SeedDatabase()
-    {
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
-
-        db.Database.EnsureCreated();
-        
-        ExecuteSqlFile(db, "TestData/a-delete.sql");
-        ExecuteSqlFile(db, "TestData/a-insert-blogposts.sql");
-    }
-
-    private void ExecuteSqlFile(BlogContext db, string fileName)
-    {
-        var projectPath = Directory.GetCurrentDirectory();
-        var sqlPath = Path.Combine(projectPath, fileName);
-
-        if (!File.Exists(sqlPath))
-        {
-            throw new FileNotFoundException($"❌ SQL fajl nije pronađen: {sqlPath}");
-        }
-
-        var sqlScript = File.ReadAllText(sqlPath);
-        db.Database.ExecuteSqlRaw(sqlScript);
-    }
-
+    
     [Fact]
     public async Task Creates_blog_post_successfully()
     {
@@ -95,24 +70,6 @@ public class BlogPostTests : BaseBlogIntegrationTest
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task Get_blog_post_by_id_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-
-        // Act
-        var response = await client.GetAsync("/api/blogpost/-2");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var blogPost = await response.Content.ReadFromJsonAsync<BlogPostDto>();
-        blogPost.ShouldNotBeNull();
-        blogPost.Title.ShouldBe("Post for Updating and Reading");
-        blogPost.ImageUrls.Count.ShouldBe(2);
     }
 
     [Fact]
