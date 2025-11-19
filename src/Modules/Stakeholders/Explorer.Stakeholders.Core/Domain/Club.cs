@@ -28,8 +28,8 @@ namespace Explorer.Stakeholders.Core.Domain
             if (string.IsNullOrWhiteSpace(Description))
                 throw new ArgumentException("Invalid Description");
 
-            if (OwnerId <= 0)
-                throw new ArgumentException("Invalid OwnerId");
+           // if (OwnerId <= 0)
+            //throw new ArgumentException("Invalid OwnerId");
 
             if (ImageUrls == null || ImageUrls.Count == 0)
                 throw new ArgumentException("At least one image is required");
