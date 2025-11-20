@@ -21,7 +21,7 @@ public static class BlogStartup
         SetupInfrastructure(services);
         return services;
     }
-    
+
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IBlogPostService, BlogPostService>();
@@ -29,19 +29,14 @@ public static class BlogStartup
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=localhost;Port=5432;Database=blog;Username=postgres;Password=root");
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("blog"));
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
-        
+
         services.AddDbContext<BlogContext>(opt =>
             opt.UseNpgsql(dataSource,
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog")));
 
         services.AddScoped<IBlogPostRepository, BlogPostRepository>();
-        
-        /*var connectionString = "Host=localhost;Port=5432;Database=blog;Username=postgres;Password=root"; 
-        services.AddDbContext<BlogContext>(opt => opt.UseNpgsql(connectionString, x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog"))); 
-        services.AddScoped<IBlogPostRepository, BlogPostRepository>();
-        */
     }
 }
