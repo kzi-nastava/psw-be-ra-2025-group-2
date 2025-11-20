@@ -14,6 +14,7 @@ namespace Explorer.Tours.API.Public.Administration
         TouristEquipmentDto GetTouristEquipment(int touristId);
         TouristEquipmentDto Create(TouristEquipmentDto entity);
         TouristEquipmentDto Update(TouristEquipmentDto entity);
+        PagedResult<EquipmentDto> GetAllEquipment(int page, int pageSize);
 
     }
 }

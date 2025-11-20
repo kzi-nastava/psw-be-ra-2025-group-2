@@ -10,6 +10,7 @@ namespace Explorer.Tours.API.Dtos
     {
         public int Id { get; set; }
         public int TouristId { get; set; }
-        public List<int> Equipment {  get; set; }
+        public List<int> Equipment { get; set; }
+        public List<EquipmentDto> Equipments { get; set; }
     }
 }
