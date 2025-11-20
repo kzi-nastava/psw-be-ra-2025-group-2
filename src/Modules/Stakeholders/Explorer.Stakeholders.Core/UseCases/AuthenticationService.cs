@@ -44,7 +44,7 @@ public class AuthenticationService : IAuthenticationService
         if(_userRepository.Exists(account.Username))
             throw new EntityValidationException("Provided username already exists.");
 
-        var user = _userRepository.Create(new User(account.Username, account.Password, UserRole.Tourist, true));
+        var user = _userRepository.Create(new User(account.Username, account.Password, account.Email, UserRole.Tourist, true));
         var person = _personRepository.Create(new Person(user.Id, account.Name, account.Surname, account.Email));
 
         return _tokenGenerator.GenerateAccessToken(user, person.Id);
