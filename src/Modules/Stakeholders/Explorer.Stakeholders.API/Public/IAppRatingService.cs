@@ -1,0 +1,19 @@
+﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Stakeholders.API.Dtos;
+using System.Collections.Generic;
+
+namespace Explorer.Stakeholders.API.Public
+{
+    public interface IAppRatingService
+    {
+        AppRatingDto Create(AppRatingDto dto);
+        AppRatingDto Update(AppRatingDto dto);
+        void Delete(long id);
+        IEnumerable<AppRatingDto> GetByUserId(long userId);
+
+        PagedResult<AppRatingDto> GetPaged(int page, int pageSize);
+
+        PagedResult<AppRatingDto> GetPagedByUserId(long userId, int page, int pageSize);
+
+    }
+}
