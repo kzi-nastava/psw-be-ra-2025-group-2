@@ -1,4 +1,5 @@
-﻿using Explorer.API.Controllers.Tourist;
+﻿using Explorer.API.Controllers.Administrator;
+using Explorer.API.Controllers.Tourist;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Infrastructure.Database;
@@ -34,12 +35,11 @@ namespace Explorer.Stakeholders.Tests.Integration
                 Comment = "New test comment"
             };
 
-            var result = controller.Create(newDto);
+            var result = controller.Create(newDto).Result;
 
             result.ShouldNotBeNull();
-            result.Result.ShouldBeOfType<OkObjectResult>();
-
-            ((OkObjectResult)result.Result).StatusCode.ShouldBe(200);
+            var okObjectResult = result.ShouldBeOfType<OkObjectResult>();
+            okObjectResult.StatusCode.ShouldBe(200);
 
             var storedEntity = _dbContext.AppRatings.FirstOrDefault(r => r.Comment == "New test comment");
             storedEntity.ShouldNotBeNull();
@@ -58,10 +58,11 @@ namespace Explorer.Stakeholders.Tests.Integration
                 Comment = "Pera's comment has been edited."
             };
 
-            var result = controller.Update(updatedDto).Result;
+            var result = controller.Update(updatedDto.Id, updatedDto);
 
             result.ShouldNotBeNull();
-            var okObjectResult = result.ShouldBeOfType<OkObjectResult>();
+
+            var okObjectResult = result.Result.ShouldBeOfType<OkObjectResult>();
             okObjectResult.StatusCode.ShouldBe(200);
 
             var updatedEntity = okObjectResult.Value.ShouldBeOfType<AppRatingDto>();
