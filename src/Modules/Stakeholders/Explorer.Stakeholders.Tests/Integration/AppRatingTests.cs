@@ -1,5 +1,4 @@
-﻿using Explorer.API.Controllers.Administrator;
-using Explorer.API.Controllers.Tourist;
+﻿using Explorer.API.Controllers.Tourist;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Infrastructure.Database;
@@ -7,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using System.Linq; 
+using System.Linq;
 
 namespace Explorer.Stakeholders.Tests.Integration
 {
@@ -27,7 +26,7 @@ namespace Explorer.Stakeholders.Tests.Integration
         public void Creates()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateTouristController(scope, "-23"); 
+            var controller = CreateTouristController(scope, "-23");
             var newDto = new AppRatingDto
             {
                 UserId = -23,
@@ -35,11 +34,12 @@ namespace Explorer.Stakeholders.Tests.Integration
                 Comment = "New test comment"
             };
 
-            var result = controller.Create(newDto).Result;
+            var result = controller.Create(newDto);
 
             result.ShouldNotBeNull();
-            var okObjectResult = result.ShouldBeOfType<OkObjectResult>();
-            okObjectResult.StatusCode.ShouldBe(200);
+            result.Result.ShouldBeOfType<OkObjectResult>();
+
+            ((OkObjectResult)result.Result).StatusCode.ShouldBe(200);
 
             var storedEntity = _dbContext.AppRatings.FirstOrDefault(r => r.Comment == "New test comment");
             storedEntity.ShouldNotBeNull();
@@ -50,9 +50,10 @@ namespace Explorer.Stakeholders.Tests.Integration
         public void Updates()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateTouristController(scope, "-21"); 
+            var controller = CreateTouristController(scope, "-21");
             var updatedDto = new AppRatingDto
             {
+                Id = -1,
                 Score = 1,
                 Comment = "Pera's comment has been edited."
             };
@@ -64,11 +65,11 @@ namespace Explorer.Stakeholders.Tests.Integration
             okObjectResult.StatusCode.ShouldBe(200);
 
             var updatedEntity = okObjectResult.Value.ShouldBeOfType<AppRatingDto>();
-            updatedEntity.Id.ShouldBe(-1); 
+            updatedEntity.Id.ShouldBe(-1);
             updatedEntity.Comment.ShouldBe("Pera's comment has been edited.");
             updatedEntity.Score.ShouldBe(1);
 
-            var storedEntity = _dbContext.AppRatings.Find(-1L); 
+            var storedEntity = _dbContext.AppRatings.Find(-1L);
             storedEntity.ShouldNotBeNull();
             storedEntity.Comment.ShouldBe("Pera's comment has been edited.");
             storedEntity.UpdatedAt.ShouldNotBeNull();
@@ -78,8 +79,8 @@ namespace Explorer.Stakeholders.Tests.Integration
         public void Deletes()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateTouristController(scope, "-22"); 
-            long idToDelete = -2; 
+            var controller = CreateTouristController(scope, "-22");
+            long idToDelete = -2;
 
             var result = controller.Delete(idToDelete);
 
@@ -94,7 +95,7 @@ namespace Explorer.Stakeholders.Tests.Integration
         public void Retrieves_my_rating()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateTouristController(scope, "-21"); 
+            var controller = CreateTouristController(scope, "-21");
 
             var result = controller.GetMyRating().Result;
 
@@ -118,7 +119,7 @@ namespace Explorer.Stakeholders.Tests.Integration
             var okObjectResult = actionResult.ShouldBeOfType<OkObjectResult>();
             var result = okObjectResult.Value.ShouldBeOfType<PagedResult<AppRatingDto>>();
 
-            result.Results.Count.ShouldBe(2); 
+            result.Results.Count.ShouldBe(2);
             result.TotalCount.ShouldBe(2);
         }
 
@@ -138,7 +139,7 @@ namespace Explorer.Stakeholders.Tests.Integration
             return new Explorer.API.Controllers.Administrator.AppRatingController(
                 scope.ServiceProvider.GetRequiredService<API.Public.IAppRatingService>())
             {
-                ControllerContext = BuildContext("-1") 
+                ControllerContext = BuildContext("-1")
             };
         }
     }

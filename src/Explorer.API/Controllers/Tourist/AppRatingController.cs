@@ -30,12 +30,25 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(result);
         }
 
-        [HttpPut]
-        public ActionResult<AppRatingDto> Update([FromBody] AppRatingDto appRating)
+        [HttpPut("{id:long}")]
+        public ActionResult<AppRatingDto> Update(long id, [FromBody] AppRatingDto appRating)
         {
+            appRating.Id = id;
             appRating.UserId = User.PersonId();
-            var result = _appRatingService.Update(appRating);
-            return Ok(result);
+
+            try
+            {
+                var result = _appRatingService.Update(appRating);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Rating with ID {id} not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "A server error occurred: " + ex.Message);
+            }
         }
 
         [HttpDelete("{id:long}")]

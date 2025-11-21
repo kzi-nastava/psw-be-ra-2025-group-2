@@ -6,14 +6,12 @@ using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using System.Collections.Generic;
 using System.Linq;
-
 namespace Explorer.Stakeholders.Core.UseCases
 {
     public class AppRatingService : IAppRatingService
     {
         private readonly IAppRatingRepository _repository;
         private readonly IMapper _mapper;
-
         public AppRatingService(IAppRatingRepository repository, IMapper mapper)
         {
             _repository = repository;
@@ -22,7 +20,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public AppRatingDto Create(AppRatingDto dto)
         {
-            dto.CreatedAt = DateTime.UtcNow; 
+            dto.CreatedAt = DateTime.UtcNow;
             var entity = _mapper.Map<AppRating>(dto);
             var result = _repository.Create(entity);
             return _mapper.Map<AppRatingDto>(result);
@@ -30,22 +28,20 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public AppRatingDto Update(AppRatingDto dto)
         {
-            var existingRating = _repository.GetByUserId(dto.UserId).FirstOrDefault();
+            var ratingToUpdate = _repository.Get(dto.Id);
 
-            if (existingRating == null)
+            if (ratingToUpdate == null)
             {
-                return Create(dto);
+                throw new KeyNotFoundException($"Rating with ID {dto.Id} not found.");
             }
-            else
-            {
-                _mapper.Map(dto, existingRating);
 
-                existingRating.SetUpdatedAt();
+            _mapper.Map(dto, ratingToUpdate);
 
-                var result = _repository.Update(existingRating);
+            ratingToUpdate.SetUpdatedAt();
 
-                return _mapper.Map<AppRatingDto>(result);
-            }
+            var result = _repository.Update(ratingToUpdate);
+
+            return _mapper.Map<AppRatingDto>(result);
         }
 
         public void Delete(long id)
@@ -93,6 +89,4 @@ namespace Explorer.Stakeholders.Core.UseCases
         }
 
     }
-
-
 }
