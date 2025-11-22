@@ -17,18 +17,18 @@ public class PersonController : ControllerBase
         _service = service;
     }
 
-    [HttpGet("{userId:long}")]
-    public ActionResult<PersonProfileDto> GetProfile(long userId)
+    [HttpGet]
+    public ActionResult<PersonProfileDto> GetProfile()
     {
-        //TODO trenutno korisnik moze da pogleda svaciji profil, pretpostavljam to nije okej
+        var userId = long.Parse(User.Claims.First(c => c.Type == "id").Value);
 
         return Ok(_service.GetProfile(userId));
     }
 
-    [HttpPut("{userId:long}")]
-    public ActionResult<PersonProfileDto> UpdateProfile(long userId, [FromBody] UpdatePersonProfileDto dto)
+    [HttpPut]
+    public ActionResult<PersonProfileDto> UpdateProfile([FromBody] UpdatePersonProfileDto dto)
     {
-        //TODO trenutno korisnik moze da menja svaciji profil, pretpostavljam to nije okej
+        var userId = long.Parse(User.Claims.First(c => c.Type == "id").Value);
 
         return Ok(_service.UpdateProfile(userId, dto));
     }
