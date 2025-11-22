@@ -20,6 +20,12 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public AppRatingDto Create(AppRatingDto dto)
         {
+            var existingRatings = _repository.GetByUserId(dto.UserId);
+            if (existingRatings.Any())
+            {
+                throw new InvalidOperationException("User has already rated the application.");
+            }
+
             dto.CreatedAt = DateTime.UtcNow;
             var entity = _mapper.Map<AppRating>(dto);
             var result = _repository.Create(entity);
