@@ -14,5 +14,7 @@ public class StakeholderProfile : Profile
             .ForMember(dest => dest.Email, opt => opt.Ignore())
             .ForMember(dest => dest.Name, opt => opt.Ignore())
             .ForMember(dest => dest.Surname, opt => opt.Ignore());
+
+        CreateMap<AuthorAwardsDto, AuthorAwards>().ReverseMap();
     }
 }
