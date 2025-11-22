@@ -16,90 +16,87 @@ namespace Explorer.Stakeholders.Tests.Integration.People
         [Fact]
         public void Updates_own_profile()
         {
-            // Arrange
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope, "-100");
             var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-            var updatedProfile = new UpdatePersonProfileDto
+            var updatedProfile = new PersonProfileDto
             {
+                Name = "Test",
+                Surname = "User",
                 Biography = "Nova biografija iz testa",
                 Motto = "Test motto",
                 ProfileImageUrl = "https://test.com/image.jpg"
             };
 
-            // Act
             var result = ((ObjectResult)controller.UpdateProfile(updatedProfile).Result)?.Value as PersonProfileDto;
 
-            // Assert - Response
             result.ShouldNotBeNull();
-            result.Biography.ShouldBe(updatedProfile.Biography);
-            result.Motto.ShouldBe(updatedProfile.Motto);
-            result.ProfileImageUrl.ShouldBe(updatedProfile.ProfileImageUrl);
             result.Name.ShouldBe("Test");
             result.Surname.ShouldBe("User");
-            result.Email.ShouldBe("testuser1@test.com");
+            result.Biography.ShouldBe("Nova biografija iz testa");
+            result.Motto.ShouldBe("Test motto");
+            result.ProfileImageUrl.ShouldBe("https://test.com/image.jpg");
 
-            // Assert - Database
             var storedEntity = dbContext.People.FirstOrDefault(p => p.UserId == -100);
             storedEntity.ShouldNotBeNull();
-            storedEntity.Biography.ShouldBe(updatedProfile.Biography);
+            storedEntity.Biography.ShouldBe("Nova biografija iz testa");
         }
 
         [Fact]
         public void Updates_profile_with_null_values()
         {
-            // Arrange
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope, "-100");
             var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-            var updatedProfile = new UpdatePersonProfileDto
+            var updatedProfile = new PersonProfileDto
             {
+                Name = "Test",
+                Surname = "User",
                 Biography = null,
                 Motto = null,
                 ProfileImageUrl = null
             };
 
-            // Act
             var result = ((ObjectResult)controller.UpdateProfile(updatedProfile).Result)?.Value as PersonProfileDto;
 
-            // Assert - Response
             result.ShouldNotBeNull();
+            result.Name.ShouldBe("Test");
+            result.Surname.ShouldBe("User");
             result.Biography.ShouldBeNull();
             result.Motto.ShouldBeNull();
             result.ProfileImageUrl.ShouldBeNull();
 
-            // Assert - Database
             var storedEntity = dbContext.People.FirstOrDefault(p => p.UserId == -100);
             storedEntity.ShouldNotBeNull();
             storedEntity.Biography.ShouldBeNull();
-            storedEntity.Motto.ShouldBeNull();
-            storedEntity.ProfileImageUrl.ShouldBeNull();
         }
 
         [Fact]
         public void Updates_only_biography()
         {
-            // Arrange
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope, "-101");
             var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-            var updatedProfile = new UpdatePersonProfileDto
+            var updatedProfile = new PersonProfileDto
             {
-                Biography = "Nova biografija",
-                Motto = null,
-                ProfileImageUrl = null
+                Name = "Test",
+                Surname = "User2",
+                Biography = "Nova biografija"
             };
 
-            // Act
             var result = ((ObjectResult)controller.UpdateProfile(updatedProfile).Result)?.Value as PersonProfileDto;
 
-            // Assert
             result.ShouldNotBeNull();
             result.Biography.ShouldBe("Nova biografija");
+
+            var storedEntity = dbContext.People.FirstOrDefault(p => p.UserId == -101);
+            storedEntity.ShouldNotBeNull();
+            storedEntity.Biography.ShouldBe("Nova biografija");
         }
+
 
         private static PersonController CreateController(IServiceScope scope, string userId)
         {

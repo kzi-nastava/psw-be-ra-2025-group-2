@@ -21,10 +21,11 @@ namespace Explorer.Stakeholders.Tests.Integration.People
             var result = ((ObjectResult)controller.GetProfile().Result)?.Value as PersonProfileDto;
 
             result.ShouldNotBeNull();
-            result.UserId.ShouldBe(-100);
             result.Name.ShouldBe("Test");
             result.Surname.ShouldBe("User");
-            result.Email.ShouldBe("testuser1@test.com");
+            result.Biography.ShouldBeNull();
+            result.Motto.ShouldBeNull();
+            result.ProfileImageUrl.ShouldBeNull();
         }
 
         [Fact]
@@ -36,10 +37,8 @@ namespace Explorer.Stakeholders.Tests.Integration.People
             var result = ((ObjectResult)controller.GetProfile().Result)?.Value as PersonProfileDto;
 
             result.ShouldNotBeNull();
-            result.UserId.ShouldBe(-101);
             result.Name.ShouldBe("Test");
             result.Surname.ShouldBe("User2");
-            result.Email.ShouldBe("testuser2@test.com");
             result.Biography.ShouldBe("Existing bio");
             result.Motto.ShouldBe("Old motto");
             result.ProfileImageUrl.ShouldBe("http://old.jpg");
@@ -54,10 +53,11 @@ namespace Explorer.Stakeholders.Tests.Integration.People
             var result = ((ObjectResult)controller.GetProfile().Result)?.Value as PersonProfileDto;
 
             result.ShouldNotBeNull();
-            result.UserId.ShouldBe(-102);
             result.Name.ShouldBe("Test");
             result.Surname.ShouldBe("Author");
-            result.Email.ShouldBe("testauthor@test.com");
+            result.Biography.ShouldBeNull();
+            result.Motto.ShouldBeNull();
+            result.ProfileImageUrl.ShouldBeNull();
         }
 
         private static PersonController CreateController(IServiceScope scope, string userId)
