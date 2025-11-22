@@ -39,7 +39,7 @@ public class PersonController : ControllerBase
     }
 
     [HttpPut]
-    public ActionResult<PersonProfileDto> UpdateProfile([FromBody] UpdatePersonProfileDto dto)
+    public ActionResult<PersonProfileDto> UpdateProfile([FromBody] PersonProfileDto dto)
     {
         var personId = GetPersonId();
         if (!personId.HasValue)

@@ -10,7 +10,7 @@ namespace Explorer.Stakeholders.API.Public
     public interface IPersonService
     {
         PersonProfileDto GetProfile(long userId);
-        PersonProfileDto UpdateProfile(long userId, UpdatePersonProfileDto dto);
+        PersonProfileDto UpdateProfile(long userId, PersonProfileDto dto);
 
     }
 }
