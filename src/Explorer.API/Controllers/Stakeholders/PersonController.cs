@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Stakeholders;
 
-[Authorize]   // korisnik mora biti ulogovan, prilagodi ako imaš specifične role
+[Authorize]
 [ApiController]
 [Route("api/person")]
 public class PersonController : ControllerBase
