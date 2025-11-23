@@ -5,5 +5,5 @@
     (-4, -1, 'Simple Post for Reading', 'A basic post without images.', NOW()); 
 
 INSERT INTO blog."BlogImages" ("Id","Url","BlogPostId") VALUES 
-    (1, 'https://test.com/img_original_1.jpg', -2),
-    (2, 'https://test.com/img_original_2.jpg', -2);
+    (-1, 'https://test.com/img_original_1.jpg', -2),
+    (-2, 'https://test.com/img_original_2.jpg', -2);

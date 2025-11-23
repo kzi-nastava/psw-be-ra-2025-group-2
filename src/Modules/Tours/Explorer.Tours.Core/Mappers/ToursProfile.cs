@@ -18,5 +18,6 @@ public class ToursProfile : Profile
 
         CreateMap<UpdateTourDto, Tour>()
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()));
+        CreateMap<MonumentDto, Monument>().ReverseMap();
     }
 }
