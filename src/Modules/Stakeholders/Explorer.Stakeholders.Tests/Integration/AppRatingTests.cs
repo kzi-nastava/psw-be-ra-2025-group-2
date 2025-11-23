@@ -107,7 +107,7 @@ namespace Explorer.Stakeholders.Tests.Integration
             using var scope = Factory.Services.CreateScope();
             var controller = CreateTouristControllerWithRole(scope, "-1", "administrator");
 
-            var actionResult = controller.GetRatingByRole(0, 0).Result;
+            var actionResult = controller.GetAll(0, 0).Result; 
 
             actionResult.ShouldNotBeNull();
             var okObjectResult = actionResult.ShouldBeOfType<OkObjectResult>();

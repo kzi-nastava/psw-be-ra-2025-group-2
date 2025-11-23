@@ -12,8 +12,5 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
         void Delete(long id);
         IEnumerable<AppRating> GetByUserId(long userId);
         PagedResult<AppRating> GetPaged(int page, int pageSize);
-
-        PagedResult<AppRating> GetPagedByUserId(long userId, int page, int pageSize);
-
     }
 }

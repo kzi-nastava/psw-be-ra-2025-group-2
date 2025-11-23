@@ -11,6 +11,5 @@ namespace Explorer.Stakeholders.API.Public
         void Delete(long id, long userId, string userRole); 
         IEnumerable<AppRatingDto> GetByUserId(long userId);
         PagedResult<AppRatingDto> GetPaged(int page, int pageSize);
-        PagedResult<AppRatingDto> GetPagedByUserId(long userId, int page, int pageSize);
     }
 }
