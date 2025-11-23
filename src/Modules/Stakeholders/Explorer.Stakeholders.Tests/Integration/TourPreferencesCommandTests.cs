@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using Explorer.API.Controllers.Tourist;
-using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Infrastructure.Database;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -22,7 +22,7 @@ namespace Explorer.Stakeholders.Tests.Integration
         public void Creates()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, "1");
             var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
             dbContext.TourPreferences.RemoveRange(dbContext.TourPreferences);
@@ -30,7 +30,7 @@ namespace Explorer.Stakeholders.Tests.Integration
 
             var newEntity = new TourPreferencesDto
             {
-                TouristId = 1,
+                TouristId = 1, // prepisan iz tokena
                 PreferredDifficulty = 1,
                 WalkingScore = 3,
                 BicycleScore = 2,
@@ -39,20 +39,20 @@ namespace Explorer.Stakeholders.Tests.Integration
                 Tags = new List<string> { "nature", "history" }
             };
 
-            var actionResult = controller.Create(newEntity);      
+            var actionResult = controller.Create(newEntity);
             var okResult = actionResult.Result as OkObjectResult;
             var result = okResult?.Value as TourPreferencesDto;
 
             result.ShouldNotBeNull();
             result!.Id.ShouldNotBe(0);
-            result.TouristId.ShouldBe(newEntity.TouristId);
+            result.TouristId.ShouldBe(1);
             result.PreferredDifficulty.ShouldBe(newEntity.PreferredDifficulty);
             result.WalkingScore.ShouldBe(newEntity.WalkingScore);
             result.Tags.Count.ShouldBe(2);
 
             var stored = dbContext.TourPreferences.SingleOrDefault(tp => tp.Id == result.Id);
             stored.ShouldNotBeNull();
-            stored!.TouristId.ShouldBe(newEntity.TouristId);
+            stored!.TouristId.ShouldBe(1);
             ((int)stored.PreferredDifficulty).ShouldBe(newEntity.PreferredDifficulty);
             stored.WalkingScore.ShouldBe(newEntity.WalkingScore);
         }
@@ -60,22 +60,26 @@ namespace Explorer.Stakeholders.Tests.Integration
         [Fact]
         public void Create_fails_invalid_scores()
         {
-            // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, "1");
 
             var invalid = new TourPreferencesDto
             {
-                TouristId = 1,          // validan turistId
+                TouristId = 1,
                 PreferredDifficulty = 0,
-                WalkingScore = 5,       // neispravno mora 0–3
+                WalkingScore = 5,   // 0–3 ispravno, ovo je neispravno
                 BicycleScore = 0,
                 CarScore = 0,
                 BoatScore = 0,
                 Tags = new List<string>()
             };
 
-            Should.Throw<ArgumentOutOfRangeException>(() => controller.Create(invalid));
+            var actionResult = controller.Create(invalid);
+            var badRequest = actionResult.Result as BadRequestObjectResult;
+
+            badRequest.ShouldNotBeNull();
+            badRequest!.StatusCode.ShouldBe(400);
+            badRequest.Value.ShouldNotBeNull();
         }
 
         [Fact]
@@ -83,9 +87,10 @@ namespace Explorer.Stakeholders.Tests.Integration
         {
             long createdId;
 
+            // prvo preferences za usera 1
             using (var scope = Factory.Services.CreateScope())
             {
-                var controller = CreateController(scope);
+                var controller = CreateController(scope, "1");
                 var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
                 dbContext.TourPreferences.RemoveRange(dbContext.TourPreferences);
@@ -107,17 +112,17 @@ namespace Explorer.Stakeholders.Tests.Integration
                 var created = createOk?.Value as TourPreferencesDto;
                 created.ShouldNotBeNull();
 
-                createdId = created!.Id;   
+                createdId = created!.Id;
             }
 
             using (var scope = Factory.Services.CreateScope())
             {
-                var controller = CreateController(scope);
+                var controller = CreateController(scope, "1");
                 var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
                 var updated = new TourPreferencesDto
                 {
-                    Id = createdId,
+                    Id = createdId, // kontroler svakako setuje ID iz entiteta
                     TouristId = 1,
                     PreferredDifficulty = 2,
                     WalkingScore = 2,
@@ -127,7 +132,7 @@ namespace Explorer.Stakeholders.Tests.Integration
                     Tags = new List<string> { "adventure", "mountains" }
                 };
 
-                var actionResult = controller.Update(updated);      
+                var actionResult = controller.Update(updated);
                 var okResult = actionResult.Result as OkObjectResult;
                 var result = okResult?.Value as TourPreferencesDto;
 
@@ -145,17 +150,20 @@ namespace Explorer.Stakeholders.Tests.Integration
             }
         }
 
-
         [Fact]
         public void Update_fails_invalid_id()
         {
-            // Arrange
+            // nova logika: user nema preferences -> NotFound
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, "1");
+            var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+
+            dbContext.TourPreferences.RemoveRange(dbContext.TourPreferences);
+            dbContext.SaveChanges();
 
             var invalid = new TourPreferencesDto
             {
-                Id = -1000,          // ne postoji u bazi
+                Id = -1000,
                 TouristId = 1,
                 PreferredDifficulty = 1,
                 WalkingScore = 1,
@@ -165,14 +173,18 @@ namespace Explorer.Stakeholders.Tests.Integration
                 Tags = new List<string>()
             };
 
-            Should.Throw<NotFoundException>(() => controller.Update(invalid));
+            var actionResult = controller.Update(invalid);
+            var notFound = actionResult.Result as NotFoundObjectResult;
+
+            notFound.ShouldNotBeNull();
+            notFound!.StatusCode.ShouldBe(404);
         }
 
         [Fact]
         public void Deletes()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, "1");
             var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
             dbContext.TourPreferences.RemoveRange(dbContext.TourPreferences);
@@ -194,31 +206,55 @@ namespace Explorer.Stakeholders.Tests.Integration
             var created = createOk?.Value as TourPreferencesDto;
             created.ShouldNotBeNull();
 
-            var actionResult = controller.Delete(created!.Id);   
-            var okResult = actionResult as OkResult;
+            var actionResult = controller.Delete();
+            var noContent = actionResult as NoContentResult;
 
-            okResult.ShouldNotBeNull();
-            okResult!.StatusCode.ShouldBe(200);
+            noContent.ShouldNotBeNull();
+            noContent!.StatusCode.ShouldBe(204);
 
-            var stored = dbContext.TourPreferences.SingleOrDefault(tp => tp.Id == created.Id);
+            var stored = dbContext.TourPreferences.SingleOrDefault(tp => tp.Id == created!.Id);
             stored.ShouldBeNull();
         }
 
         [Fact]
-        public void Delete_fails_invalid_id()
+        public void Delete_when_no_preferences_still_returns_no_content()
         {
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, "1");
+            var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-            Should.Throw<NotFoundException>(() => controller.Delete(-1000));
+            dbContext.TourPreferences.RemoveRange(dbContext.TourPreferences);
+            dbContext.SaveChanges();
+
+            var actionResult = controller.Delete();
+            var noContent = actionResult as NoContentResult;
+
+            noContent.ShouldNotBeNull();
+            noContent!.StatusCode.ShouldBe(204);
         }
 
-        private static TourPreferencesController CreateController(IServiceScope scope)
+        private static TourPreferencesController CreateController(IServiceScope scope, string touristId)
         {
-            return new TourPreferencesController(scope.ServiceProvider.GetRequiredService<ITourPreferencesService>())
+            var controller = new TourPreferencesController(
+                scope.ServiceProvider.GetRequiredService<ITourPreferencesService>());
+
+            var user = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, touristId),
+                    new Claim("id", touristId),
+                    new Claim(ClaimTypes.Role, "tourist")
+                }, "TestAuth"));
+
+            controller.ControllerContext = new ControllerContext
             {
-                ControllerContext = BuildContext("1")
+                HttpContext = new DefaultHttpContext
+                {
+                    User = user
+                }
             };
+
+            return controller;
         }
     }
 }
