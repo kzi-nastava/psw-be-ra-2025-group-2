@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
@@ -28,20 +25,59 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var entity = _repository.GetByTouristId(touristId);
             if (entity == null) return null;
-
             return _mapper.Map<TourPreferencesDto>(entity);
         }
 
         public TourPreferencesDto Create(TourPreferencesDto dto)
         {
-            var entity = _mapper.Map<TourPreferences>(dto);
+            // Validacija
+            ValidateDifficulty(dto.PreferredDifficulty);
+            ValidateScore(dto.WalkingScore, nameof(dto.WalkingScore));
+            ValidateScore(dto.BicycleScore, nameof(dto.BicycleScore));
+            ValidateScore(dto.CarScore, nameof(dto.CarScore));
+            ValidateScore(dto.BoatScore, nameof(dto.BoatScore));
+
+            // Kreiraj entity
+            var entity = new TourPreferences(
+                dto.TouristId, // postavljen u Controller-u iz tokena
+                (TourDifficulty)dto.PreferredDifficulty,
+                dto.WalkingScore,
+                dto.BicycleScore,
+                dto.CarScore,
+                dto.BoatScore,
+                dto.Tags ?? new List<string>()
+            );
+
             var created = _repository.Create(entity);
             return _mapper.Map<TourPreferencesDto>(created);
         }
 
         public TourPreferencesDto Update(TourPreferencesDto dto)
         {
-            var entity = _mapper.Map<TourPreferences>(dto);
+            // Validacija
+            ValidateDifficulty(dto.PreferredDifficulty);
+            ValidateScore(dto.WalkingScore, nameof(dto.WalkingScore));
+            ValidateScore(dto.BicycleScore, nameof(dto.BicycleScore));
+            ValidateScore(dto.CarScore, nameof(dto.CarScore));
+            ValidateScore(dto.BoatScore, nameof(dto.BoatScore));
+
+            // Učitaj postojeći entity
+            var entity = _repository.GetByTouristId(dto.TouristId);
+            if (entity == null || entity.Id != dto.Id)
+            {
+                throw new InvalidOperationException("Preferences not found.");
+            }
+
+            // Update
+            entity.Update(
+                (TourDifficulty)dto.PreferredDifficulty,
+                dto.WalkingScore,
+                dto.BicycleScore,
+                dto.CarScore,
+                dto.BoatScore,
+                dto.Tags ?? new List<string>()
+            );
+
             var updated = _repository.Update(entity);
             return _mapper.Map<TourPreferencesDto>(updated);
         }
@@ -49,6 +85,22 @@ namespace Explorer.Stakeholders.Core.UseCases
         public void Delete(long id)
         {
             _repository.Delete(id);
+        }
+
+        private void ValidateDifficulty(int difficulty)
+        {
+            if (difficulty < 0 || difficulty > 2)
+            {
+                throw new ArgumentException("Preferred difficulty must be 0 (Easy), 1 (Medium), or 2 (Hard).");
+            }
+        }
+
+        private void ValidateScore(int score, string paramName)
+        {
+            if (score < 0 || score > 3)
+            {
+                throw new ArgumentException($"{paramName} must be between 0 and 3.", paramName);
+            }
         }
     }
 }
