@@ -41,12 +41,11 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new KeyNotFoundException($"Rating with ID {dto.Id} not found.");
             }
 
-            _mapper.Map(dto, ratingToUpdate);
+            ratingToUpdate.Update(dto.Score, dto.Comment);
 
             ratingToUpdate.SetUpdatedAt();
 
             var result = _repository.Update(ratingToUpdate);
-
             return _mapper.Map<AppRatingDto>(result);
         }
 
