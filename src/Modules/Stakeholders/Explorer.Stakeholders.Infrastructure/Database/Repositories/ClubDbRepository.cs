@@ -28,7 +28,10 @@ public class ClubDbRepository : IClubRepository
 
     public Club Get(long id)
     {
-        var entity = _dbSet.Find(id);
+        var entity = _dbSet
+            .AsNoTracking()
+            .FirstOrDefault(c => c.Id == id);
+
         if (entity == null) throw new NotFoundException("Club not found: " + id);
         return entity;
     }
@@ -61,10 +64,14 @@ public class ClubDbRepository : IClubRepository
 
     public void Delete(long id)
     {
-        var entity = Get(id);
+        var entity = _dbSet.Find(id);
+        if (entity == null)
+            throw new NotFoundException("Club not found: " + id);
+
         _dbSet.Remove(entity);
         DbContext.SaveChanges();
     }
+
     
     public List<Club> GetAll()
     {

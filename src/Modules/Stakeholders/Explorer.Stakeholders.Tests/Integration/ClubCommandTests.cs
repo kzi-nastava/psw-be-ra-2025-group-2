@@ -6,6 +6,8 @@ using Explorer.Stakeholders.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Explorer.Stakeholders.Tests.Integration;
 
@@ -21,11 +23,27 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+
+        // "ulogovani" korisnik (turista) sa ID -21
+        var userId = -21;
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
         var newEntity = new ClubDto
         {
             Name = "Test klub",
             Description = "Opis test kluba",
-            OwnerId = -21,
+            // OwnerId više ne moraš da setuješ, kontroler ga ignoriše i postavlja na userId
             ImageUrls = new List<string> { "test-image.jpg" }
         };
 
@@ -37,12 +55,14 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(0);
         result.Name.ShouldBe(newEntity.Name);
+        result.OwnerId.ShouldBe(userId);  // vlasnik je ulogovani korisnik
 
         // Assert - Database
         var storedEntity = dbContext.Clubs.FirstOrDefault(c => c.Id == result.Id);
         storedEntity.ShouldNotBeNull();
         storedEntity.Id.ShouldBe(result.Id);
         storedEntity.Name.ShouldBe(newEntity.Name);
+        storedEntity.OwnerId.ShouldBe(userId);
     }
 
 
@@ -52,9 +72,25 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
+
+        // >>> Dodajemo "ulogovanog" korisnika da GetCurrentUserId ne puca
+        var userId = -21; // neki postojeći turista iz test podataka
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
         var invalid = new ClubDto
         {
-            // nema Name, a očekujemo da servis baci grešku
+            // nema Name, a očekujemo da servis/entitet baci grešku
             Description = "Opis bez imena"
         };
 
@@ -62,62 +98,97 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         Should.Throw<ArgumentException>(() => controller.Create(invalid));
     }
 
-    [Fact]
-    public void Updates()
+
+[Fact]
+public void Updates()
+{
+    long idToUpdate;
+    var userId = -21;   // turista koji je vlasnik
+
+    // 1) Kreiranje kluba
+    using (var createScope = Factory.Services.CreateScope())
     {
-        long idToUpdate;
-        
-        using (var createScope = Factory.Services.CreateScope())
+        var createController = CreateController(createScope);
+
+        // Ulogovani korisnik za create
+        createController.ControllerContext = new ControllerContext
         {
-            var createController = CreateController(createScope);
-
-            var created = createController.Create(new ClubDto
+            HttpContext = new DefaultHttpContext
             {
-                Name = "Klub za izmenu",
-                Description = "Originalni opis",
-                OwnerId = -21,
-                ImageUrls = new List<string> { "original.jpg" }
-            });
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
 
-            var createdResult = (created.Result as OkObjectResult)?.Value as ClubDto;
-            createdResult.ShouldNotBeNull();
-            createdResult.Id.ShouldNotBe(0);
-
-            idToUpdate = createdResult.Id;
-        }
-
-        
-        using (var updateScope = Factory.Services.CreateScope())
+        var created = createController.Create(new ClubDto
         {
-            var controller = CreateController(updateScope);
-            var dbContext = updateScope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+            Name = "Klub za izmenu",
+            Description = "Originalni opis",
+            // OwnerId NE moraš da šalješ – kontroler ga postavlja na userId
+            ImageUrls = new List<string> { "original.jpg" }
+        });
 
-            var updated = new ClubDto
-            {
-                Id = idToUpdate,
-                Name = "Izmenjeni klub",
-                Description = "Izmenjeni opis",
-                OwnerId = -21,
-                ImageUrls = new List<string> { "updated-image.jpg" }
-            };
+        var createdResult = (created.Result as OkObjectResult)?.Value as ClubDto;
+        createdResult.ShouldNotBeNull();
+        createdResult.Id.ShouldNotBe(0);
+        createdResult.OwnerId.ShouldBe(userId);
 
-            // Act
-            var actionResult = controller.Update(idToUpdate, updated);
-            var result = (actionResult.Result as OkObjectResult)?.Value as ClubDto;
-
-            // Assert - Response
-            result.ShouldNotBeNull();
-            result.Id.ShouldBe(idToUpdate);
-            result.Name.ShouldBe(updated.Name);
-            result.Description.ShouldBe(updated.Description);
-
-            // Assert - Database
-            var stored = dbContext.Clubs.FirstOrDefault(c => c.Id == idToUpdate);
-            stored.ShouldNotBeNull();
-            stored.Name.ShouldBe(updated.Name);
-            stored.Description.ShouldBe(updated.Description);
-        }
+        idToUpdate = createdResult.Id;
     }
+
+    // 2) Izmena istog kluba kao isti korisnik
+    using (var updateScope = Factory.Services.CreateScope())
+    {
+        var controller = CreateController(updateScope);
+        var dbContext = updateScope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+
+        // Ulogovani korisnik za update (isti vlasnik)
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
+        var updated = new ClubDto
+        {
+            Id = idToUpdate,
+            Name = "Izmenjeni klub",
+            Description = "Izmenjeni opis",
+            // OwnerId se opet ignoriše u kontroleru, ali može da stoji
+            ImageUrls = new List<string> { "updated-image.jpg" }
+        };
+
+        // Act
+        var actionResult = controller.Update(idToUpdate, updated);
+        var result = (actionResult.Result as OkObjectResult)?.Value as ClubDto;
+
+        // Assert - Response
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(idToUpdate);
+        result.Name.ShouldBe(updated.Name);
+        result.Description.ShouldBe(updated.Description);
+        result.OwnerId.ShouldBe(userId);
+
+        // Assert - Database
+        var stored = dbContext.Clubs.FirstOrDefault(c => c.Id == idToUpdate);
+        stored.ShouldNotBeNull();
+        stored.Name.ShouldBe(updated.Name);
+        stored.Description.ShouldBe(updated.Description);
+        stored.OwnerId.ShouldBe(userId);
+    }
+}
+
 
 
 
@@ -127,18 +198,36 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
+
+        // "ulogovani" korisnik (turista)
+        var userId = -21;
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
         var updated = new ClubDto
         {
             Id = -1000,                     // ne postoji u bazi
             Name = "Nepostojeci klub",
             Description = "Opis nepostojeceg kluba",
-            OwnerId = -21,                  // postoji u Users (turista1)
-            ImageUrls = new List<string> { "nepostojeci.jpg" }  // bar jedna slika
+            // OwnerId ne moraš da setuješ – kontroler ga postavlja na userId
+            ImageUrls = new List<string> { "nepostojeci.jpg" }
         };
 
         // Act & Assert
+        // _clubService.Get(-1000) -> repo baca NotFoundException
         Should.Throw<NotFoundException>(() => controller.Update(updated.Id, updated));
     }
+
 
 
     [Fact]
@@ -149,27 +238,46 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         var controller = CreateController(scope);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
+        // "ulogovani" korisnik – vlasnik kluba
+        var userId = -21;
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
         var newEntity = new ClubDto
         {
             Name = "Klub za brisanje",
             Description = "Ovaj klub je kreiran u testu da bi bio obrisan.",
-            OwnerId = -21,
+            // OwnerId više ne moraš da setaš – kontroler ga postavlja na userId
             ImageUrls = new List<string> { "delete-me.jpg" }
         };
 
-        // prvo GA KREIRAMO
-        var createResult = (controller.Create(newEntity).Result as OkObjectResult)?.Value as ClubDto;
-        createResult.ShouldNotBeNull();
-        createResult.Id.ShouldNotBe(0);
+        // prvo ga KREIRAMO
+        var createActionResult = controller.Create(newEntity);
+        var created = (createActionResult.Result as OkObjectResult)?.Value as ClubDto;
 
-        var idToDelete = createResult.Id;
+        created.ShouldNotBeNull();
+        created.Id.ShouldNotBe(0);
+        created.OwnerId.ShouldBe(userId);
+
+        var idToDelete = created.Id;
 
         // Act - brišemo taj klub
-        var deleteResult = controller.Delete(idToDelete) as OkResult;
+        var deleteActionResult = controller.Delete(idToDelete);
+        var deleteResult = deleteActionResult as NoContentResult; // jer Delete sada radi return NoContent();
 
         // Assert - Response
         deleteResult.ShouldNotBeNull();
-        deleteResult.StatusCode.ShouldBe(200);
+        deleteResult.StatusCode.ShouldBe(204);
 
         // Assert - Database
         var stored = dbContext.Clubs.FirstOrDefault(c => c.Id == idToDelete);
@@ -184,7 +292,23 @@ public class ClubCommandTests : BaseStakeholdersIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
+        // "ulogovani" korisnik (turista), bitan je samo da postoji claim "id"
+        var userId = -21;
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
         // Act & Assert
+        // -1000 ne postoji → _clubService.Get(id) → repo baca NotFoundException
         Should.Throw<NotFoundException>(() => controller.Delete(-1000));
     }
 

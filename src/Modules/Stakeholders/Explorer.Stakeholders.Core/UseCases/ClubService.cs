@@ -18,6 +18,13 @@ namespace Explorer.Stakeholders.Core.UseCases
             _clubRepository = clubRepository;
             _mapper = mapper;
         }
+        
+        public ClubDto Get(long id)
+        {
+            var club = _clubRepository.Get(id); 
+            return club == null ? null : _mapper.Map<ClubDto>(club);
+        }
+
 
         public ClubDto Create(ClubDto club)
         {

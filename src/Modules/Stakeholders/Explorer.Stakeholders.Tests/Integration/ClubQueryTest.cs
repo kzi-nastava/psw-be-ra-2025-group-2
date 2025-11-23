@@ -5,6 +5,10 @@ using Explorer.Stakeholders.API.Public;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
 
 namespace Explorer.Stakeholders.Tests.Integration;
 
@@ -20,12 +24,26 @@ public class ClubQueryTests : BaseStakeholdersIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-       
+        // "Ulogovani" turista
+        var userId = -21;
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(
+                    new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", userId.ToString()),
+                        new Claim(ClaimTypes.Role, "tourist")
+                    }, "TestAuth"))
+            }
+        };
+
         var createdResult = controller.Create(new ClubDto
         {
             Name = "Klub za pretragu",
             Description = "Opis kluba za test Retrieves_all",
-            OwnerId = -21,
+            // OwnerId ne moraš, kontroler ga postavlja na userId iz tokena
             ImageUrls = new List<string> { "retrieves-all.jpg" }
         });
 
@@ -33,7 +51,7 @@ public class ClubQueryTests : BaseStakeholdersIntegrationTest
         created.ShouldNotBeNull();
         created.Id.ShouldNotBe(0);
 
-       
+        // Act
         var actionResult = controller.GetAll();
         var okResult = actionResult.Result as OkObjectResult;
         var result = okResult?.Value as List<ClubDto>;
@@ -45,6 +63,7 @@ public class ClubQueryTests : BaseStakeholdersIntegrationTest
         // proverimo da je baš taj koji smo kreirali u listi
         result.Any(c => c.Id == created.Id && c.Name == created.Name).ShouldBeTrue();
     }
+
 
 
     private static ClubsController CreateController(IServiceScope scope)

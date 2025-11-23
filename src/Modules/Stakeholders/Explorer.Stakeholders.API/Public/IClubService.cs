@@ -9,5 +9,6 @@ namespace Explorer.Stakeholders.API.Public
         ClubDto Update(ClubDto club);
         void Delete(long id);
         List<ClubDto> GetAll();
+        ClubDto Get(long id);
     }
 }
