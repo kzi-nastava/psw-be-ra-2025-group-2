@@ -30,6 +30,7 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
         services.AddScoped<IAppRatingService, AppRatingService>();
+        services.AddScoped<IPersonService, PersonService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
