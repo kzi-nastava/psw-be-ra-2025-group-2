@@ -66,7 +66,7 @@ namespace Explorer.API.Controllers.Tourist
             long userId = User.PersonId();
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            if (role == "tourist")
+            if (role == "tourist" || role == "author")
             {
                 var result = _appRatingService.GetPagedByUserId(userId, page, pageSize);
                 return Ok(result);
