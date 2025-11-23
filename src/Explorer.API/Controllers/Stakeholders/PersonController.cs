@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Stakeholders;
 
-[Authorize]   // korisnik mora biti ulogovan, prilagodi ako imaš specifične role
+[Authorize]
 [ApiController]
 [Route("api/person")]
 public class PersonController : ControllerBase
@@ -17,19 +17,56 @@ public class PersonController : ControllerBase
         _service = service;
     }
 
-    [HttpGet("{userId:long}")]
-    public ActionResult<PersonProfileDto> GetProfile(long userId)
+    [HttpGet]
+    public ActionResult<PersonProfileDto> GetProfile()
     {
-        //TODO trenutno korisnik moze da pogleda svaciji profil, pretpostavljam to nije okej
+        var personId = GetPersonId();
+        if (!personId.HasValue)
+            return Unauthorized("Missing or invalid personId claim.");
 
-        return Ok(_service.GetProfile(userId));
+        try
+        {
+            var profile = _service.GetProfile(personId.Value);
+            if (profile == null)
+                return NotFound("Person profile not found.");
+
+            return Ok(profile);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
-    [HttpPut("{userId:long}")]
-    public ActionResult<PersonProfileDto> UpdateProfile(long userId, [FromBody] UpdatePersonProfileDto dto)
+    [HttpPut]
+    public ActionResult<PersonProfileDto> UpdateProfile([FromBody] PersonProfileDto dto)
     {
-        //TODO trenutno korisnik moze da menja svaciji profil, pretpostavljam to nije okej
+        var personId = GetPersonId();
+        if (!personId.HasValue)
+            return Unauthorized("Missing or invalid personId claim.");
 
-        return Ok(_service.UpdateProfile(userId, dto));
+        try
+        {
+            var updated = _service.UpdateProfile(personId.Value, dto);
+            if (updated == null)
+                return NotFound("Failed to update profile.");
+
+            return Ok(updated);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    private long? GetPersonId()
+    {
+        var claim = User.Claims.FirstOrDefault(c => c.Type == "personId");
+        if (claim == null) return null;
+
+        if (long.TryParse(claim.Value, out var id))
+            return id;
+
+        return null;
     }
 }

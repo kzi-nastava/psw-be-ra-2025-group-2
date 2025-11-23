@@ -29,13 +29,14 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<PersonProfileDto>(person);
         }
 
-        public PersonProfileDto UpdateProfile(long userId, UpdatePersonProfileDto dto)
+        public PersonProfileDto UpdateProfile(long userId, PersonProfileDto dto)
         {
             var person = _repo.GetByUserId(userId);
 
             if (person == null) throw new Exception("Person not found");
 
             _mapper.Map(dto, person);
+            person.Validate();
 
             _repo.Update(person);
             return _mapper.Map<PersonProfileDto>(person);

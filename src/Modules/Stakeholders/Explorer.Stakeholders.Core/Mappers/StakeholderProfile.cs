@@ -9,10 +9,9 @@ public class StakeholderProfile : Profile
     public StakeholderProfile()
     {
         CreateMap<Person, PersonProfileDto>();
-        CreateMap<UpdatePersonProfileDto, Person>()
-            .ForMember(dest => dest.UserId, opt => opt.Ignore())
-            .ForMember(dest => dest.Email, opt => opt.Ignore())
-            .ForMember(dest => dest.Name, opt => opt.Ignore())
-            .ForMember(dest => dest.Surname, opt => opt.Ignore());
+        CreateMap<PersonProfileDto, Person>()
+    .ForMember(dest => dest.UserId, opt => opt.Ignore())
+    .ForMember(dest => dest.Email, opt => opt.Ignore());
+        CreateMap<AuthorAwardsDto, AuthorAwards>().ReverseMap();
     }
 }

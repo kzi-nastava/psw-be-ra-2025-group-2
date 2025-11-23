@@ -1,8 +1,10 @@
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
 using Explorer.Stakeholders.Core.UseCases;
+using Explorer.Stakeholders.Core.UseCases.Administration;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Stakeholders.Infrastructure.Database.Repositories;
@@ -24,10 +26,12 @@ public static class StakeholdersStartup
 
     private static void SetupCore(IServiceCollection services)
     {
+        services.AddScoped<IAuthorAwardsService, AuthorAwardsService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
         services.AddScoped<IMeetupService, MeetupService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
+        services.AddScoped<IPersonService, PersonService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -35,6 +39,7 @@ public static class StakeholdersStartup
         services.AddScoped<IPersonRepository, PersonDbRepository>();
         services.AddScoped<IUserRepository, UserDbRepository>();
         services.AddScoped<IMeetupRepository, MeetupDbRepository>();
+        services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
