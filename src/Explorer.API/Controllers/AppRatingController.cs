@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Explorer.API.Controllers.Tourist
+namespace Explorer.API.Controllers
 {
     [Authorize(Roles = "author, tourist, administrator")]
     [Route("api/app-ratings")]
@@ -20,7 +20,7 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpGet]
-        [Authorize(Roles = "administrator")] 
+        [Authorize(Roles = "administrator")]
         public ActionResult<PagedResult<AppRatingDto>> GetAll([FromQuery] int page, [FromQuery] int pageSize)
         {
             var result = _appRatingService.GetPaged(page, pageSize);
@@ -38,12 +38,19 @@ namespace Explorer.API.Controllers.Tourist
 
 
         [HttpPost]
-        [Authorize(Roles = "author, tourist")] 
+        [Authorize(Roles = "author, tourist")]
         public ActionResult<AppRatingDto> Create([FromBody] AppRatingDto appRating)
         {
-            appRating.UserId = User.PersonId();
-            var result = _appRatingService.Create(appRating);
-            return Ok(result);
+            try
+            {
+                appRating.UserId = User.PersonId();
+                var result = _appRatingService.Create(appRating);
+                return Ok(result);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpPut("{id:long}")]

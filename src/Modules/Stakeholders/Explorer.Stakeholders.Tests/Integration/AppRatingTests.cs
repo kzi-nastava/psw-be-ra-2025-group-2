@@ -1,4 +1,4 @@
-﻿using Explorer.API.Controllers.Tourist;
+﻿using Explorer.API.Controllers;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Infrastructure.Database;
@@ -117,18 +117,18 @@ namespace Explorer.Stakeholders.Tests.Integration
             result.TotalCount.ShouldBe(2);
         }
 
-        private static Explorer.API.Controllers.Tourist.AppRatingController CreateTouristController(IServiceScope scope, string personId)
+        private static AppRatingController CreateTouristController(IServiceScope scope, string personId)
         {
-            return new Explorer.API.Controllers.Tourist.AppRatingController(
+            return new Explorer.API.Controllers.AppRatingController(
                 scope.ServiceProvider.GetRequiredService<API.Public.IAppRatingService>())
             {
                 ControllerContext = BuildContext(personId) 
             };
         }
 
-        private static Explorer.API.Controllers.Tourist.AppRatingController CreateTouristControllerWithRole(IServiceScope scope, string personId, string role)
+        private static AppRatingController CreateTouristControllerWithRole(IServiceScope scope, string personId, string role)
         {
-            return new Explorer.API.Controllers.Tourist.AppRatingController(
+            return new Explorer.API.Controllers.AppRatingController(
                 scope.ServiceProvider.GetRequiredService<API.Public.IAppRatingService>())
             {
                 ControllerContext = BuildContextWithRole(personId, role)

@@ -21,9 +21,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 
         public AppRating Get(long id)
         {
-            var entity = _dbContext.AppRatings.FirstOrDefault(r => r.Id == id);
-            if (entity == null) throw new KeyNotFoundException("Not found: " + id);
-            return entity;
+            return _dbContext.AppRatings.FirstOrDefault(r => r.Id == id);
         }
         public AppRating Create(AppRating entity)
         {
