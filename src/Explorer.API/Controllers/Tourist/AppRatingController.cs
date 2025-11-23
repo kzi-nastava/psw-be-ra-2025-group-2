@@ -34,30 +34,44 @@ namespace Explorer.API.Controllers.Tourist
         public ActionResult<AppRatingDto> Update(long id, [FromBody] AppRatingDto appRating)
         {
             appRating.Id = id;
-            appRating.UserId = User.PersonId();
+            long userId = User.PersonId();
+            string userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             try
             {
-                var result = _appRatingService.Update(appRating);
+                var result = _appRatingService.Update(appRating, userId, userRole);
                 return Ok(result);
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException e)
             {
-                return NotFound($"Rating with ID {id} not found.");
+                return NotFound(e.Message);
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException e)
             {
-                return StatusCode(500, "A server error occurred: " + ex.Message);
+                return Forbid(e.Message); 
             }
         }
 
         [HttpDelete("{id:long}")]
         public ActionResult Delete(long id)
         {
-            _appRatingService.Delete(id);
-            return Ok();
-        }
+            long userId = User.PersonId();
+            string userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
+            try
+            {
+                _appRatingService.Delete(id, userId, userRole);
+                return Ok();
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                return Forbid(e.Message); 
+            }
+        }
 
 
         [HttpGet]

@@ -7,13 +7,10 @@ namespace Explorer.Stakeholders.API.Public
     public interface IAppRatingService
     {
         AppRatingDto Create(AppRatingDto dto);
-        AppRatingDto Update(AppRatingDto dto);
-        void Delete(long id);
+        AppRatingDto Update(AppRatingDto dto, long userId, string userRole); 
+        void Delete(long id, long userId, string userRole); 
         IEnumerable<AppRatingDto> GetByUserId(long userId);
-
         PagedResult<AppRatingDto> GetPaged(int page, int pageSize);
-
         PagedResult<AppRatingDto> GetPagedByUserId(long userId, int page, int pageSize);
-
     }
 }

@@ -32,7 +32,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<AppRatingDto>(result);
         }
 
-        public AppRatingDto Update(AppRatingDto dto)
+        public AppRatingDto Update(AppRatingDto dto, long userId, string userRole)
         {
             var ratingToUpdate = _repository.Get(dto.Id);
 
@@ -41,16 +41,32 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new KeyNotFoundException($"Rating with ID {dto.Id} not found.");
             }
 
-            ratingToUpdate.Update(dto.Score, dto.Comment);
+            if (ratingToUpdate.UserId != userId && userRole != "administrator")
+            {
+                throw new UnauthorizedAccessException("You are not authorized to update this rating.");
+            }
 
+            ratingToUpdate.Update(dto.Score, dto.Comment);
             ratingToUpdate.SetUpdatedAt();
 
             var result = _repository.Update(ratingToUpdate);
             return _mapper.Map<AppRatingDto>(result);
         }
 
-        public void Delete(long id)
+        public void Delete(long id, long userId, string userRole)
         {
+            var ratingToDelete = _repository.Get(id);
+
+            if (ratingToDelete == null)
+            {
+                throw new KeyNotFoundException($"Rating with ID {id} not found.");
+            }
+
+            if (ratingToDelete.UserId != userId && userRole != "administrator")
+            {
+                throw new UnauthorizedAccessException("You are not authorized to delete this rating.");
+            }
+
             _repository.Delete(id);
         }
 
