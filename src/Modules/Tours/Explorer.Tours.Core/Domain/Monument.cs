@@ -26,13 +26,13 @@ public class Monument : Entity
         if (string.IsNullOrWhiteSpace(Name)) throw new ArgumentException("Invalid Name.");
         if (string.IsNullOrWhiteSpace(Description)) throw new ArgumentException("Invalid Description.");
         if (YearOfCreation > 2025) throw new ArgumentException("Invalid year of creation.");
-        if (Latitude < 0 && Latitude > 90) throw new ArgumentException("Invalid Latitude.");
-        if (Longitude < 0 && Longitude > 180) throw new ArgumentException("Invalid Longitude.");
+        if (Latitude < -90 || Latitude > 90) throw new ArgumentException("Invalid Latitude.");
+        if (Longitude < -180 || Longitude > 180) throw new ArgumentException("Invalid Longitude.");
     }
+}
 
-    public enum MonumentState
-    {
-        ACTIVE,
-        INACTIVE
-    }
+public enum MonumentState
+{
+    ACTIVE,
+    INACTIVE
 }

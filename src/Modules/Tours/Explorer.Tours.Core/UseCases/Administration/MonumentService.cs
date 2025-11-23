@@ -42,12 +42,4 @@ public class MonumentService : IMonumentService
     {
         _monumentRepository.Delete(id);
     }
-
-    private void Validate(MonumentDto entity)
-    {
-        if (entity.YearOfCreation < DateTime.Today.Year)
-        {
-            throw new EntityValidationException("Invalid year.");
-        }
-    }
 }

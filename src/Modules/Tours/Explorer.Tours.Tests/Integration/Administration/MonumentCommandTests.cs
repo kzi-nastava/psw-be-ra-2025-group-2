@@ -33,7 +33,7 @@ public class MonumentCommandTests : BaseToursIntegrationTest
             Name = "Pobednik",
             Description = "Simbol Beograda",
             YearOfCreation = 1928,
-            State = MonumentDto.MonumentState.ACTIVE,
+            State = "ACTIVE",
             Latitude = 44.78f,
             Longitude = 20.45f
         };
@@ -72,6 +72,46 @@ public class MonumentCommandTests : BaseToursIntegrationTest
     }
 
     [Fact]
+    public void Create_fails_invalid_latitude()
+    {
+        // Arrange
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope);
+        var updatedEntity = new MonumentDto
+        {
+            Name = "Pobednik",
+            Description = "Simbol Beograda",
+            YearOfCreation = 1928,
+            State = "ACTIVE",
+            Latitude = -244.78f,
+            Longitude = 20.45f
+        };
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => controller.Create(updatedEntity));
+    }
+
+    [Fact]
+    public void Create_fails_invalid_longitude()
+    {
+        // Arrange
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope);
+        var updatedEntity = new MonumentDto
+        {
+            Name = "Pobednik",
+            Description = "Simbol Beograda",
+            YearOfCreation = 1928,
+            State = "ACTIVE",
+            Latitude = 44.78f,
+            Longitude = -220.45f
+        };
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => controller.Create(updatedEntity));
+    }
+
+    [Fact]
     public void Updates()
     {
         using var scope = Factory.Services.CreateScope();
@@ -83,7 +123,7 @@ public class MonumentCommandTests : BaseToursIntegrationTest
             Name = "Spomenik Karađorđu",
             Description = "Test",
             YearOfCreation = 1913,
-            State = MonumentDto.MonumentState.ACTIVE,
+            State = "ACTIVE",
             Latitude = 44.78f,
             Longitude = 20.45f
         };
@@ -122,7 +162,7 @@ public class MonumentCommandTests : BaseToursIntegrationTest
             Name = "Nepostojeci spomenik",
             Description = "Validan opis",
             YearOfCreation = 1900,
-            State = MonumentDto.MonumentState.ACTIVE,
+            State = "ACTIVE",
             Latitude = 44,
             Longitude = 20
         };

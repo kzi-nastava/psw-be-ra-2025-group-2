@@ -29,4 +29,16 @@
     <ProjectReference Include="..\..\..\Explorer.API\Explorer.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\a-delete.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\b-equipment.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\c-monument.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Explorer.API.Controllers.Administrator.Administration;
 
 [Authorize(Policy = "administratorPolicy")]
-[Route("api/administration/monument")]
+[Route("api/administration/monuments")]
 [ApiController]
 public class MonumentController : ControllerBase
 {
