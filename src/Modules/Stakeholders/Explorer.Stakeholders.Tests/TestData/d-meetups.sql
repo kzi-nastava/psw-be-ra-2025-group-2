@@ -1,5 +1,5 @@
 INSERT INTO stakeholders."Meetups"(
-    "Id", "Name", "Description", "Date", "Latitude", "Longitude", "CreatedByUserId"
+    "Id", "Name", "Description", "Date", "Latitude", "Longitude", "CreatorId"
 ) VALUES 
 (-101, 'Winter Networking Meetup', 'Meetup for winter season', '2025-02-01 10:00:00', 44.7866, 20.4489, -11),
 (-102, 'IT Professionals Gathering', 'Tech meetup in markdown **format**', '2025-03-12 18:30:00', 45.2671, 19.8335, -21),

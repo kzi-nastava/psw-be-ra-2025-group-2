@@ -42,7 +42,7 @@ public class Meetup : Entity
         if (Longitude < -180 || Longitude > 180)
             throw new ArgumentException("Invalid Longitude");
 
-        if (CreatorId <= 0)
+        if (CreatorId == 0)
             throw new ArgumentException("Invalid CreatorId");
     }
 }

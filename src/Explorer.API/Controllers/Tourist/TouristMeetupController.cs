@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
 namespace Explorer.API.Controllers.Tourist;
-
 [Authorize(Policy = "touristPolicy")]
 [Route("api/tourist/meetups")]
 [ApiController]
