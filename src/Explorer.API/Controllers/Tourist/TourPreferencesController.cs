@@ -20,7 +20,6 @@ public class TourPreferencesController : ControllerBase
 
     private long GetAuthenticatedTouristId()
     {
-        // Proveri različite claim tipove koje JWT može da koristi
         var claim = User.Claims.FirstOrDefault(c =>
             c.Type == ClaimTypes.NameIdentifier || 
             c.Type == "id" ||                      
@@ -29,7 +28,6 @@ public class TourPreferencesController : ControllerBase
 
         if (claim == null || !long.TryParse(claim.Value, out long touristId))
         {
-            // Loguj sve claims za debugging
             var allClaims = string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
             throw new UnauthorizedAccessException($"Invalid token. Available claims: {allClaims}");
         }
@@ -115,24 +113,24 @@ public class TourPreferencesController : ControllerBase
     }
 
     [HttpDelete]
-    public ActionResult Delete()
+    public IActionResult Delete()
     {
         try
         {
             var touristId = GetAuthenticatedTouristId();
 
             var existing = _tourPreferencesService.GetByTourist(touristId);
-            if (existing == null)
+            if (existing != null)
             {
-                return NotFound("You don't have any preferences to delete.");
+                _tourPreferencesService.Delete(existing.Id);
             }
 
-            _tourPreferencesService.Delete(existing.Id);
-            return Ok("Preferences deleted successfully.");
+            return NoContent(); // HTTP 204
         }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(ex.Message);
         }
     }
+
 }

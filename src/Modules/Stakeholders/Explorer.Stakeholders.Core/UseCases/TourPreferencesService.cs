@@ -61,7 +61,6 @@ namespace Explorer.Stakeholders.Core.UseCases
             ValidateScore(dto.CarScore, nameof(dto.CarScore));
             ValidateScore(dto.BoatScore, nameof(dto.BoatScore));
 
-            // Učitaj postojeći entity
             var entity = _repository.GetByTouristId(dto.TouristId);
             if (entity == null || entity.Id != dto.Id)
             {
