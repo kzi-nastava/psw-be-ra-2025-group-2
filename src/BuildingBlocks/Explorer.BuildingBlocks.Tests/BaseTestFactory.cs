@@ -35,6 +35,7 @@ public abstract class BaseTestFactory<TDbContext> : WebApplicationFactory<Progra
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+
             var databaseCreator = context.Database.GetService<IRelationalDatabaseCreator>();
             databaseCreator.CreateTables();
         }
