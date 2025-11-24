@@ -36,7 +36,21 @@
     <None Update="TestData\b-equipment.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\b-users.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\c-monument.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\c-people.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  
+    <None Update="TestData\c-touristequipment.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  
+    <None Update="TestData\c-touristobject.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

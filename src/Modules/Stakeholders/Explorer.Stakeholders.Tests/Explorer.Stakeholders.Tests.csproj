@@ -10,6 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="TestData\d-app-ratings.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="TestData\d-app-ratings.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </ApplicationDefinition>
+  </ItemGroup>
+
+  <ItemGroup>
 	<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.20" />
 	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
 	<PackageReference Include="Shouldly" Version="4.3.0" />
@@ -27,6 +37,27 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Explorer.BuildingBlocks.Tests\Explorer.BuildingBlocks.Tests.csproj" />
     <ProjectReference Include="..\..\..\Explorer.API\Explorer.API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestData\a-delete.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\b-users.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\c-people.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\d-authorawards.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\d-clubs.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\d-tourpreferences.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

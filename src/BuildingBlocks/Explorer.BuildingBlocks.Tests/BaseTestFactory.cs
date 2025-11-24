@@ -16,7 +16,7 @@ public abstract class BaseTestFactory<TDbContext> : WebApplicationFactory<Progra
         builder.ConfigureServices(services =>
         {
             using var scope = BuildServiceProvider(services).CreateScope();
-            var scopedServices = scope.ServiceProvider;  
+            var scopedServices = scope.ServiceProvider;
             var db = scopedServices.GetRequiredService<TDbContext>();
             var logger = scopedServices.GetRequiredService<ILogger<BaseTestFactory<TDbContext>>>();
 
