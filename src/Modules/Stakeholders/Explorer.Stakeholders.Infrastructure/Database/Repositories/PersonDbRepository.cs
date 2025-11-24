@@ -15,10 +15,21 @@ public class PersonDbRepository : IPersonRepository
         _dbSet = DbContext.Set<Person>();
     }
 
-    public Person Create(Person entity)
+    public Person Create(Person person)
     {
-        _dbSet.Add(entity);
+        _dbSet.Add(person);
         DbContext.SaveChanges();
-        return entity;
+        return person;
+    }
+    public Person GetByUserId(long userId)
+    {
+        return _dbSet.FirstOrDefault(x => x.UserId == userId);
+    }
+
+    public Person Update(Person person)
+    {
+        _dbSet.Update(person);
+        DbContext.SaveChanges();
+        return person;
     }
 }

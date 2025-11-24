@@ -64,4 +64,9 @@ public class UserDbRepository : IUserRepository
         task.Wait();
         return task.Result;
     }
+
+    public User GetByPersonId(long personId)
+    {
+        return _dbContext.Users.FirstOrDefault(p => p.Id == personId);
+    }
 }

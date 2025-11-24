@@ -11,4 +11,6 @@ public interface IUserRepository
     User? GetUserByUsername(string username);
     User Update(User user);
     PagedResult<User> GetPaged(int page, int pageSize);
+
+    User GetByPersonId(long personId);
 }
