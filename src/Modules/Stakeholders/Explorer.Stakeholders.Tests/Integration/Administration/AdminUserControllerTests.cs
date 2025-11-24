@@ -47,7 +47,7 @@ public class AdminUserControllerTests : BaseStakeholdersIntegrationTest
         var controller = CreateController(scope);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-        var testUser = new User("block_test", "Password!", "block@test.com", UserRole.Author, true);
+        var testUser = new User("block_test", "Password!", UserRole.Author, true);
         dbContext.Users.Add(testUser);
         dbContext.SaveChanges();
 
@@ -66,7 +66,7 @@ public class AdminUserControllerTests : BaseStakeholdersIntegrationTest
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
         // Insert inactive user with negative ID
-        var testUser = new User("unblock_test", "Password!", "unblock@test.com", UserRole.Author, false);
+        var testUser = new User("unblock_test", "Password!", UserRole.Author, false);
         dbContext.Users.Add(testUser);
         dbContext.SaveChanges();
 

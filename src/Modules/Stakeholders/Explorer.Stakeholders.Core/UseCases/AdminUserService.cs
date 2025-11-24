@@ -24,11 +24,11 @@ public class AdminUserService : IAdminUserService
             User user;
             if (account.Role == "Administrator")
             {
-                user = _userRepository.Create(new User(account.Username, account.Password, account.Email, UserRole.Administrator, true));
+                user = _userRepository.Create(new User(account.Username, account.Password, UserRole.Administrator, true));
             }
             else if (account.Role == "Author")
             {
-                user = _userRepository.Create(new User(account.Username, account.Password, account.Email, UserRole.Author, true));
+                user = _userRepository.Create(new User(account.Username, account.Password, UserRole.Author, true));
             }
             else
             {
