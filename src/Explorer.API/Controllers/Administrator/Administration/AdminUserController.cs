@@ -3,6 +3,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.Stakeholders.API.Public;
 
 namespace Explorer.Stakeholders.API.Controllers;
 
@@ -11,9 +12,9 @@ namespace Explorer.Stakeholders.API.Controllers;
 [ApiController]
 public class AdminUserController : ControllerBase
 {
-    private readonly AdminUserService _service;
+    private readonly IAdminUserService _service;
 
-    public AdminUserController(AdminUserService service)
+    public AdminUserController(IAdminUserService service)
     {
         _service = service;
     }
