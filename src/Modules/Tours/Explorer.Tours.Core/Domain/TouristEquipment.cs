@@ -9,9 +9,12 @@ namespace Explorer.Tours.Core.Domain
 {
     public class TouristEquipment : Entity
     {
-        public int TouristId { get; init; }
-        public List<int> Equipment {  get; init; }
-        public TouristEquipment( int tourist) { }
+        public int TouristId { get; set; }
+        public List<int> Equipment {  get; set; }
+        public TouristEquipment()
+        {
+            Equipment = new List<int>();
+        }
         public TouristEquipment( int touristId, List<int> equipment) 
         {
             TouristId = touristId;

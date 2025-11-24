@@ -28,43 +28,82 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public TouristEquipmentDto Create(TouristEquipmentDto entity)
         {
+           
+            foreach (var id in entity.Equipment)
+            {
+                var eq = _equipmentRepository.Get(id);
+                if (eq == null)
+                    throw new Exception("Invalid equipment id: " + id);
+            }
+
             var result = _repository.Create(_mapper.Map<TouristEquipment>(entity));
             return _mapper.Map<TouristEquipmentDto>(result);
         }
 
-       
+
 
         public TouristEquipmentDto GetTouristEquipment(int touristId)
+{
+        var result = _repository.GetByUserId(touristId);
+
+       
+        if (result == null)
         {
-            var result = _repository.GetByUserId(touristId);
-            var resultDto = _mapper.Map<TouristEquipmentDto>(result);
-            resultDto.Equipments = new List<EquipmentDto>();
-            foreach (int id in resultDto.Equipment)
+            return new TouristEquipmentDto
             {
-                Equipment eq = _equipmentRepository.Get(id);
-                resultDto.Equipments.Add(_mapper.Map<EquipmentDto>(eq));
-            }
-            return resultDto;
+                TouristId = touristId,
+                Equipment = new List<int>(),
+                Equipments = new List<EquipmentDto>()
+            };
         }
 
-         public PagedResult<EquipmentDto> GetAllEquipment(int page, int pageSize)
+       
+        var resultDto = _mapper.Map<TouristEquipmentDto>(result);
+        resultDto.Equipments = new List<EquipmentDto>();
+
+        foreach (int id in resultDto.Equipment)
         {
+            Equipment eq = _equipmentRepository.Get(id);
+            resultDto.Equipments.Add(_mapper.Map<EquipmentDto>(eq));
+        }
+
+        return resultDto;
+    }
+
+
+        public PagedResult<EquipmentDto> GetAllEquipment(int page, int pageSize)
+        {
+            if (pageSize == 0) pageSize = int.MaxValue;
+
             var result = _equipmentRepository.GetPaged(page, pageSize);
 
             var items = result.Results.Select(_mapper.Map<EquipmentDto>).ToList();
             return new PagedResult<EquipmentDto>(items, result.TotalCount);
-        } 
+        }
 
-        /*public PagedResult<EquipmentDto> GetAllEquipment(int page, int pageSize)
-        {
-            var result = _equipmentRepository.GetPaged(page, pageSize);
-            return _mapper.Map<PagedResult<EquipmentDto>>(result);
-        }*/
 
         public TouristEquipmentDto Update(TouristEquipmentDto entity)
         {
-            var result = _repository.Update(_mapper.Map<TouristEquipment>(entity));
+            // 1) proveri da li postoji zapis za turistu
+            var existing = _repository.GetByUserId(entity.TouristId);
+            if (existing == null)
+                throw new Exception("Tourist equipment entry not found.");
+
+            // 2) validacija: svaki equipment mora da postoji
+            foreach (var id in entity.Equipment)
+            {
+                var eq = _equipmentRepository.Get(id);
+                if (eq == null)
+                    throw new Exception("Invalid equipment id: " + id);
+            }
+
+            // 3) primeni izmene na već track-ovan entitet
+            existing.Equipment = entity.Equipment;
+
+            var result = _repository.Update(existing);
             return _mapper.Map<TouristEquipmentDto>(result);
         }
+
+
     }
 }
