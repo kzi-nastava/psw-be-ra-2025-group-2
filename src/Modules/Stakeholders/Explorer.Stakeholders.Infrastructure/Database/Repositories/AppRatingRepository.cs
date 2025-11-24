@@ -19,7 +19,10 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
             return _dbContext.AppRatings.Where(r => r.UserId == userId).ToList();
         }
 
-
+        public AppRating Get(long id)
+        {
+            return _dbContext.AppRatings.FirstOrDefault(r => r.Id == id);
+        }
         public AppRating Create(AppRating entity)
         {
             _dbContext.AppRatings.Add(entity);
