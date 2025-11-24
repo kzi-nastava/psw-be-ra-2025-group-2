@@ -7,6 +7,8 @@ namespace Explorer.Tours.Infrastructure.Database;
 public class ToursContext : DbContext
 {
     public DbSet<Equipment> Equipment { get; set; }
+    public DbSet<TouristObject> TouristObject { get; set; }
+
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
