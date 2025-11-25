@@ -8,5 +8,6 @@ public class UserProfile : Profile
     public UserProfile()
     {
         CreateMap<AdminUserInfoDto, User>().ReverseMap();
+        CreateMap<User, AdminUserInfoDto>().ReverseMap();
     }
 }
