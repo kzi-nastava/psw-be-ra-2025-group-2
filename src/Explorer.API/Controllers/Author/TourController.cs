@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Author
 {
-    [ApiController]
-    [Route("api/author/tours")]
     [Authorize(Policy = "authorPolicy")]
+    [Route("api/author/tours")]
+    [ApiController]
     public class TourController : ControllerBase
     {
         private readonly ITourService _tourService;

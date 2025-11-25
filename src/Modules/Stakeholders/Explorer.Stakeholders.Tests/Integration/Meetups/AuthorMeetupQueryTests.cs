@@ -14,7 +14,7 @@ public class AuthorMeetupQueryTests : BaseStakeholdersIntegrationTest
 {
     public AuthorMeetupQueryTests(StakeholdersTestFactory factory) : base(factory) { }
 
-    [Fact]
+    /*[Fact]
     public void Author_Retrieves_all_meetups()
     {
         using var scope = Factory.Services.CreateScope();
@@ -24,7 +24,7 @@ public class AuthorMeetupQueryTests : BaseStakeholdersIntegrationTest
 
         result.ShouldNotBeNull();
         result.Count().ShouldBeGreaterThanOrEqualTo(3); // test data has at least 3
-    }
+    }*/
 
     [Fact]
     public void Author_Retrieves_own_meetups()

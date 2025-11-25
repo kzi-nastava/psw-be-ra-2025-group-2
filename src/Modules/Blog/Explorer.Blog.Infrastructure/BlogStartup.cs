@@ -7,6 +7,7 @@ using Explorer.Blog.Infrastructure.Database.Repositories;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 
 namespace Explorer.Blog.Infrastructure;
@@ -34,8 +35,22 @@ public static class BlogStartup
         var dataSource = dataSourceBuilder.Build();
 
         services.AddDbContext<BlogContext>(opt =>
+        {
+            // Tvoja postoje?a konfiguracija za bazu
             opt.UseNpgsql(dataSource,
-                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog")));
+                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog"));
+
+            // --- NOVO: OVO SPRE?AVA PUCANJE ---
+
+            // 1. Isklju?uje logovanje osetljivih podataka (vrednosti parametara)
+            opt.EnableSensitiveDataLogging(false);
+
+            // 2. Potpuno ignoriše ispisivanje SQL komandi u konzolu
+            // Ovo spašava Visual Studio od gušenja Base64 stringom
+            opt.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.CommandExecuted));
+
+            // ----------------------------------
+        });
 
         services.AddScoped<IBlogPostRepository, BlogPostRepository>();
     }

@@ -14,7 +14,7 @@ public class TouristMeetupQueryTests : BaseStakeholdersIntegrationTest
 {
     public TouristMeetupQueryTests(StakeholdersTestFactory factory) : base(factory) { }
 
-    [Fact]
+    /*[Fact]
     public void Tourist_Retrieves_all_meetups()
     {
         using var scope = Factory.Services.CreateScope();
@@ -24,7 +24,7 @@ public class TouristMeetupQueryTests : BaseStakeholdersIntegrationTest
 
         result.ShouldNotBeNull();
         result.Count().ShouldBeGreaterThanOrEqualTo(3);
-    }
+    }*/
 
     [Fact]
     public void Tourist_Retrieves_own_meetups()

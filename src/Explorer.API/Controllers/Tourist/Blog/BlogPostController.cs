@@ -5,8 +5,8 @@ using Explorer.BuildingBlocks.Core.UseCases;
 
 namespace Explorer.API.Controllers.Tourist.Blog
 {
-    [ApiController]
     [Route("api/blogpost")]
+    [ApiController]
     public class BlogPostController : ControllerBase
     {
         private readonly IBlogPostService _service;

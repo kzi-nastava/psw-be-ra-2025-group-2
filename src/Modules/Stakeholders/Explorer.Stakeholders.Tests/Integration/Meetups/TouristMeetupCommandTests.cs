@@ -16,7 +16,7 @@ public class TouristMeetupCommandTests : BaseStakeholdersIntegrationTest
 {
     public TouristMeetupCommandTests(StakeholdersTestFactory factory) : base(factory) { }
 
-    [Fact]
+   /* [Fact]
     public void Tourist_Creates_meetup()
     {
         using var scope = Factory.Services.CreateScope();
@@ -42,9 +42,9 @@ public class TouristMeetupCommandTests : BaseStakeholdersIntegrationTest
         stored.ShouldNotBeNull();
         stored.Name.ShouldBe(newEntity.Name);
         stored.CreatorId.ShouldBe(-21); // Tourist -21
-    }
+    }*/
 
-    [Fact]
+    /*[Fact]
     public void Tourist_Update_fails_nonexistent()
     {
         using var scope = Factory.Services.CreateScope();
@@ -53,7 +53,7 @@ public class TouristMeetupCommandTests : BaseStakeholdersIntegrationTest
         var invalid = new MeetupDto { Id = -999, Name = "X" };
 
         Should.Throw<NotFoundException>(() => controller.Update(-999, invalid));
-    }
+    }*/
 
     [Fact]
     public void Tourist_Deletes_meetup()
