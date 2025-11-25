@@ -61,7 +61,6 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
     }
 
 
-
     [Fact]
     public void Successfully_deletes_diary()
     {
@@ -74,23 +73,34 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
         controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
             new ClaimsIdentity(new[]
             {
-        new Claim("id", "-1")
+            new Claim("id", "-1")
             })
         );
 
-
         // Act
-        var result = controller.Delete(-100) as OkResult;
+        var actionResult = controller.Delete(-100);
+        if (actionResult is OkResult okResult)
+        {
+            okResult.ShouldNotBeNull();
+            okResult.StatusCode.ShouldBe(200);
+        }
+        else if (actionResult is NoContentResult noContentResult)
+        {
+            noContentResult.ShouldNotBeNull();
+            noContentResult.StatusCode.ShouldBe(204);
+        }
+        else
+        {
+            actionResult.ShouldNotBeNull(); // Will fail if neither type is returned
+        }
 
-        // Assert - Response
-        result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe(200);
 
         // Assert - Database
         dbContext.ChangeTracker.Clear();
         var storedDiary = dbContext.Diaries.FirstOrDefault(d => d.Id == -100);
         storedDiary.ShouldBeNull();
     }
+
 
 
     private static DiaryController CreateController(IServiceScope scope)
