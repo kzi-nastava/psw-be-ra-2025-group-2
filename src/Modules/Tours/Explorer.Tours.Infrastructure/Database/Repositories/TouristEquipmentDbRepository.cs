@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Explorer.Tours.Infrastructure.Database.Repositories 
+namespace Explorer.Tours.Infrastructure.Database.Repositories
 {
     internal class TouristEquipmentDbRepository : ITouristEquipmentRepository
     {
@@ -33,7 +33,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
 
         public void Delete(long id)
         {
-           throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public TouristEquipment GetByUserId(long userId)

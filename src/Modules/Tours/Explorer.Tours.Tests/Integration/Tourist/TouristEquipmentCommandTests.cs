@@ -48,9 +48,7 @@ public class TouristEquipmentCommandTests : BaseToursIntegrationTest
         result.Equipment.ShouldContain(-2);
     }
 
-    // ----------------------------------------------------------------------
-    // CREATE FAIL – INVALID EQUIPMENT IDS
-    // ----------------------------------------------------------------------
+
     [Fact]
     public void Create_fails_invalid_equipment()
     {
@@ -92,9 +90,6 @@ public class TouristEquipmentCommandTests : BaseToursIntegrationTest
         result.Equipment.ShouldContain(-3);
     }
 
-    // ----------------------------------------------------------------------
-    // UPDATE FAIL – NONEXISTENT ID
-    // ----------------------------------------------------------------------
     [Fact]
     public void Update_fails_invalid_id()
     {
@@ -111,9 +106,7 @@ public class TouristEquipmentCommandTests : BaseToursIntegrationTest
         Should.Throw<Exception>(() => controller.Update(dto));
     }
 
-    // ----------------------------------------------------------------------
-    // UPDATE FAIL – INVALID EQUIPMENT IDS
-    // ----------------------------------------------------------------------
+  
     [Fact]
     public void Update_fails_invalid_equipment()
     {

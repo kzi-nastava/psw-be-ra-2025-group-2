@@ -43,4 +43,5 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(_service.GetAllEquipment(page, pageSize));
         }
 
-    }}
+    }
+}

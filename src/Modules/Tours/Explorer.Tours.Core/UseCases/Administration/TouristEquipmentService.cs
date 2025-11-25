@@ -82,14 +82,35 @@ namespace Explorer.Tours.Core.UseCases.Administration
         }
 
 
+
+
         public TouristEquipmentDto Update(TouristEquipmentDto entity)
         {
-            // 1) proveri da li postoji zapis za turistu
-            var existing = _repository.GetByUserId(entity.TouristId);
-            if (existing == null)
-                throw new Exception("Tourist equipment entry not found.");
+            if (entity.Id == 0)
+            {
+                foreach (var id in entity.Equipment)
+                {
+                    var eq = _equipmentRepository.Get(id);
+                    if (eq == null)
+                        throw new Exception("Invalid equipment id: " + id);
+                }
 
-            // 2) validacija: svaki equipment mora da postoji
+                var created = new TouristEquipment
+                {
+                    TouristId = entity.TouristId,
+                    Equipment = entity.Equipment
+                };
+
+                var resultCreate = _repository.Create(created);
+                return _mapper.Map<TouristEquipmentDto>(resultCreate);
+            }
+
+            
+            var existing = _repository.GetByUserId(entity.TouristId);
+
+            if (existing == null || existing.Id != entity.Id)
+                throw new Exception("Invalid TouristEquipment id");
+   
             foreach (var id in entity.Equipment)
             {
                 var eq = _equipmentRepository.Get(id);
@@ -97,12 +118,12 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     throw new Exception("Invalid equipment id: " + id);
             }
 
-            // 3) primeni izmene na već track-ovan entitet
             existing.Equipment = entity.Equipment;
 
             var result = _repository.Update(existing);
             return _mapper.Map<TouristEquipmentDto>(result);
         }
+
 
 
     }
