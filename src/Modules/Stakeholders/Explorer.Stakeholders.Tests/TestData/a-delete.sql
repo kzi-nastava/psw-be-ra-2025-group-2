@@ -4,3 +4,5 @@ DELETE FROM stakeholders."People";
 DELETE FROM stakeholders."Users";
 DELETE FROM stakeholders."AuthorAwards";
 DELETE FROM stakeholders."AppRatings";
+DELETE FROM stakeholders."Diaries";
+  
