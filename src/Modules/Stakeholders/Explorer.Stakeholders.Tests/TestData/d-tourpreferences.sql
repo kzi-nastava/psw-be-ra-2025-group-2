@@ -1,4 +1,4 @@
-﻿INSERT INTO stakeholders."TourPreferences"
+﻿INSERT INTO "TourPreferences"
     ("Id", "TouristId", "PreferredDifficulty",
      "WalkingScore", "BicycleScore", "CarScore", "BoatScore", "Tags")
 VALUES
