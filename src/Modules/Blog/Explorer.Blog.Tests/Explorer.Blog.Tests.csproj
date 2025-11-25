@@ -35,10 +35,11 @@
 
   <ItemGroup>
     <None Update="TestData\a-delete.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\a-insert-blogposts.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+ 
+    <None Update="TestData\a-insert-blogpost.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
