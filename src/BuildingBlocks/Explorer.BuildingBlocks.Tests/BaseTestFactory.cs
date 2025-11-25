@@ -21,54 +21,35 @@ public abstract class BaseTestFactory<TDbContext> : WebApplicationFactory<Progra
             var logger = scopedServices.GetRequiredService<ILogger<BaseTestFactory<TDbContext>>>();
 
             var path = Path.Combine(".", "..", "..", "..", "TestData");
-
-
             InitializeDatabase(db, path, logger);
         });
     }
 
     private static void InitializeDatabase(DbContext context, string scriptFolder, ILogger logger)
     {
-        // 1) Uvek obriši i ponovo kreiraj testnu bazu
         try
         {
-            context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
-
-
             var databaseCreator = context.Database.GetService<IRelationalDatabaseCreator>();
             databaseCreator.CreateTables();
         }
         catch (Exception)
         {
-            // CreateTables baca exception ako tabela već postoji - ignoriši
+            // CreateTables throws an exception if the schema already exists. This is a workaround for multiple dbcontexts.
         }
 
-        // 2) Pronađi sve SQL fajlove u TestData folderu
-        var scriptFiles = Directory.GetFiles(scriptFolder);
-        Array.Sort(scriptFiles);
-
-        // 3) Loguj koji se fajlovi izvršavaju
-        Console.WriteLine("=== SQL FILES FOUND IN TESTDATA ===");
-        foreach (var f in scriptFiles)
-        {
-            Console.WriteLine("EXECUTING SQL FILE: " + f);
-        }
-
-        // 4) Izvrši SQL skripte i ulovi sve SQL greške
         try
         {
-            var script = string.Join("\n", scriptFiles.Select(File.ReadAllText));
+            var scriptFiles = Directory.GetFiles(scriptFolder);
+            Array.Sort(scriptFiles);
+            var script = string.Join('\n', scriptFiles.Select(File.ReadAllText));
             context.Database.ExecuteSqlRaw(script);
         }
         catch (Exception ex)
         {
-            Console.WriteLine("SQL ERROR: " + ex.Message);
-            logger.LogError(ex, "Error executing SQL test data scripts.");
-            throw;       // bacamo exception da ZAISTA vidiš grešku iz SQL-a
+            logger.LogError(ex, "An error occurred seeding the database with test data. Error: {Message}", ex.Message);
         }
     }
-
 
     private ServiceProvider BuildServiceProvider(IServiceCollection services)
     {
