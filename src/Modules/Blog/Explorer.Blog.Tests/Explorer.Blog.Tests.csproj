@@ -38,10 +38,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
  
-    <None Update="TestData\a-delete-test.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
- 
     <None Update="TestData\a-insert-blogpost.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
