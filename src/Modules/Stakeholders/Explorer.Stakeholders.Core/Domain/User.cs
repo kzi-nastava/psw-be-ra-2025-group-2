@@ -29,7 +29,6 @@ public class User : Entity
         return Role.ToString().ToLower();
     }
 }
-
 public enum UserRole
 {
     Administrator,

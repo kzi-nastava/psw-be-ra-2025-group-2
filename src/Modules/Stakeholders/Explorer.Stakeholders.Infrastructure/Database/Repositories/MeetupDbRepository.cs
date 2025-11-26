@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Explorer.Stakeholders.Infrastructure.Database.Repositories;
 public class MeetupDbRepository : IMeetupRepository
@@ -36,7 +37,7 @@ public class MeetupDbRepository : IMeetupRepository
         var entity = _dbSet.Find(id);
         if (entity == null)
         {
-            return;
+            throw new NotFoundException("Not found: " + id);
         }
 
         _dbSet.Remove(entity);
