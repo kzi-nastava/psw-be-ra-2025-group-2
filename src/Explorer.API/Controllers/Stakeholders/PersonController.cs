@@ -61,7 +61,7 @@ public class PersonController : ControllerBase
 
     private long? GetPersonId()
     {
-        var claim = User.Claims.FirstOrDefault(c => c.Type == "personId");
+        var claim = User.Claims.FirstOrDefault(c => c.Type == "id");
         if (claim == null) return null;
 
         if (long.TryParse(claim.Value, out var id))
