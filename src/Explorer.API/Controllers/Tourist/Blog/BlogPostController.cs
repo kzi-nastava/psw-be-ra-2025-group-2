@@ -2,9 +2,11 @@
 using Explorer.Blog.API.Public;
 using Explorer.Blog.API.Dtos;
 using Explorer.BuildingBlocks.Core.UseCases;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Explorer.API.Controllers.Tourist.Blog
 {
+    [Authorize(Policy="touristAuthorPolicy")]
     [Route("api/blogpost")]
     [ApiController]
     public class BlogPostController : ControllerBase
