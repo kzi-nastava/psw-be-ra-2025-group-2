@@ -1,47 +1,67 @@
-﻿using Explorer.Stakeholders.Core.Domain;
+﻿using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Stakeholders.Infrastructure.Database.Repositories;
 
-    public class DiaryDbRepository : IDiaryRepository
+public class DiaryDbRepository : IDiaryRepository
 {
-    private readonly StakeholdersContext _context;
+    protected readonly StakeholdersContext DbContext;
     private readonly DbSet<Diary> _dbSet;
 
-    public DiaryDbRepository(StakeholdersContext context)
+    public DiaryDbRepository(StakeholdersContext dbContext)
     {
-        _context = context;
+        DbContext = dbContext;
+        _dbSet = DbContext.Set<Diary>();
     }
 
-    public Diary Get(long id) => _context.Diaries.Find(id);
-
-    public List<Diary> GetByUserId(long userId) =>
-        _context.Diaries.Where(d => d.UserId == userId).ToList();
-
-    public Diary Create(Diary diary)
+    public Diary Get(long id)
     {
-        _context.Diaries.Add(diary);
-        _context.SaveChanges();
-        return diary;
+        var entity = _dbSet
+            .AsNoTracking()
+            .FirstOrDefault(d => d.Id == id);
+
+        if (entity == null) throw new NotFoundException("Diary not found: " + id);
+        return entity;
     }
 
-    public Diary Update(Diary diary)
+    public List<Diary> GetByUserId(long userId)
     {
-        _context.Diaries.Update(diary);
-        _context.SaveChanges();
-        return diary;
+        return _dbSet.Where(d => d.UserId == userId).ToList();
+    }
+
+    public Diary Create(Diary entity)
+    {
+        _dbSet.Add(entity);
+        DbContext.SaveChanges();
+        return entity;
+    }
+
+    public Diary Update(Diary entity)
+    {
+        try
+        {
+            DbContext.Update(entity);
+            DbContext.SaveChanges();
+        }
+        catch (DbUpdateException e)
+        {
+            throw new NotFoundException(e.Message);
+        }
+        return entity;
     }
 
     public void Delete(long id)
     {
-        var diary = _context.Diaries.Find(id);
-        if (diary != null)
-        {
-            _context.Diaries.Remove(diary);
-            _context.SaveChanges();
-        }
+        var entity = _dbSet.Find(id);
+        if (entity == null)
+            throw new NotFoundException("Diary not found: " + id);
+
+        _dbSet.Remove(entity);
+        DbContext.SaveChanges();
     }
 
     public List<Diary> GetAll()
