@@ -17,12 +17,12 @@ public class ToursProfile : Profile
 
         CreateMap<TourProblem, TourProblemDto>().ReverseMap();
         CreateMap<CreateTourProblemDto, TourProblem>();
-        CreateMap<TouristEquipment, TouristEquipmentDto>()
+       /* CreateMap<TouristEquipment, TouristEquipmentDto>()
             .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment))
             .ForMember(dest => dest.Equipments, opt => opt.Ignore());
 
         CreateMap<TouristEquipmentDto, TouristEquipment>()
-            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment));
+            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment));*/
 
         CreateMap<TouristObject, TouristObjectDto>()
             .ForMember(

@@ -1,17 +1,17 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
 using Microsoft.EntityFrameworkCore;
-
 namespace Explorer.Stakeholders.Infrastructure.Database;
 
 public class StakeholdersContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Person> People { get; set; }
+    public DbSet<Meetup> Meetups { get; set; }
     public DbSet<TourPreferences> TourPreferences { get; set; }
     public DbSet<AuthorAwards> AuthorAwards { get; set; }
     public DbSet<AppRating> AppRatings { get; set; }
     public DbSet<Club> Clubs { get; set; }
-
+    public DbSet<TouristPosition> TouristPositions { get; set; }
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,5 +29,11 @@ public class StakeholdersContext : DbContext
             .HasOne<User>()
             .WithOne()
             .HasForeignKey<Person>(s => s.UserId);
+        // TouristPosition -> Person (many positions per person)
+        modelBuilder.Entity<TouristPosition>()
+            .HasOne<Person>()
+            .WithMany()
+            .HasForeignKey(p => p.PersonId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
