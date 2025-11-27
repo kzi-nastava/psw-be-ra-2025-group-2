@@ -3,6 +3,8 @@ using Explorer.API.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+
 builder.Services.AddControllers();
 builder.Services.ConfigureSwagger(builder.Configuration);
 const string corsPolicy = "_corsPolicy";

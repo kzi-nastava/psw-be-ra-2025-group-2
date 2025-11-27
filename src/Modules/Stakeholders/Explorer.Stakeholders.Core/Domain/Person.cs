@@ -9,6 +9,9 @@ public class Person : Entity
     public string Name { get; init; }
     public string Surname { get; init; }
     public string Email { get; init; }
+    public string? Biography { get; set; }
+    public string? Motto { get; set; }
+    public string? ProfileImageUrl { get; set; }
 
     public Person(long userId, string name, string surname, string email)
     {
@@ -19,7 +22,7 @@ public class Person : Entity
         Validate();
     }
 
-    private void Validate()
+    public void Validate()
     {
         if (UserId == 0) throw new ArgumentException("Invalid UserId");
         if (string.IsNullOrWhiteSpace(Name)) throw new ArgumentException("Invalid Name");
