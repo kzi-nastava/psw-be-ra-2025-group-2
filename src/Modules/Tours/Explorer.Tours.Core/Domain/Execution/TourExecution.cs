@@ -9,7 +9,7 @@ using Explorer.BuildingBlocks.Core.Exceptions;
 using System.Runtime;
 using Explorer.Tours.Core.Domain.Exceptions;
 
-namespace Explorer.Tours.Core.Domain.TourSession
+namespace Explorer.Tours.Core.Domain.Execution
 
 {
     public class TourExecution : AggregateRoot

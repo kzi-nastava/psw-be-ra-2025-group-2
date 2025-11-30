@@ -1,5 +1,5 @@
 ﻿using Explorer.Tours.Core.Domain;
-using Explorer.Tours.Core.Domain.TourSession;
+using Explorer.Tours.Core.Domain.Execution;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 

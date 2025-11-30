@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Explorer.Tours.Core.Domain.TourSession
+namespace Explorer.Tours.Core.Domain.Execution
 {
     public class KeyPointVisit : Entity
     {
