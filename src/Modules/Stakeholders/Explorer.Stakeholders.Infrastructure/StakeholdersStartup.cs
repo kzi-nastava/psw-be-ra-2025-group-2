@@ -1,8 +1,10 @@
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
+using Explorer.Stakeholders.Core.Services;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
 using Explorer.Stakeholders.Infrastructure.Authentication;
@@ -36,6 +38,8 @@ public static class StakeholdersStartup
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IDiaryService, DiaryService>();
+        services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -47,6 +51,8 @@ public static class StakeholdersStartup
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
         services.AddScoped<IDiaryRepository, DiaryDbRepository>();
+      
+
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();

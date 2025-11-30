@@ -18,10 +18,12 @@ public class Diary : Entity
     public string Country { get; private set; }
     public string? City { get; private set; }
 
-    public Diary(long userId, string name, string country, string? city = null)
+    public Diary(long userId, string name, string? country = null, string? city = null)
     {
+        name = name?.Trim();
+        country = country?.Trim();
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name required.");
-        if (string.IsNullOrWhiteSpace(country)) throw new ArgumentException("Country required.");
+       // if (string.IsNullOrWhiteSpace(country)) throw new ArgumentException("Country required.");
         UserId = userId;
         Name = name;
         Country = country;

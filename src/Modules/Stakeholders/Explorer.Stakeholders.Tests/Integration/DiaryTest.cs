@@ -77,8 +77,9 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
             })
         );
 
+
         // Act
-        var actionResult = controller.Delete(-100);
+        var actionResult = controller.Delete(-1);
         if (actionResult is OkResult okResult)
         {
             okResult.ShouldNotBeNull();
