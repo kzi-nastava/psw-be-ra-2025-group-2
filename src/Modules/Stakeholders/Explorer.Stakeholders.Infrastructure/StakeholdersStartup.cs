@@ -1,4 +1,5 @@
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
@@ -35,6 +36,8 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IUsernameProvider, UsernameProviderService>();
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
