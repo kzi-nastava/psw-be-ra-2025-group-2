@@ -1,4 +1,5 @@
 ﻿using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.TourSession;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 
@@ -13,11 +14,20 @@ public class ToursContext : DbContext
 
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
+
+    public DbSet<TourExecution> TourExecutions { get; set; }
+
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("tours");
+
+        modelBuilder.Entity<TourExecution>()
+            .HasMany(te => te.KeyPointVisits)
+            .WithOne()
+            .HasForeignKey("TourExecutionId")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
