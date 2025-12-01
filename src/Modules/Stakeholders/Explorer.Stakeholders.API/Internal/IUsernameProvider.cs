@@ -9,6 +9,7 @@ namespace Explorer.Stakeholders.API.Internal
     public interface IUsernameProvider
     {
         Dictionary<long, string> GetNamesByIds(IEnumerable<long> ids);
+        string GetNameById(long id);
     }
 }
 

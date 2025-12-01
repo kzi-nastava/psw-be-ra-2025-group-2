@@ -30,6 +30,12 @@ namespace Explorer.Stakeholders.Core.UseCases
             }
             return result;
         }
+
+        public string GetNameById(long id)
+        {
+            var user = _userRepository.GetByPersonId(id);
+            return user?.Username ?? string.Empty;
+        }
     }
 }
 
