@@ -21,16 +21,22 @@ namespace Explorer.Stakeholders.Core.UseCases
         public AppRatingDto Create(AppRatingDto dto)
         {
             var existingRatings = _repository.GetByUserId(dto.UserId);
+
+            // Ako korisnik već ima rating — vrati taj umesto da bacaš grešku
             if (existingRatings.Any())
             {
-                throw new InvalidOperationException("User has already rated the application.");
+                var existing = existingRatings.First();
+                return _mapper.Map<AppRatingDto>(existing);
             }
 
             dto.CreatedAt = DateTime.UtcNow;
+
             var entity = _mapper.Map<AppRating>(dto);
             var result = _repository.Create(entity);
+
             return _mapper.Map<AppRatingDto>(result);
         }
+
 
         public AppRatingDto Update(AppRatingDto dto, long userId, string userRole)
         {

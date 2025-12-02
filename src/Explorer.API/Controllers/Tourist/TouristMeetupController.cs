@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Security.Claims;
-
+using Explorer.Stakeholders.Infrastructure.Authentication;
 namespace Explorer.API.Controllers.Tourist;
 [Authorize(Policy = "touristPolicy")]
 [Route("api/tourist/meetups")]
