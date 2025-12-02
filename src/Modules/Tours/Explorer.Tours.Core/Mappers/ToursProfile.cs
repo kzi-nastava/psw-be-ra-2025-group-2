@@ -36,16 +36,19 @@ public class ToursProfile : Profile
                 opt => opt.MapFrom(src => Enum.Parse<TouristObjectCategory>(src.Category))
             );
         CreateMap<Tour, TourDto>()
-           .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+             .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
 
         CreateMap<CreateTourDto, Tour>()
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()));
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
+            .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
 
         CreateMap<UpdateTourDto, Tour>()
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()));
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
+            .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+
         CreateMap<MonumentDto, Monument>().ReverseMap();
-
-
+        CreateMap<KeyPoint, KeyPointDto>().ReverseMap();
     }
 }
 
