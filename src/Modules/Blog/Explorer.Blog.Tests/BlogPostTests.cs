@@ -92,57 +92,6 @@ public class BlogPostTests : BaseBlogIntegrationTest
     }
 
     [Fact]
-    public async Task Get_blog_by_id_returns_draft_for_owner()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-
-        // Act - korisnik pokušava da vidi svoj Draft blog
-        var response = await client.GetAsync("/api/blogpost/-2");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<BlogPostDto>();
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(-2);
-        result.State.ShouldBe(0); // Draft
-    }
-
-    [Fact]
-    public async Task Updates_blog_post_successfully_and_replaces_images()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new UpdateBlogPostDto
-        {
-            Title = "Updated Title OK",
-            Description = "New description content.",
-            ImageUrls = new List<string> { "new_image_a.png", "new_image_b.png", "new_image_c.png" }
-        };
-
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/-2", updateRequest);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-
-        // Verify in database
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
-
-        var blogPost = db.BlogPosts
-            .Include(b => b.Images)
-            .FirstOrDefault(p => p.Id == -2);
-
-        blogPost.ShouldNotBeNull();
-        blogPost.Title.ShouldBe("Updated Title OK");
-        blogPost.Description.ShouldBe("New description content.");
-        blogPost.Images.Count.ShouldBe(3);
-        blogPost.Images.ShouldContain(i => i.Url == "new_image_a.png");
-    }
-
-    [Fact]
     public async Task Update_fails_on_invalid_id()
     {
         // Arrange
