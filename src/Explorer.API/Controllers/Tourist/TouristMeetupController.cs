@@ -1,9 +1,10 @@
-﻿using Explorer.Stakeholders.Infrastructure.Authentication; // zbog User.PersonId()
+﻿using System.Collections.Generic;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 
 namespace Explorer.API.Controllers.Tourist;
 [Authorize(Policy = "touristPolicy")]
@@ -11,7 +12,7 @@ namespace Explorer.API.Controllers.Tourist;
 [ApiController]
 public class TouristMeetupController : ControllerBase
 {
-    private readonly IMeetupService _meetupService;
+    private readonly IMeetupService  _meetupService;
 
     public TouristMeetupController(IMeetupService meetupService)
     {
