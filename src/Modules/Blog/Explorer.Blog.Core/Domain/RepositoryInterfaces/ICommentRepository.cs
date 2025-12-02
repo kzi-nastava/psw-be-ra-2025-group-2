@@ -9,9 +9,9 @@ namespace Explorer.Blog.Core.Domain.RepositoryInterfaces
     public interface ICommentRepository
     {
         Comment Create(Comment comment);
-        Comment Get(string username, DateTime createdAt); 
+        Comment Get(string username); 
         Comment Update(Comment comment); 
-        void Delete(string username, DateTime createdAt); 
+        void Delete(string username); 
         List<Comment> GetAll();
     }
 }

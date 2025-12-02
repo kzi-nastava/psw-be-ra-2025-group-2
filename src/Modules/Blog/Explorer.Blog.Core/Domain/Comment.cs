@@ -4,7 +4,7 @@
     public string Text { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastModifiedAt { get; private set; }
-    private Comment() { }
+    public Comment() { }
 
     public Comment(long userId, string text)
     {

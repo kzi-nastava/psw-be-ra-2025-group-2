@@ -10,6 +10,7 @@ namespace Explorer.Stakeholders.API.Internal
     {
         Dictionary<long, string> GetNamesByIds(IEnumerable<long> ids);
         string GetNameById(long id);
+        
     }
 }
 
