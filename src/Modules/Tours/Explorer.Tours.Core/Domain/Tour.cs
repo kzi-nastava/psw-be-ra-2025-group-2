@@ -92,27 +92,25 @@ public class Tour : AggregateRoot
             KeyPoints.Remove(kp);
     }
 
-    public void UpdateKeyPoint(int ordinalNo, KeyPointDto dto)
+    public void UpdateKeyPoint(int ordinalNo, KeyPointUpdate update)
     {
-        if (dto == null)
-            throw new ArgumentNullException(nameof(dto));
+        if (update == null)
+            throw new ArgumentNullException(nameof(update));
 
         var keyPoint = KeyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
         if (keyPoint == null)
             throw new InvalidOperationException($"KeyPoint with OrdinalNo {ordinalNo} does not exist.");
 
-       
         var updatedKeyPoint = new KeyPoint(
             ordinalNo,
-            dto.Name ?? keyPoint.Name,
-            dto.Description ?? keyPoint.Description,
-            dto.SecretText ?? keyPoint.SecretText,
-            dto.ImageUrl ?? keyPoint.ImageUrl,
-            dto.Latitude,
-            dto.Longitude
+            update.Name ?? keyPoint.Name,
+            update.Description ?? keyPoint.Description,
+            update.SecretText ?? keyPoint.SecretText,
+            update.ImageUrl ?? keyPoint.ImageUrl,
+            update.Latitude,
+            update.Longitude
         );
 
-       
         KeyPoints[KeyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
     }
 

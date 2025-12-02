@@ -62,5 +62,41 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return _mapper.Map<TourDto>(tour);
         }
+
+        public void AddKeyPoint(long tourId, KeyPointDto dto)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result
+                       ?? throw new Exception("Tour not found.");
+            tour.AddKeyPoint(_mapper.Map<KeyPoint>(dto));
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result
+                       ?? throw new Exception("Tour not found.");
+
+           
+            var update = new KeyPointUpdate(
+                dto.Name,
+                dto.Description,
+                dto.SecretText,
+                dto.ImageUrl,
+                dto.Latitude,
+                dto.Longitude
+            );
+
+            tour.UpdateKeyPoint(ordinalNo, update);
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public void RemoveKeyPoint(long tourId, int ordinalNo)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result
+                       ?? throw new Exception("Tour not found.");
+            tour.RemoveKeyPoint(ordinalNo);
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+
     }
 }

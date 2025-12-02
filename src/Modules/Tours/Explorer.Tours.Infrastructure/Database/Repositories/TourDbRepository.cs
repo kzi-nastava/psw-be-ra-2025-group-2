@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Explorer.Tours.Infrastructure.Database.Repositories;
 
