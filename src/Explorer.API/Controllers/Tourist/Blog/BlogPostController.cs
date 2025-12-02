@@ -66,9 +66,7 @@ namespace Explorer.API.Controllers.Tourist.Blog
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, UpdateBlogPostDto dto)
         {
-            long userId = User.Identity?.IsAuthenticated == true
-     ? User.PersonId()
-     : -21;
+            long userId = User.Identity?.IsAuthenticated == true ? User.PersonId() : -21;
 
             try
             {
@@ -80,7 +78,7 @@ namespace Explorer.API.Controllers.Tourist.Blog
                 if (blog.AuthorId != userId)
                     return Forbid(); // 403 - nije vlasnik bloga
 
-                await _service.UpdateAsync(id, dto);
+                await _service.UpdateAsync(id, dto, userId);
                 return NoContent();
             }
             catch (InvalidOperationException ex)
@@ -119,5 +117,32 @@ namespace Explorer.API.Controllers.Tourist.Blog
                 return Forbid();
             }
         }
+
+        //Arhiviranje
+        [HttpPut("{id}/archive")]
+        public async Task<IActionResult> Archive(long id)
+        {
+            var userId = User.PersonId();
+
+            try
+            {
+                await _service.ArchiveAsync(id, userId);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException) { return Forbid(); }
+            catch (KeyNotFoundException) { return NotFound(); }
+        }
+
+
+        //pregled svih blogova
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<BlogPostDto>>> GetAll([FromQuery] int? status = null)
+        {
+            long? userId = User.Identity?.IsAuthenticated == true ? User.PersonId() : (long?)null;
+            var blogs = await _service.GetVisibleBlogsAsync(userId, status);
+            return Ok(blogs);
+        }
+
     }
 }

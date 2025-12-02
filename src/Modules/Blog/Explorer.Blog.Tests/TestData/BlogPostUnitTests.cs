@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.Blog.API.Dtos;
 using Explorer.Blog.Core.Domain;
+using Explorer.Blog.Core.UseCases;
 using Shouldly;
 
 namespace Explorer.Blog.Tests.TestData
@@ -150,5 +152,58 @@ namespace Explorer.Blog.Tests.TestData
             // Assert
             blog.Images.Count.ShouldBe(imageCount);
         }
+
+        [Theory]
+        [InlineData(BlogState.Published, "Updated Description", true)] // Published može da menja opis
+        [InlineData(BlogState.Draft, "Updated Description", false)]    // Draft ne može
+        [InlineData(BlogState.Archived, "Updated Description", false)] // Archived ne može
+        public void EditDescription_based_on_state(BlogState initialState, string newDescription, bool shouldSucceed)
+        {
+            // Arrange
+            var blog = new BlogPost("Title", "Description", -21, null, true);
+
+            if (initialState == BlogState.Published)
+                blog.Publish();
+            else if (initialState == BlogState.Archived)
+            {
+                blog.Publish();
+                blog.Archive(); // koristi Archive metodu iz domena
+            }
+
+            // Act & Assert
+            if (shouldSucceed)
+            {
+                blog.EditDescription(newDescription);
+                blog.Description.ShouldBe(newDescription);
+            }
+            else
+            {
+                Should.Throw<InvalidOperationException>(() => blog.EditDescription(newDescription));
+            }
+        }
+
+        [Fact]
+        public void Archive_blog_makes_it_immutable()
+        {
+            // Arrange
+            var blog = new BlogPost("Title", "Description", -21, null, true);
+            blog.Publish();
+
+            // Act
+            blog.Archive();
+
+            blog.State.ShouldBe(BlogState.Archived);
+
+            // Assert - ništa više ne može da se menja
+            Should.Throw<InvalidOperationException>(() =>
+                blog.Edit("New Title", "New Description", new List<BlogImage>())
+            );
+
+            Should.Throw<InvalidOperationException>(() =>
+                blog.EditDescription("New Description")
+            );
+        }
+
+
     }
 }

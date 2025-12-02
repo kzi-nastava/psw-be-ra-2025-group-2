@@ -20,6 +20,8 @@ namespace Explorer.Blog.Core.Domain
 
         public BlogState State { get; private set; }
 
+        public DateTime? LastModifiedAt { get; private set; }
+
         private BlogPost() { }
         public BlogPost(string title, string description, long authorId, List<BlogImage>? images = null, bool skipAuthorValidation = false)
         {
@@ -66,12 +68,32 @@ namespace Explorer.Blog.Core.Domain
             _images.AddRange(images);
         }
 
+        public void EditDescription(string description)
+        {
+            if (State != BlogState.Published)
+                throw new InvalidOperationException("Only published blogs can update description.");
+
+            if (string.IsNullOrWhiteSpace(description))
+                throw new ArgumentException("Description cannot be empty.");
+
+            Description = description;
+            LastModifiedAt = DateTime.UtcNow;
+        }
+
         public void Publish()
         {
             if (State != BlogState.Draft)
                 throw new InvalidOperationException("Only draft blogs can be published.");
 
             State = BlogState.Published;
+        }
+
+        public void Archive()
+        {
+            if (State != BlogState.Published)
+                throw new InvalidOperationException("Only published blogs can be archived.");
+
+            State = BlogState.Archived;
         }
 
     }
