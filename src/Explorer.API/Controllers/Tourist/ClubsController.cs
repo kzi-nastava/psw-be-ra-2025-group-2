@@ -109,5 +109,77 @@ public class ClubsController : ControllerBase
 
     }
 
+    [HttpPost("{clubId:long}/invite/{touristId:long}")]
+    public IActionResult InviteTourist(long clubId, long touristId)
+    {
+        var ownerId = GetCurrentUserId();
 
+        _clubService.InviteTourist(clubId, ownerId, touristId);
+
+        return Ok("Invitation sent.");
+    }
+
+    [HttpPost("{clubId:long}/invitation/{touristId:long}/accept")]
+    public IActionResult AcceptInvitation(long clubId, long touristId)
+    {
+        _clubService.AcceptInvitation(clubId, touristId);
+        return Ok("Invitation accepted.");
+    }
+
+    [HttpPost("{clubId:long}/invitation/{touristId:long}/reject")]
+    public IActionResult RejectInvitation(long clubId, long touristId)
+    {
+        _clubService.RejectInvitation(clubId, touristId);
+        return Ok("Invitation rejected.");
+    }
+
+    [HttpDelete("{clubId:long}/members/{touristId:long}")]
+    public IActionResult RemoveMember(long clubId, long touristId)
+    {
+        var ownerId = GetCurrentUserId();
+
+        _clubService.RemoveMember(clubId, ownerId, touristId);
+
+        return Ok("Member removed.");
+    }
+
+    [HttpPost("{clubId:long}/join-requests")]
+    public IActionResult RequestMembership(long clubId)
+    {
+        var touristId = GetCurrentUserId();
+
+        _clubService.RequestMembership(clubId, touristId);
+
+        return Ok("Membership request sent.");
+    }
+
+    [HttpDelete("{clubId:long}/join-requests")]
+    public IActionResult WithdrawMembershipRequest(long clubId)
+    {
+        var touristId = GetCurrentUserId();
+
+        _clubService.WithdrawMembershipRequest(clubId, touristId);
+
+        return Ok("Membership request withdrawn.");
+    }
+
+    [HttpPost("{clubId:long}/join-requests/{touristId:long}/accept")]
+    public IActionResult AcceptMembershipRequest(long clubId, long touristId)
+    {
+        var ownerId = GetCurrentUserId();
+
+        _clubService.AcceptMembershipRequest(clubId, ownerId, touristId);
+
+        return Ok("Membership request accepted.");
+    }
+
+    [HttpPost("{clubId:long}/join-requests/{touristId:long}/reject")]
+    public IActionResult RejectMembershipRequest(long clubId, long touristId)
+    {
+        var ownerId = GetCurrentUserId();
+
+        _clubService.RejectMembershipRequest(clubId, ownerId, touristId);
+
+        return Ok("Membership request rejected.");
+    }
 }
