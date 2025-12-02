@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Explorer.Blog.API.Dtos
+﻿namespace Explorer.Blog.API.Dtos
 {
     public class BlogPostDto
     {
@@ -14,5 +8,7 @@ namespace Explorer.Blog.API.Dtos
         public DateTime CreatedAt { get; set; }
         public long AuthorId { get; set; }
         public List<string> ImageUrls { get; set; } = new();
+        public int State { get; set; }
+
     }
 }
