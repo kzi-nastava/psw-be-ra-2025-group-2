@@ -30,5 +30,9 @@ public class ToursContext : DbContext
         .HasMany(sc => sc.Items)
         .WithOne()
         .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Tour>()
+        .Property(t => t.Tags)
+        .HasColumnType("jsonb");
     }
 }
