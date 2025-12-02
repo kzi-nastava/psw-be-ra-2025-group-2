@@ -10,9 +10,11 @@ namespace Explorer.Blog.API.Public
 {
     public interface IBlogPostService
     {
-        Task<BlogPostDto> CreateAsync(CreateBlogPostDto dto);
-        Task<BlogPostDto?> GetByIdAsync(long id);
-        Task<IEnumerable<BlogPostDto>> GetByAuthorAsync(long authorId);
-        Task UpdateAsync(long id, UpdateBlogPostDto dto);
+        Task<BlogPostDto> CreateAsync(CreateBlogPostDto dto, long authorId);
+        Task<BlogPostDto?> GetByIdAsync(long id, long? currentUserId = null);
+        Task<IEnumerable<BlogPostDto>> GetByAuthorAsync(long authorId, long? currentUserId = null);
+        Task<BlogPostDto> UpdateAsync(long id, UpdateBlogPostDto dto);
+        Task PublishAsync(long id, long userId);
+
     }
 }

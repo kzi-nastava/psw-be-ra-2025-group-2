@@ -25,7 +25,6 @@ public class BlogPostTests : BaseBlogIntegrationTest
         {
             Title = "New Valid Post Title",
             Description = "Description with images.",
-            AuthorId = -1,
             ImageUrls = new List<string> { "new_img_1.png", "new_img_2.png" }
         };
 
@@ -38,6 +37,8 @@ public class BlogPostTests : BaseBlogIntegrationTest
         var created = await response.Content.ReadFromJsonAsync<BlogPostDto>();
         created.ShouldNotBeNull();
         created.ImageUrls.Count.ShouldBe(2);
+        created.State.ShouldBe(0); // Draft state
+        created.AuthorId.ShouldNotBe(0); // AuthorId postavljen iz tokena
 
         // Verify in database
         using var scope = Factory.Services.CreateScope();
@@ -50,6 +51,7 @@ public class BlogPostTests : BaseBlogIntegrationTest
         blogPost.ShouldNotBeNull();
         blogPost.Title.ShouldBe("New Valid Post Title");
         blogPost.Images.Count.ShouldBe(2);
+        blogPost.State.ShouldBe(Core.Domain.BlogState.Draft);
     }
 
     [Fact]
@@ -61,7 +63,24 @@ public class BlogPostTests : BaseBlogIntegrationTest
         {
             Title = "",
             Description = "Valid Desc",
-            AuthorId = -1,
+            ImageUrls = new List<string>()
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/blogpost", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+    [Fact]
+    public async Task Create_fails_on_empty_description()
+    {
+        // Arrange
+        var client = Factory.CreateClient();
+        var request = new CreateBlogPostDto
+        {
+            Title = "Valid Title",
+            Description = "", // Prazna description
             ImageUrls = new List<string>()
         };
 
@@ -73,21 +92,21 @@ public class BlogPostTests : BaseBlogIntegrationTest
     }
 
     [Fact]
-    public async Task Get_blog_posts_by_author_successfully()
+    public async Task Get_blog_by_id_returns_draft_for_owner()
     {
         // Arrange
         var client = Factory.CreateClient();
 
-        // Act
-        var response = await client.GetAsync("/api/blogpost/author/-21");
+        // Act - korisnik pokušava da vidi svoj Draft blog
+        var response = await client.GetAsync("/api/blogpost/-2");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<List<BlogPostDto>>();
+        var result = await response.Content.ReadFromJsonAsync<BlogPostDto>();
         result.ShouldNotBeNull();
-        result.Count.ShouldBe(3);
-        result.ShouldAllBe(p => p.AuthorId == -21);
+        result.Id.ShouldBe(-2);
+        result.State.ShouldBe(0); // Draft
     }
 
     [Fact]
@@ -142,22 +161,4 @@ public class BlogPostTests : BaseBlogIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Fact]
-    public async Task Update_fails_on_empty_description()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new UpdateBlogPostDto
-        {
-            Title = "Valid Title",
-            Description = "",
-            ImageUrls = new List<string>()
-        };
-
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/-2", updateRequest);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
 }

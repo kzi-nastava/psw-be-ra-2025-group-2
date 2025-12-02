@@ -18,6 +18,8 @@ namespace Explorer.Blog.Core.Domain
         private readonly List<BlogImage> _images = new();
         public IReadOnlyCollection<BlogImage> Images => _images.AsReadOnly();
 
+        public BlogState State { get; private set; }
+
         private BlogPost() { }
         public BlogPost(string title, string description, long authorId, List<BlogImage>? images = null, bool skipAuthorValidation = false)
         {
@@ -25,6 +27,7 @@ namespace Explorer.Blog.Core.Domain
             Description = description;
             AuthorId = authorId;
             CreatedAt = DateTime.UtcNow;
+            State = BlogState.Draft;
 
             if (images != null)
             {
@@ -46,29 +49,30 @@ namespace Explorer.Blog.Core.Domain
             if (!skipAuthorValidation && AuthorId == 0)
                 throw new ArgumentException("Invalid author.");
         }
-
-        // ---------------------------
-        //   UPDATE METHODS
-        // ---------------------------
-
-        public void UpdateTitle(string newTitle)
+        public void Edit(string title, string description, List<BlogImage> images)
         {
-            if (string.IsNullOrWhiteSpace(newTitle))
+            if (State != BlogState.Draft)
+                throw new InvalidOperationException("Blog can be edited only while in Draft state.");
+            if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.");
-            Title = newTitle;
-        }
 
-        public void UpdateDescription(string newDescription)
-        {
-            if (string.IsNullOrWhiteSpace(newDescription))
+            if (string.IsNullOrWhiteSpace(description))
                 throw new ArgumentException("Description cannot be empty.");
-            Description = newDescription;
+
+            Title = title;
+            Description = description;
+
+            _images.Clear();
+            _images.AddRange(images);
         }
 
-        public void ReplaceImages(List<BlogImage> newImages)
+        public void Publish()
         {
-            _images.Clear();
-            _images.AddRange(newImages);
+            if (State != BlogState.Draft)
+                throw new InvalidOperationException("Only draft blogs can be published.");
+
+            State = BlogState.Published;
         }
+
     }
 }
