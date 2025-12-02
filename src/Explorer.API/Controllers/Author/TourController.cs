@@ -18,7 +18,6 @@ namespace Explorer.API.Controllers.Author
             _tourService = tourService;
         }
 
-        // POST: api/author/tours
         [HttpPost]
         public ActionResult<TourDto> Create([FromBody] CreateTourDto dto)
         {
@@ -37,7 +36,6 @@ namespace Explorer.API.Controllers.Author
             return Ok(created);
         }
 
-        // GET: api/author/tours?authorId=-11
         [HttpGet]
         public ActionResult<IEnumerable<TourDto>> GetByAuthor([FromQuery] long authorId)
         {
@@ -45,7 +43,6 @@ namespace Explorer.API.Controllers.Author
             return Ok(tours);
         }
 
-        // GET: api/author/tours/{id}
         [HttpGet("{id}")]
         public ActionResult<TourDto> GetById(long id)
         {
@@ -60,7 +57,6 @@ namespace Explorer.API.Controllers.Author
             return Ok(tour);
         }
 
-        // PUT: api/author/tours/{id}
         [HttpPut("{id}")]
         public ActionResult<TourDto> Update(long id, [FromBody] UpdateTourDto dto)
         {
@@ -74,7 +70,6 @@ namespace Explorer.API.Controllers.Author
             return Ok(updated);
         }
 
-        // DELETE: api/author/tours/{id}
         [HttpDelete("{id}")]
         public IActionResult Delete(long id)
         {

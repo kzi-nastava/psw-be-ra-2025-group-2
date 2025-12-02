@@ -1,0 +1,197 @@
+diff --git a/src/Explorer.API/Controllers/Author/TourController.cs b/src/Explorer.API/Controllers/Author/TourController.cs
+index e99c3a5..2d55869 100644
+--- a/src/Explorer.API/Controllers/Author/TourController.cs
++++ b/src/Explorer.API/Controllers/Author/TourController.cs
+@@ -18,7 +18,6 @@ namespace Explorer.API.Controllers.Author
+             _tourService = tourService;
+         }
+ 
+-        // POST: api/author/tours
+         [HttpPost]
+         public ActionResult<TourDto> Create([FromBody] CreateTourDto dto)
+         {
+@@ -37,7 +36,6 @@ namespace Explorer.API.Controllers.Author
+             return Ok(created);
+         }
+ 
+-        // GET: api/author/tours?authorId=-11
+         [HttpGet]
+         public ActionResult<IEnumerable<TourDto>> GetByAuthor([FromQuery] long authorId)
+         {
+@@ -45,7 +43,6 @@ namespace Explorer.API.Controllers.Author
+             return Ok(tours);
+         }
+ 
+-        // GET: api/author/tours/{id}
+         [HttpGet("{id}")]
+         public ActionResult<TourDto> GetById(long id)
+         {
+@@ -60,7 +57,6 @@ namespace Explorer.API.Controllers.Author
+             return Ok(tour);
+         }
+ 
+-        // PUT: api/author/tours/{id}
+         [HttpPut("{id}")]
+         public ActionResult<TourDto> Update(long id, [FromBody] UpdateTourDto dto)
+         {
+@@ -74,7 +70,6 @@ namespace Explorer.API.Controllers.Author
+             return Ok(updated);
+         }
+ 
+-        // DELETE: api/author/tours/{id}
+         [HttpDelete("{id}")]
+         public IActionResult Delete(long id)
+         {
+diff --git a/src/Explorer.API/Explorer.API.csproj b/src/Explorer.API/Explorer.API.csproj
+index 734c930..ab34f61 100644
+--- a/src/Explorer.API/Explorer.API.csproj
++++ b/src/Explorer.API/Explorer.API.csproj
+@@ -17,6 +17,9 @@
+   <ItemGroup>
+     <ProjectReference Include="..\BuildingBlocks\Explorer.BuildingBlocks.Core\Explorer.BuildingBlocks.Core.csproj" />
+     <ProjectReference Include="..\BuildingBlocks\Explorer.BuildingBlocks.Infrastructure\Explorer.BuildingBlocks.Infrastructure.csproj" />
++    <ProjectReference Include="..\Explorer.ShoppingCart.API\Explorer.ShoppingCart.API.csproj" />
++    <ProjectReference Include="..\Explorer.ShoppingCart.Core\Explorer.ShoppingCart.Core.csproj" />
++    <ProjectReference Include="..\Explorer.ShoppingCart.Infrastructure\Explorer.ShoppingCart.Infrastructure.csproj" />
+     <ProjectReference Include="..\Modules\Blog\Explorer.Blog.Core\Explorer.Blog.Core.csproj" />
+     <ProjectReference Include="..\Modules\Blog\Explorer.Blog.Infrastructure\Explorer.Blog.Infrastructure.csproj" />
+     <ProjectReference Include="..\Modules\Stakeholders\Explorer.Stakeholders.API\Explorer.Stakeholders.API.csproj" />
+diff --git a/src/Explorer.API/Startup/ModulesConfiguration.cs b/src/Explorer.API/Startup/ModulesConfiguration.cs
+index 8092e72..50d7e43 100644
+--- a/src/Explorer.API/Startup/ModulesConfiguration.cs
++++ b/src/Explorer.API/Startup/ModulesConfiguration.cs
+@@ -1,6 +1,8 @@
+ using Explorer.Blog.Infrastructure;
+ using Explorer.Stakeholders.Infrastructure;
+ using Explorer.Tours.Infrastructure;
++using Explorer.ShoppingCart.Infrastructure;
++
+ 
+ namespace Explorer.API.Startup;
+ 
+@@ -11,6 +13,8 @@ public static class ModulesConfiguration
+         services.ConfigureStakeholdersModule();
+         services.ConfigureToursModule();
+         services.ConfigureBlogModule();
++        services.ConfigureShoppingCartModule();
++
+ 
+         return services;
+     }
+diff --git a/src/Explorer.sln b/src/Explorer.sln
+index e840329..782c35d 100644
+--- a/src/Explorer.sln
++++ b/src/Explorer.sln
+@@ -47,6 +47,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer.Blog.Infrastructur
+ EndProject
+ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer.Blog.Tests", "Modules\Blog\Explorer.Blog.Tests\Explorer.Blog.Tests.csproj", "{DF1A942F-E72F-4C8F-9E92-21C35A98087D}"
+ EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer.ShoppingCart.Core", "Explorer.ShoppingCart.Core\Explorer.ShoppingCart.Core.csproj", "{836049B0-E462-4168-A4CB-3982D7745ED7}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer.ShoppingCart.Infrastructure", "Explorer.ShoppingCart.Infrastructure\Explorer.ShoppingCart.Infrastructure.csproj", "{9D07D2BA-82DE-4117-9117-15CA1A85A87A}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer.ShoppingCart.API", "Explorer.ShoppingCart.API\Explorer.ShoppingCart.API.csproj", "{7A131CF7-CF72-4DAF-AD3F-6591DB800B95}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer.ShoppingCart.Tests", "Explorer.ShoppingCart.Tests\Explorer.ShoppingCart.Tests.csproj", "{F7AF6D03-F56B-49CD-8007-4BA1F88E98DE}"
++EndProject
++Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ShoppingCart", "ShoppingCart", "{D98A432E-AE4A-44B1-9371-8E90F2524A0F}"
++EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+ 		Debug|Any CPU = Debug|Any CPU
+@@ -121,6 +131,22 @@ Global
+ 		{DF1A942F-E72F-4C8F-9E92-21C35A98087D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+ 		{DF1A942F-E72F-4C8F-9E92-21C35A98087D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+ 		{DF1A942F-E72F-4C8F-9E92-21C35A98087D}.Release|Any CPU.Build.0 = Release|Any CPU
++		{836049B0-E462-4168-A4CB-3982D7745ED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{836049B0-E462-4168-A4CB-3982D7745ED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{836049B0-E462-4168-A4CB-3982D7745ED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{836049B0-E462-4168-A4CB-3982D7745ED7}.Release|Any CPU.Build.0 = Release|Any CPU
++		{9D07D2BA-82DE-4117-9117-15CA1A85A87A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{9D07D2BA-82DE-4117-9117-15CA1A85A87A}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{9D07D2BA-82DE-4117-9117-15CA1A85A87A}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{9D07D2BA-82DE-4117-9117-15CA1A85A87A}.Release|Any CPU.Build.0 = Release|Any CPU
++		{7A131CF7-CF72-4DAF-AD3F-6591DB800B95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{7A131CF7-CF72-4DAF-AD3F-6591DB800B95}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{7A131CF7-CF72-4DAF-AD3F-6591DB800B95}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{7A131CF7-CF72-4DAF-AD3F-6591DB800B95}.Release|Any CPU.Build.0 = Release|Any CPU
++		{F7AF6D03-F56B-49CD-8007-4BA1F88E98DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{F7AF6D03-F56B-49CD-8007-4BA1F88E98DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{F7AF6D03-F56B-49CD-8007-4BA1F88E98DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{F7AF6D03-F56B-49CD-8007-4BA1F88E98DE}.Release|Any CPU.Build.0 = Release|Any CPU
+ 	EndGlobalSection
+ 	GlobalSection(SolutionProperties) = preSolution
+ 		HideSolutionNode = FALSE
+@@ -144,6 +170,11 @@ Global
+ 		{C0122F54-15DC-4D5F-AC23-97D3D061EAAE} = {5590906A-4397-4E5D-AFBF-EAC492F1FB73}
+ 		{3FC3329F-16D5-4B61-9AF9-C08731DCDD78} = {5590906A-4397-4E5D-AFBF-EAC492F1FB73}
+ 		{DF1A942F-E72F-4C8F-9E92-21C35A98087D} = {5590906A-4397-4E5D-AFBF-EAC492F1FB73}
++		{836049B0-E462-4168-A4CB-3982D7745ED7} = {D98A432E-AE4A-44B1-9371-8E90F2524A0F}
++		{9D07D2BA-82DE-4117-9117-15CA1A85A87A} = {D98A432E-AE4A-44B1-9371-8E90F2524A0F}
++		{7A131CF7-CF72-4DAF-AD3F-6591DB800B95} = {D98A432E-AE4A-44B1-9371-8E90F2524A0F}
++		{F7AF6D03-F56B-49CD-8007-4BA1F88E98DE} = {D98A432E-AE4A-44B1-9371-8E90F2524A0F}
++		{D98A432E-AE4A-44B1-9371-8E90F2524A0F} = {B8BD4B35-C40B-4BC6-9A8D-7FBE215FD1CE}
+ 	EndGlobalSection
+ 	GlobalSection(ExtensibilityGlobals) = postSolution
+ 		SolutionGuid = {C378FE87-3A2E-4BB0-8E39-FB8767789244}
+diff --git a/src/Modules/Tours/Explorer.Tours.Infrastructure/Database/ToursContext.cs b/src/Modules/Tours/Explorer.Tours.Infrastructure/Database/ToursContext.cs
+index 0ecb831..120739a 100644
+--- a/src/Modules/Tours/Explorer.Tours.Infrastructure/Database/ToursContext.cs
++++ b/src/Modules/Tours/Explorer.Tours.Infrastructure/Database/ToursContext.cs
+@@ -1,6 +1,8 @@
+ ﻿using Explorer.Tours.Core.Domain;
+ using Microsoft.EntityFrameworkCore;
+ using Microsoft.EntityFrameworkCore.Internal;
++using Explorer.ShoppingCart.Core.Domain;
++
+ 
+ namespace Explorer.Tours.Infrastructure.Database;
+ 
+@@ -13,11 +15,20 @@ public class ToursContext : DbContext
+ 
+     public DbSet<Tour> Tours { get; set; }
+     public DbSet<Monument> Monument { get; set; }
++    public DbSet<Explorer.ShoppingCart.Core.Domain.Cart> ShoppingCarts { get; set; } 
++    public DbSet<OrderItem> OrderItems { get; set; }
+     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
+ 
+ 
+     protected override void OnModelCreating(ModelBuilder modelBuilder)
+     {
+         modelBuilder.HasDefaultSchema("tours");
++        modelBuilder.Entity<Explorer.ShoppingCart.Core.Domain.Cart>().ToTable("ShoppingCarts", "shoppingcart");
++        modelBuilder.Entity<OrderItem>().ToTable("OrderItems", "shoppingcart");
++
++        modelBuilder.Entity<Explorer.ShoppingCart.Core.Domain.Cart>()
++        .HasMany(sc => sc.Items)
++        .WithOne()
++        .OnDelete(DeleteBehavior.Cascade);
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Modules/Tours/Explorer.Tours.Infrastructure/Explorer.Tours.Infrastructure.csproj b/src/Modules/Tours/Explorer.Tours.Infrastructure/Explorer.Tours.Infrastructure.csproj
+index cdba0d3..8a7d60e 100644
+--- a/src/Modules/Tours/Explorer.Tours.Infrastructure/Explorer.Tours.Infrastructure.csproj
++++ b/src/Modules/Tours/Explorer.Tours.Infrastructure/Explorer.Tours.Infrastructure.csproj
+@@ -8,11 +8,20 @@
+ 
+   <ItemGroup>
+     <ProjectReference Include="..\..\..\BuildingBlocks\Explorer.BuildingBlocks.Infrastructure\Explorer.BuildingBlocks.Infrastructure.csproj" />
+-    <ProjectReference Include="..\Explorer.Tours.Core\Explorer.Tours.Core.csproj" />
++	  <ProjectReference Include="..\..\..\Explorer.ShoppingCart.Core\Explorer.ShoppingCart.Core.csproj" />
++	  <ProjectReference Include="..\Explorer.Tours.Core\Explorer.Tours.Core.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+     <Folder Include="Database\Scripts\" />
++    <Folder Include="Migrations\" />
++  </ItemGroup>
++
++  <ItemGroup>
++    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
++      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
++      <PrivateAssets>all</PrivateAssets>
++    </PackageReference>
+   </ItemGroup>
+ 
+ </Project>
