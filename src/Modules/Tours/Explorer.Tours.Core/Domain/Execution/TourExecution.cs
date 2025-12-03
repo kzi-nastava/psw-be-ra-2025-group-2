@@ -14,18 +14,17 @@ namespace Explorer.Tours.Core.Domain.Execution
 {
     public class TourExecution : AggregateRoot
     {
-        public int TouristId { get; init; }
-        public int TourId { get; init; }
-
-        private readonly List<KeyPointVisit> _keyPointVisits;
-        public IReadOnlyList<KeyPointVisit> KeyPointVisits => _keyPointVisits.AsReadOnly();
+        public long TouristId { get; init; }
+        public long TourId { get; init; }
         public TourExecutionState State { get; private set; } = TourExecutionState.NotStarted;
-
         public DateTime LastActivityTimestamp { get; private set; }
         public DateTime? CompletionTimestamp { get; private set; }
 
+        private readonly List<KeyPointVisit> _keyPointVisits;
+        public IReadOnlyList<KeyPointVisit> KeyPointVisits => _keyPointVisits.AsReadOnly();
 
-        public TourExecution(int touristId, int tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp)
+
+        public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp)
         {
             LastActivityTimestamp = EnsureUtc(lastActivityTimestamp);
             CompletionTimestamp = completionTimestamp == null ? null : EnsureUtc(completionTimestamp.Value);
