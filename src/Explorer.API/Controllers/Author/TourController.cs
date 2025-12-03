@@ -82,5 +82,30 @@ namespace Explorer.API.Controllers.Author
             _tourService.Delete(id);
             return NoContent();
         }
+
+        // POST: api/author/tours/{tourId}/keypoints
+        [HttpPost("{tourId}/keypoints")]
+        public ActionResult AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
+        {
+            _tourService.AddKeyPoint(tourId, dto);
+            return Ok();
+        }
+
+        // PUT: api/author/tours/{tourId}/keypoints/{ordinalNo}
+        [HttpPut("{tourId}/keypoints/{ordinalNo}")]
+        public ActionResult UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
+        {
+            _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
+            return Ok();
+        }
+
+        // DELETE: api/author/tours/{tourId}/keypoints/{ordinalNo}
+        [HttpDelete("{tourId}/keypoints/{ordinalNo}")]
+        public ActionResult RemoveKeyPoint(long tourId, int ordinalNo)
+        {
+            _tourService.RemoveKeyPoint(tourId, ordinalNo);
+            return Ok();
+        }
+
     }
 }

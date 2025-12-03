@@ -35,6 +35,8 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+
+        services.AddScoped<ITouristPositionService, TouristPositionService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -45,6 +47,8 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
+
+        services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();
