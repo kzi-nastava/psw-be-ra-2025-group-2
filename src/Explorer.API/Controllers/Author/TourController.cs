@@ -45,6 +45,7 @@ namespace Explorer.API.Controllers.Author
             return Ok(tours);
         }
 
+        
         // GET: api/author/tours/{id}
         [HttpGet("{id}")]
         public ActionResult<TourDto> GetById(long id)

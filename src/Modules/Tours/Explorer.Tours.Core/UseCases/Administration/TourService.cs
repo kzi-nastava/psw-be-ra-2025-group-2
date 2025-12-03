@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
@@ -34,6 +35,45 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tours = _tourRepository.GetByAuthorAsync(authorId).Result;
             return _mapper.Map<IEnumerable<TourDto>>(tours);
         }
+
+      /*  public Result<PagedResult<TourDto>> GetByRange(double lat, double lon, int range, int type, int page, int pageSize)
+        {
+            var tours = _tourRepository.GetAllPublished(page, pageSize);
+            var filteredTours = tours.Results
+                .Where(Tour =>
+                {
+                    if (type == 1 && Tour.Keypoints.Count > 0)
+                    {
+                        var firstKeypoint = Tour.Keypoints.First();
+                        return isWithinRange(lat, lon, firstKeypoint.Latitude, firstKeypoint.Longitude, range * 1000);
+                    }
+                    else if (type == 2 && Tour.Keypoints.Count > 0)
+                    {
+                        var lasttKeypoint = Tour.Keypoints.Last();
+                        return isWithinRange(lat, lon, lastKeypoint.Latitude, lastKeypoint.Longitude, range * 1000);
+                    }
+                    else
+                    {
+                        return Tour.Keypoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000));
+                    }
+
+                })
+                .ToList();
+            var totalCount = filteredTours.Count;
+
+            foreach (var tour in filteredTours)
+            {
+                if (tour.Keypoints.Count > 1)
+                {
+                    var firstKeypoint = tour.Keypoints.First();
+                    tour.Keypoints.Clear();
+                    tour.Keypoints.Add(firstKeypoint);
+                }
+            }
+            var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
+            return MapToDto(pagedResult);
+
+        } */
 
         public TourDto Update(long id, UpdateTourDto dto)
         {
