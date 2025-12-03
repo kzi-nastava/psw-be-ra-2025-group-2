@@ -44,7 +44,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 .ToList();
             var totalCount = filteredTours.Count;
 
-            foreach (var tour in filteredTours)
+          /*  foreach (var tour in filteredTours)
             {
                 if (tour.KeyPoints.Count > 1)
                 {
@@ -52,7 +52,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     tour.KeyPoints.Clear();
                     tour.KeyPoints.Add(firstKeyPoint);
                 }
-            }
+            }*/
 
             var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
             var items = pagedResult.Results.Select(_mapper.Map<TourDto>).ToList();
