@@ -14,5 +14,8 @@ namespace Explorer.Tours.API.Public.Administration
         TourDto? GetById(long id, long authorId);
         TourDto Update(long id, UpdateTourDto dto);
         void Delete(long id);
+        void AddKeyPoint(long tourId, KeyPointDto dto);
+        void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto);
+        void RemoveKeyPoint(long tourId, int ordinalNo);
     }
 }

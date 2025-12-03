@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Explorer.Tours.Infrastructure.Database.Repositories;
 
@@ -26,12 +27,15 @@ public class TourDbRepository : ITourRepository
 
     public async Task<Tour?> GetByIdAsync(long id)
     {
-        return await _dbSet.FindAsync(id);
+        return await _dbSet
+            .Include(t => t.KeyPoints)
+            .FirstOrDefaultAsync(t => t.Id == id);
     }
 
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
         return await _dbSet
+             .Include(t => t.KeyPoints)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
     }
