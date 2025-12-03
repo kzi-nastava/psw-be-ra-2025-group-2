@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using System.Runtime;
 using Explorer.Tours.Core.Domain.Exceptions;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Explorer.Tours.Core.Domain.Execution
 
@@ -20,9 +21,19 @@ namespace Explorer.Tours.Core.Domain.Execution
         public DateTime LastActivityTimestamp { get; private set; }
         public DateTime? CompletionTimestamp { get; private set; }
 
-        private readonly List<KeyPointVisit> _keyPointVisits;
+        private readonly List<KeyPointVisit> _keyPointVisits = new();
         public IReadOnlyList<KeyPointVisit> KeyPointVisits => _keyPointVisits.AsReadOnly();
 
+        private TourExecution()
+        {
+
+        }
+
+        public TourExecution(long touristId, long tourId)
+        {
+            TouristId = touristId;
+            TourId = tourId;
+        }
 
         public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp)
         {

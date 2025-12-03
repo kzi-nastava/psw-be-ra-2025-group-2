@@ -38,7 +38,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
 
         public TourExecution Get(int id)
         {
-            var entity = _dbContext.TourExecutions.Find(id);
+            var entity = _dbContext.TourExecutions.Include(e => e.KeyPointVisits).FirstOrDefault(e => e.Id == id);
             if (entity == null)
                 throw new NotFoundException("Not found: " + id);
 
