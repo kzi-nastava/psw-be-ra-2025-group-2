@@ -41,10 +41,10 @@ public class TourDbRepository : ITourRepository
             .ToListAsync();
     }
 
-    public PagedResult<Tour> GetAllPublished(int page, int pageSize)
+    public List<Tour> GetAllPublished(int page, int pageSize)
     {
-        var tours = _dbSet.Where(t => t.Status == TourStatus.Published).GetPagedById(page, pageSize); //TODO: include (t => t.Keypoints)
-        return tours.Result;
+        var tours = _dbSet.Include(t => t.KeyPoints).Where(t => t.Status == TourStatus.Published).ToList();
+        return tours;
 
     }
 

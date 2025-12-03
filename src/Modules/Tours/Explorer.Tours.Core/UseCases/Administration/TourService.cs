@@ -36,44 +36,47 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return _mapper.Map<IEnumerable<TourDto>>(tours);
         }
 
-      /*  public Result<PagedResult<TourDto>> GetByRange(double lat, double lon, int range, int type, int page, int pageSize)
+        public PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize)
         {
             var tours = _tourRepository.GetAllPublished(page, pageSize);
-            var filteredTours = tours.Results
-                .Where(Tour =>
-                {
-                    if (type == 1 && Tour.Keypoints.Count > 0)
-                    {
-                        var firstKeypoint = Tour.Keypoints.First();
-                        return isWithinRange(lat, lon, firstKeypoint.Latitude, firstKeypoint.Longitude, range * 1000);
-                    }
-                    else if (type == 2 && Tour.Keypoints.Count > 0)
-                    {
-                        var lasttKeypoint = Tour.Keypoints.Last();
-                        return isWithinRange(lat, lon, lastKeypoint.Latitude, lastKeypoint.Longitude, range * 1000);
-                    }
-                    else
-                    {
-                        return Tour.Keypoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000));
-                    }
-
-                })
+            var filteredTours = tours
+                .Where(Tour =>Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
                 .ToList();
             var totalCount = filteredTours.Count;
 
             foreach (var tour in filteredTours)
             {
-                if (tour.Keypoints.Count > 1)
+                if (tour.KeyPoints.Count > 1)
                 {
-                    var firstKeypoint = tour.Keypoints.First();
-                    tour.Keypoints.Clear();
-                    tour.Keypoints.Add(firstKeypoint);
+                    var firstKeyPoint = tour.KeyPoints.First();
+                    tour.KeyPoints.Clear();
+                    tour.KeyPoints.Add(firstKeyPoint);
                 }
             }
-            var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
-            return MapToDto(pagedResult);
 
-        } */
+            var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
+            var items = pagedResult.Results.Select(_mapper.Map<TourDto>).ToList();
+            return new PagedResult<TourDto>(items, pagedResult.TotalCount);
+
+        }
+
+        private bool IsWithinRange(double latPosition, double lonPosition, double latPoint, double lonPoint, double rangeMeters)
+        {
+            const double earthRadius = 6371000;
+            latPosition *= Math.PI / 180;
+            lonPosition *= Math.PI / 180;
+            latPoint *= Math.PI / 180;
+            lonPoint *= Math.PI / 180;
+
+            double dLat = latPoint - latPosition;
+            double dLon = lonPoint - lonPosition;
+            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                       Math.Cos(latPosition) * Math.Cos(latPoint) * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            double distance = earthRadius * c;
+
+            return distance <= rangeMeters;
+        }
 
         public TourDto Update(long id, UpdateTourDto dto)
         {
