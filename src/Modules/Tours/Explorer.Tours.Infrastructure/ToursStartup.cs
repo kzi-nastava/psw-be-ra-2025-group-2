@@ -27,7 +27,7 @@ public static class ToursStartup
     {
         services.AddScoped<IEquipmentService, EquipmentService>();
         services.AddScoped<ITourProblemService, TourProblemService>();
-        //services.AddScoped<ITouristEquipmentService, TouristEquipmentService>();
+        services.AddScoped<ITouristEquipmentService, TouristEquipmentService>();
         services.AddScoped<ITouristObjectService, TouristObjectService>();
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
@@ -38,7 +38,7 @@ public static class ToursStartup
         services.AddScoped<IEquipmentRepository, EquipmentDbRepository>();
 
         services.AddScoped<ITourProblemRepository, TourProblemDbRepository>();
-        //services.AddScoped<ITouristEquipmentRepository, TouristEquipmentDbRepository>();
+        services.AddScoped<ITouristEquipmentRepository, TouristEquipmentDbRepository>();
         services.AddScoped<ITouristObjectRepository, TouristObjectDbRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<ITourRepository, TourDbRepository>();
