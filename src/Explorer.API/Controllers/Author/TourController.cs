@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
@@ -20,6 +21,7 @@ namespace Explorer.API.Controllers.Author
 
         // POST: api/author/tours
         [HttpPost]
+        
         public ActionResult<TourDto> Create([FromBody] CreateTourDto dto)
         {
             var authorIdClaim = User.FindFirst("id");
@@ -45,6 +47,7 @@ namespace Explorer.API.Controllers.Author
             return Ok(tours);
         }
 
+        
         // GET: api/author/tours/{id}
         [HttpGet("{id}")]
         public ActionResult<TourDto> GetById(long id)
@@ -104,6 +107,16 @@ namespace Explorer.API.Controllers.Author
         {
             _tourService.RemoveKeyPoint(tourId, ordinalNo);
             return Ok();
+        }
+
+        // GetByRange: 
+
+        [HttpGet("search/{lat:double}/{lon:double}/{range:int}")]
+        [AllowAnonymous]
+        public ActionResult<PagedResult<TourDto>> GetByRange (double lat, double lon, int range, [FromQuery]int page, [FromQuery] int pageSize)
+        {
+            var result = _tourService.GetByRange(lat, lon, range, page, pageSize);
+            return Ok(result);
         }
 
     }

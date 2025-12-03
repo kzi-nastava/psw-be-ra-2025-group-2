@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
@@ -33,6 +34,48 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tours = _tourRepository.GetByAuthorAsync(authorId).Result;
             return _mapper.Map<IEnumerable<TourDto>>(tours);
+        }
+
+        public PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize)
+        {
+            var tours = _tourRepository.GetAllPublished(page, pageSize);
+            var filteredTours = tours
+                .Where(Tour =>Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
+                .ToList();
+            var totalCount = filteredTours.Count;
+
+          /*  foreach (var tour in filteredTours)
+            {
+                if (tour.KeyPoints.Count > 1)
+                {
+                    var firstKeyPoint = tour.KeyPoints.First();
+                    tour.KeyPoints.Clear();
+                    tour.KeyPoints.Add(firstKeyPoint);
+                }
+            }*/
+
+            var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
+            var items = pagedResult.Results.Select(_mapper.Map<TourDto>).ToList();
+            return new PagedResult<TourDto>(items, pagedResult.TotalCount);
+
+        }
+
+        private bool IsWithinRange(double latPosition, double lonPosition, double latPoint, double lonPoint, double rangeMeters)
+        {
+            const double earthRadius = 6371000;
+            latPosition *= Math.PI / 180;
+            lonPosition *= Math.PI / 180;
+            latPoint *= Math.PI / 180;
+            lonPoint *= Math.PI / 180;
+
+            double dLat = latPoint - latPosition;
+            double dLon = lonPoint - lonPosition;
+            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                       Math.Cos(latPosition) * Math.Cos(latPoint) * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            double distance = earthRadius * c;
+
+            return distance <= rangeMeters;
         }
 
         public TourDto Update(long id, UpdateTourDto dto)
