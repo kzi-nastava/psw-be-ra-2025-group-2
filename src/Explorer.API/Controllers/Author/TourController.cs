@@ -17,7 +17,12 @@ namespace Explorer.API.Controllers.Author
         {
             _tourService = tourService;
         }
-
+        private long GetUserId()
+        {
+            var claim = User.FindFirst("id");
+            if (claim == null) throw new UnauthorizedAccessException("User id claim missing.");
+            return long.Parse(claim.Value);
+        }
         // POST: api/author/tours
         [HttpPost]
         public ActionResult<TourDto> Create([FromBody] CreateTourDto dto)
@@ -59,7 +64,7 @@ namespace Explorer.API.Controllers.Author
 
             return Ok(tour);
         }
-
+        // SAMO KREATOR može UPDATE
         // PUT: api/author/tours/{id}
         [HttpPut("{id}")]
         public ActionResult<TourDto> Update(long id, [FromBody] UpdateTourDto dto)
@@ -69,15 +74,30 @@ namespace Explorer.API.Controllers.Author
 
             if (dto.Difficulty < 1 || dto.Difficulty > 5)
                 throw new ArgumentOutOfRangeException(nameof(dto.Difficulty), "Difficulty must be between 1 and 5.");
+            var userId = GetUserId();
 
+            var existing = _tourService.GetById(id, userId);
+            if (existing == null)
+                return NotFound();
+
+            if (existing.AuthorId != userId)
+                return Forbid("You are not allowed to edit this tour.");
             var updated = _tourService.Update(id, dto);
             return Ok(updated);
         }
-
+        // SAMO KREATOR može DELETE
         // DELETE: api/author/tours/{id}
         [HttpDelete("{id}")]
         public IActionResult Delete(long id)
         {
+            var userId = GetUserId();
+
+            var existing = _tourService.GetById(id, userId);
+            if (existing == null)
+                return NotFound();
+
+            if (existing.AuthorId != userId)
+                return Forbid("You are not allowed to delete this tour.");
             _tourService.Delete(id);
             return NoContent();
         }

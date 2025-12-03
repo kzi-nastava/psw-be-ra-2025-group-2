@@ -13,6 +13,9 @@ public class ToursContext : DbContext
 
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
+    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<TourPurchaseToken> TourPurchaseTokens { get; set; }
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
 

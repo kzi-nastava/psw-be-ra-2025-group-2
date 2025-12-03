@@ -69,4 +69,5 @@ public class Tour : Entity
         if (price < 0) throw new ArgumentException("Price cannot be negative.", nameof(price));
         Price = price;
     }
+    public bool IsOwnedBy(long userId) => AuthorId == userId;
 }
