@@ -23,7 +23,12 @@ public class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
-    public List<KeyPoint> KeyPoints { get; private set; } = new();
+   
+
+   
+    private readonly List<KeyPoint> _keyPoints = new();
+
+    public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
 
 
     public Tour() { }
@@ -72,24 +77,25 @@ public class Tour : AggregateRoot
         Price = price;
     }
 
+
+
     public void AddKeyPoint(KeyPoint keyPoint)
     {
         if (keyPoint == null)
             throw new ArgumentNullException(nameof(keyPoint));
 
-        
-        if (KeyPoints.Any(k => k.OrdinalNo == keyPoint.OrdinalNo))
+        if (_keyPoints.Any(k => k.OrdinalNo == keyPoint.OrdinalNo))
             throw new InvalidOperationException($"KeyPoint with OrdinalNo {keyPoint.OrdinalNo} already exists.");
 
-        KeyPoints.Add(keyPoint);
+        _keyPoints.Add(keyPoint);
         RecalculateKeyPointOrdinals();
     }
 
     public void RemoveKeyPoint(int ordinalNo)
     {
-        var kp = KeyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
+        var kp = _keyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
         if (kp != null)
-            KeyPoints.Remove(kp);
+            _keyPoints.Remove(kp);
     }
 
     public void UpdateKeyPoint(int ordinalNo, KeyPointUpdate update)
@@ -97,7 +103,7 @@ public class Tour : AggregateRoot
         if (update == null)
             throw new ArgumentNullException(nameof(update));
 
-        var keyPoint = KeyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
+        var keyPoint = _keyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
         if (keyPoint == null)
             throw new InvalidOperationException($"KeyPoint with OrdinalNo {ordinalNo} does not exist.");
 
@@ -111,17 +117,20 @@ public class Tour : AggregateRoot
             update.Longitude
         );
 
-        KeyPoints[KeyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
+        _keyPoints[_keyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
     }
 
-    public void ClearKeyPoints() => KeyPoints.Clear();
+    public void ClearKeyPoints() => _keyPoints.Clear();
 
     private void RecalculateKeyPointOrdinals()
     {
-        KeyPoints = KeyPoints
-            .OrderBy(k => k.OrdinalNo)
-            .Select((k, index) => { k.SetOrdinalNo(index + 1); return k; })
-            .ToList();
+        var ordered = _keyPoints.OrderBy(k => k.OrdinalNo).ToList();
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].SetOrdinalNo(i + 1);
+        }
+        _keyPoints.Clear();
+        _keyPoints.AddRange(ordered);
     }
 
 }
