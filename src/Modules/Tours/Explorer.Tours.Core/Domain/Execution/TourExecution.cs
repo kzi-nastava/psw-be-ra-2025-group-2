@@ -23,6 +23,10 @@ namespace Explorer.Tours.Core.Domain.Execution
         private readonly List<KeyPointVisit> _keyPointVisits;
         public IReadOnlyList<KeyPointVisit> KeyPointVisits => _keyPointVisits.AsReadOnly();
 
+        private TourExecution()
+        {
+            _keyPointVisits = new List<KeyPointVisit>();
+        }
 
         public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp)
         {

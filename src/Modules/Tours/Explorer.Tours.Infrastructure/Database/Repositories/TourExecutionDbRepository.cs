@@ -36,7 +36,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
             _dbContext.SaveChanges();
         }
 
-        public TourExecution Get(int id)
+        public TourExecution Get(long id)
         {
             var entity = _dbContext.TourExecutions.Find(id);
             if (entity == null)
