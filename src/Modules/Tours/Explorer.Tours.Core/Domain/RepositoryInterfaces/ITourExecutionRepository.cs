@@ -9,9 +9,10 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
 {
     public interface ITourExecutionRepository
     {
-        public TourExecution Get(int id);
+        public TourExecution Get(long id);
         public TourExecution Create(TourExecution execution);
         public TourExecution Update(TourExecution execution);
-        public void Delete(int id);
+        public void Delete(long id);
+        public TourExecution? GetActiveByTouristId(long touristId);
     }
 }

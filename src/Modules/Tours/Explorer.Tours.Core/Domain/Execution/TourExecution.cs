@@ -24,18 +24,21 @@ namespace Explorer.Tours.Core.Domain.Execution
         private readonly List<KeyPointVisit> _keyPointVisits = new();
         public IReadOnlyList<KeyPointVisit> KeyPointVisits => _keyPointVisits.AsReadOnly();
 
+        public int KeyPointsCount { get; init; }
+
         private TourExecution()
         {
 
         }
 
-        public TourExecution(long touristId, long tourId)
+        public TourExecution(long touristId, long tourId, int keyPointsCount)
         {
             TouristId = touristId;
             TourId = tourId;
+            KeyPointsCount = keyPointsCount;
         }
 
-        public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp)
+        public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp, int KeyPointsCount)
         {
             LastActivityTimestamp = EnsureUtc(lastActivityTimestamp);
             CompletionTimestamp = completionTimestamp == null ? null : EnsureUtc(completionTimestamp.Value);
@@ -84,7 +87,7 @@ namespace Explorer.Tours.Core.Domain.Execution
 
         public void ArriveAtKeyPointByOrdinal(int ordinal)
         {
-            if(ordinal < 1)
+            if(ordinal < 1 || ordinal > KeyPointsCount)
                 throw new ArgumentException("Invalid key point ordinal.");
 
             int lastVisited = GetLastVisitedKeyPointOrdinal();
@@ -94,6 +97,17 @@ namespace Explorer.Tours.Core.Domain.Execution
 
             _keyPointVisits.Add(new KeyPointVisit(ordinal, DateTime.UtcNow));
 
+        }
+
+        public bool HasTouristVisitedKeyPoint(int ordinal)
+        {
+            if (ordinal < 1 || ordinal > KeyPointsCount)
+                throw new ArgumentException("Invalid key point ordinal.");
+
+            if(_keyPointVisits.Any(kpv => kpv.KeyPointOrdinal == ordinal))
+                    return true;
+
+            return false;
         }
 
         public void RecordActivity()
@@ -108,6 +122,11 @@ namespace Explorer.Tours.Core.Domain.Execution
 
             if (CompletionTimestamp.HasValue && CompletionTimestamp.Value > DateTime.UtcNow)
                 throw new EntityValidationException("Completion time must be in the past.");
+
+            if(KeyPointsCount <= 0)
+            {
+                throw new EntityValidationException("Key point count must be greater than 0.");
+            }
         }
 
 

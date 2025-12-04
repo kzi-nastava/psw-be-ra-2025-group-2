@@ -26,7 +26,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
             return execution;
         }
 
-        public void Delete(int id)
+        public void Delete(long id)
         {
             var entity = _dbContext.TourExecutions.Find(id);
             if (entity == null)
@@ -36,13 +36,20 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
             _dbContext.SaveChanges();
         }
 
-        public TourExecution Get(int id)
+        public TourExecution Get(long id)
         {
             var entity = _dbContext.TourExecutions.Include(e => e.KeyPointVisits).FirstOrDefault(e => e.Id == id);
             if (entity == null)
                 throw new NotFoundException("Not found: " + id);
 
             return entity;
+        }
+
+        public TourExecution? GetActiveByTouristId(long touristId)
+        {
+            return _dbContext.TourExecutions
+                .Include(e => e.KeyPointVisits)
+                .FirstOrDefault(e => e.TouristId == touristId && e.State == TourExecutionState.InProgress);
         }
 
         public TourExecution Update(TourExecution execution)

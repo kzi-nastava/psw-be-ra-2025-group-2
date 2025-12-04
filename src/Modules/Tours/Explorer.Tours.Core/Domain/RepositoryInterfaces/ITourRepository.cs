@@ -13,5 +13,8 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId);
         Task UpdateAsync(Tour tour);
         Task DeleteAsync(Tour tour);
+
+        // TODO Promeniti kasnije
+        Task<IEnumerable<Tour?>> GetAllAsync(); 
     }
 }

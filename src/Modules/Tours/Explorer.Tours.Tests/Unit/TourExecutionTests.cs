@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Explorer.Tours.Tests.Unit
 {
-    internal class TourExecutionTests
+    public class TourExecutionTests
     {
+
     }
 }
