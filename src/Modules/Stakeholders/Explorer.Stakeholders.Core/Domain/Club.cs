@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Explorer.BuildingBlocks.Core.Domain;
+using System.Linq;
 
 namespace Explorer.Stakeholders.Core.Domain
 {
@@ -10,6 +11,16 @@ namespace Explorer.Stakeholders.Core.Domain
         public string Description { get; private set; }
         public long OwnerId { get; init; }
         public List<string> ImageUrls { get; private set; }
+        public ClubStatus Status { get; private set; }
+
+        private readonly List<ClubMember> _members = new();
+        public IReadOnlyCollection<ClubMember> Members => _members;
+
+        private readonly List<ClubJoinRequest> _joinRequests = new();
+        public IReadOnlyCollection<ClubJoinRequest> JoinRequests => _joinRequests;
+
+        private readonly List<ClubInvitation> _invitations = new();
+        public IReadOnlyCollection<ClubInvitation> Invitations => _invitations;
 
         public Club(string name, string description, long ownerId, List<string> imageUrls)
         {
@@ -17,6 +28,7 @@ namespace Explorer.Stakeholders.Core.Domain
             Description = description;
             OwnerId = ownerId;
             ImageUrls = imageUrls ?? new List<string>();
+            Status = ClubStatus.Active;
             Validate();
         }
 
@@ -41,6 +53,110 @@ namespace Explorer.Stakeholders.Core.Domain
             Description = description;
             ImageUrls = imageUrls ?? new List<string>();
             Validate();
+        }
+
+        public void Close()
+        {
+            Status = ClubStatus.Closed;
+        }
+
+        public void Open()
+        {
+            Status = ClubStatus.Active;
+        }
+
+        public void RequestMembership(long touristId)
+        {
+            if (Status != ClubStatus.Active)
+                throw new InvalidOperationException("Club is not active.");
+
+            if (_members.Any(m => m.TouristId == touristId))
+                throw new InvalidOperationException("Tourist is already a member.");
+
+            if (_joinRequests.Any(r => r.TouristId == touristId))
+                throw new InvalidOperationException("Join request already exists.");
+
+            var request = new ClubJoinRequest(touristId);
+            _joinRequests.Add(request);
+        }
+
+        public void WithdrawRequest(long touristId)
+        {
+            var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+            if (request == null)
+                throw new InvalidOperationException("Join request not found.");
+
+            _joinRequests.Remove(request);
+        }
+
+        public void AcceptRequest(long touristId)
+        {
+            var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+            if (request == null)
+                throw new InvalidOperationException("Join request not found.");
+
+            _joinRequests.Remove(request);
+            _members.Add(new ClubMember(touristId));
+
+        }
+
+        public void RejectRequest(long touristId)
+        {
+            var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+            if (request == null)
+                throw new InvalidOperationException("Join request not found.");
+
+            _joinRequests.Remove(request);
+
+        }
+
+        public void InviteTourist(long touristId)
+        {
+            if (Status != ClubStatus.Active)
+                throw new InvalidOperationException("Club is not active.");
+
+            if (_members.Any(m => m.TouristId == touristId))
+                throw new InvalidOperationException("Tourist is already a member.");
+
+            if (_invitations.Any(i => i.TouristId == touristId))
+                throw new InvalidOperationException("Invitation already exists.");
+
+            if (_joinRequests.Any(r => r.TouristId == touristId))
+                throw new InvalidOperationException("Tourist already has a pending join request.");
+
+            var invitation = new ClubInvitation(touristId);
+            _invitations.Add(invitation);
+
+        }
+
+        public void AcceptInvitation(long touristId)
+        {
+            var invitation = _invitations.SingleOrDefault(i => i.TouristId == touristId);
+            if (invitation == null)
+                throw new InvalidOperationException("Invitation not found.");
+
+            _invitations.Remove(invitation);
+            _members.Add(new ClubMember(touristId));
+
+        }
+
+        public void RejectInvitation(long touristId)
+        {
+            var invitation = _invitations.SingleOrDefault(i => i.TouristId == touristId);
+            if (invitation == null)
+                throw new InvalidOperationException("Invitation not found.");
+
+            _invitations.Remove(invitation);
+
+        }
+
+        public void RemoveMember(long touristId)
+        {
+            var member = _members.SingleOrDefault(m => m.TouristId == touristId);
+            if (member == null)
+                throw new InvalidOperationException("Member not found.");
+
+            _members.Remove(member);
         }
     }
 }

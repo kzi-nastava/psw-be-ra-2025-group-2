@@ -8,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Explorer.Stakeholders.Core.Domain;
+using System.Collections.Generic;
+using System.Linq;
+using Xunit;
 
 namespace Explorer.Stakeholders.Tests.Integration;
 
@@ -319,5 +323,99 @@ public void Updates()
             
             ControllerContext = BuildContext("-21")
         };
+    }
+
+    [Fact]
+    public void Invite_and_accept_invitation_adds_member_and_removes_invitation()
+    {
+        // Arrange
+        var club = new Club(
+            name: "Test club",
+            description: "Some description",
+            ownerId: 1,
+            imageUrls: new List<string> { "https://example.com/image.jpg" });
+
+        var touristId = 10L;
+
+        // Act 1: vlasnik šalje poziv
+        club.InviteTourist(touristId);
+
+        // Assert posle poziva
+        Assert.Single(club.Invitations);
+        Assert.Empty(club.Members);
+
+        // Act 2: turista prihvata poziv
+        club.AcceptInvitation(touristId);
+
+        // Assert posle prihvatanja
+        Assert.Empty(club.Invitations);
+        Assert.Single(club.Members);
+        Assert.Equal(touristId, club.Members.Single().TouristId);
+    }
+
+    [Fact]
+    public void Invite_fails_when_tourist_is_already_member()
+    {
+        // Arrange
+        var club = new Club(
+            name: "Test club",
+            description: "Desc",
+            ownerId: 1,
+            imageUrls: new List<string> { "img" });
+
+        var touristId = 10L;
+
+        // prvo vlasnik pošalje poziv
+        club.InviteTourist(touristId);
+        // turista prihvati poziv -> postaje član
+        club.AcceptInvitation(touristId);
+
+        // Act & Assert: sada je već član i novi poziv treba da padne
+        Assert.Throws<InvalidOperationException>(() =>
+            club.InviteTourist(touristId));
+    }
+
+    [Fact]
+    public void Accept_invitation_fails_when_invitation_does_not_exist()
+    {
+        // Arrange
+        var club = new Club(
+            name: "Test club",
+            description: "Desc",
+            ownerId: 1,
+            imageUrls: new List<string> { "img" });
+
+        var touristId = 10L;
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            club.AcceptInvitation(touristId));
+
+        Assert.Equal("Invitation not found.", ex.Message);
+    }
+
+    [Fact]
+    public void Remove_member_removes_existing_member()
+    {
+        // Arrange
+        var club = new Club(
+            name: "Test club",
+            description: "Desc",
+            ownerId: 1,
+            imageUrls: new List<string> { "img" });
+
+        var touristId = 10L;
+
+        // napravi člana preko domenske logike
+        club.InviteTourist(touristId);
+        club.AcceptInvitation(touristId);
+
+        Assert.Single(club.Members);
+
+        // Act
+        club.RemoveMember(touristId);
+
+        // Assert
+        Assert.Empty(club.Members);
     }
 }

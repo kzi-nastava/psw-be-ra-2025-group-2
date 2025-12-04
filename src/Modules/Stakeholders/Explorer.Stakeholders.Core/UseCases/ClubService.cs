@@ -50,5 +50,102 @@ namespace Explorer.Stakeholders.Core.UseCases
             var clubs = _clubRepository.GetAll();
             return clubs.Select(_mapper.Map<ClubDto>).ToList();
         }
+
+        public void InviteTourist(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can invite tourists.");
+
+            club.InviteTourist(touristId);
+
+            _clubRepository.Update(club);
+        }
+
+        public void AcceptInvitation(long clubId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            club.AcceptInvitation(touristId);
+
+            _clubRepository.Update(club);
+        }
+
+        public void RejectInvitation(long clubId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            club.RejectInvitation(touristId);
+
+            _clubRepository.Update(club);
+        }
+
+        public void RemoveMember(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can remove members.");
+
+            club.RemoveMember(touristId);
+
+            _clubRepository.Update(club);
+        }
+        public void RequestMembership(long clubId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            club.RequestMembership(touristId);
+
+            _clubRepository.Update(club);
+        }
+
+        public void WithdrawMembershipRequest(long clubId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            club.WithdrawRequest(touristId);
+
+            _clubRepository.Update(club);
+        }
+        public void AcceptMembershipRequest(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can accept membership requests.");
+
+            club.AcceptRequest(touristId);
+
+            _clubRepository.Update(club);
+        }
+        public void RejectMembershipRequest(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can reject membership requests.");
+
+            club.RejectRequest(touristId);
+
+            _clubRepository.Update(club);
+        }
     }
 }
