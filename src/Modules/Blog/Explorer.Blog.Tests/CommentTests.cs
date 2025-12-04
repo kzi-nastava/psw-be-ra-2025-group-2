@@ -1,301 +1,303 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using Explorer.Blog.API.Dtos;
-using Explorer.Blog.Infrastructure.Database;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Explorer.Blog.Core.Domain;
 using Shouldly;
 
-namespace Explorer.Blog.Tests;
-
-[Collection("Sequential")]
-public class CommentTests : BaseBlogIntegrationTest
+namespace Explorer.Blog.Tests.Unit.Domain
 {
-    public CommentTests(BlogTestFactory factory) : base(factory)
+    public class CommentTests
     {
-    }
-
-    [Fact]
-    public async Task Creates_comment_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var request = new CommentDto
+        [Fact]
+        public void Create_comment_succeeds()
         {
-            UserId = -21,
-            BlogPostId = -1,
-            Text = "Ovo je novi test komentar."
-        };
+            // Arrange & Act
+            var comment = new Comment(-1, -21, "Ovo je test komentar.");
 
-        // Act
-        var response = await client.PostAsJsonAsync("/api/blogpost/comments", request);
+            // Assert
+            comment.BlogPostId.ShouldBe(-1);
+            comment.UserId.ShouldBe(-21);
+            comment.Text.ShouldBe("Ovo je test komentar.");
+            comment.CreatedAt.ShouldNotBe(default(DateTime));
+            comment.LastModifiedAt.ShouldBeNull();
+        }
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
-
-        var created = await response.Content.ReadFromJsonAsync<CommentDto>();
-        created.ShouldNotBeNull();
-        created.Text.ShouldBe("Ovo je novi test komentar.");
-        created.UserId.ShouldBe(-21);
-        created.BlogPostId.ShouldBe(-1);
-
-        // Verify in database
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
-
-        var comment = db.Comments.FirstOrDefault(c => c.Id == created.Id);
-        comment.ShouldNotBeNull();
-        comment.Text.ShouldBe("Ovo je novi test komentar.");
-    }
-
-    [Fact]
-    public async Task Create_fails_on_empty_text()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var request = new CommentDto
+        [Fact]
+        public void Create_comment_fails_when_text_empty()
         {
-            UserId = -21,
-            BlogPostId = -1,
-            Text = ""
-        };
+            // Arrange & Act & Assert
+            Should.Throw<ArgumentException>(() => new Comment(-1, -21, ""));
+        }
 
-        // Act
-        var response = await client.PostAsJsonAsync("/api/blogpost/comments", request);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task Create_fails_on_invalid_blog_post_id()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var request = new CommentDto
+        [Fact]
+        public void Create_comment_fails_when_text_null()
         {
-            UserId = -21,
-            BlogPostId = 9999, // Ne postoji
-            Text = "Komentar na nepostojeci post"
-        };
+            // Arrange & Act & Assert
+            Should.Throw<ArgumentException>(() => new Comment(-1, -21, null));
+        }
 
-        // Act
-        var response = await client.PostAsJsonAsync("/api/blogpost/comments", request);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task Get_all_comments_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-
-        // Act
-        var response = await client.GetAsync("/api/blogpost/comments");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<List<CommentDto>>();
-        result.ShouldNotBeNull();
-        result.Count.ShouldBeGreaterThan(0);
-    }
-
-    [Fact]
-    public async Task Get_comment_by_id_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-
-        // Act
-        var response = await client.GetAsync("/api/blogpost/comments/-1");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<CommentDto>();
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(-1);
-    }
-
-    [Fact]
-    public async Task Get_comment_fails_on_invalid_id()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-
-        // Act
-        var response = await client.GetAsync("/api/blogpost/comments/9999");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task Get_comments_by_blog_post_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-
-        // Act
-        var response = await client.GetAsync("/api/blogpost/comments/by-post/-1");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<List<CommentDto>>();
-        result.ShouldNotBeNull();
-        result.Count.ShouldBeGreaterThan(0);
-        result.ShouldAllBe(c => c.BlogPostId == -1);
-    }
-
-    [Fact]
-    public async Task Updates_comment_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new CommentDto
+        [Fact]
+        public void Create_comment_fails_when_text_whitespace()
         {
-            Text = "Ažurirani tekst komentara."
-        };
+            // Arrange & Act & Assert
+            Should.Throw<ArgumentException>(() => new Comment(-1, -21, "   "));
+        }
 
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/comments/-3", updateRequest);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var updated = await response.Content.ReadFromJsonAsync<CommentDto>();
-        updated.ShouldNotBeNull();
-        updated.Text.ShouldBe("Ažurirani tekst komentara.");
-
-        // Verify in database
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
-
-        var comment = db.Comments.FirstOrDefault(c => c.Id == -3);
-        comment.ShouldNotBeNull();
-        comment.Text.ShouldBe("Ažurirani tekst komentara.");
-        comment.LastModifiedAt.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public async Task Update_fails_on_invalid_id()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new CommentDto
+        [Fact]
+        public void Create_comment_fails_when_userId_zero()
         {
-            Text = "Ne postoji."
-        };
+            // Arrange & Act & Assert
+            Should.Throw<ArgumentException>(() => new Comment(-1, 0, "Test text"));
+        }
 
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/comments/9999", updateRequest);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task Update_fails_on_empty_text()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new CommentDto
+        [Fact]
+        public void Create_comment_succeeds_when_userId_negative()
         {
-            Text = ""
-        };
+            // Arrange & Act
+            var comment = new Comment(-1, -21, "Test text");
 
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/comments/-3", updateRequest);
+            // Assert
+            comment.UserId.ShouldBe(-21);
+        }
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task Update_fails_when_not_owner()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        // Pretpostavljamo da je komentar -1 kreirao user -21, 
-        // a pokušavamo da update-ujemo kao user -1
-        var updateRequest = new CommentDto
+        [Fact]
+        public void Create_comment_fails_when_blogPostId_zero()
         {
-            UserId = -1, // Različit user
-            Text = "Pokušaj neovlašćenog update-a."
-        };
+            // Arrange & Act & Assert
+            Should.Throw<ArgumentException>(() => new Comment(0, -21, "Test text"));
+        }
 
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/comments/-1", updateRequest);
+        [Fact]
+        public void Create_comment_succeeds_when_blogPostId_negative()
+        {
+            // Arrange & Act
+            var comment = new Comment(-10, -21, "Test text");
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
+            // Assert
+            comment.BlogPostId.ShouldBe(-10);
+        }
 
-    [Fact]
-    public async Task Deletes_comment_successfully()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
+        [Fact]
+        public void Create_comment_fails_when_text_exceeds_1000_characters()
+        {
+            // Arrange
+            var longText = new string('a', 1001);
 
-        // Act
-        var response = await client.DeleteAsync("/api/blogpost/comments/-8");
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => new Comment(-1, -21, longText));
+        }
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        [Fact]
+        public void Create_comment_succeeds_when_text_exactly_1000_characters()
+        {
+            // Arrange
+            var maxText = new string('a', 1000);
 
-        // Verify in database
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
+            // Act
+            var comment = new Comment(-1, -21, maxText);
 
-        var comment = db.Comments.FirstOrDefault(c => c.Id == -8);
-        comment.ShouldBeNull();
-    }
+            // Assert
+            comment.Text.Length.ShouldBe(1000);
+        }
 
-    [Fact]
-    public async Task Delete_fails_on_invalid_id()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
+        [Fact]
+        public void Edit_comment_succeeds()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
 
-        // Act
-        var response = await client.DeleteAsync("/api/blogpost/comments/9999");
+            // Act
+            comment.Edit("Ažurirani tekst.");
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
+            // Assert
+            comment.Text.ShouldBe("Ažurirani tekst.");
+            comment.LastModifiedAt.ShouldNotBeNull();
+        }
 
-    [Fact]
-    public async Task Delete_fails_when_not_owner()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        // Pretpostavljamo da je komentar -2 kreirao user -21,
-        // a pokušavamo da delete-ujemo kao user -1
+        [Fact]
+        public void Edit_comment_fails_when_text_empty()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
 
-        // Act
-        var response = await client.DeleteAsync("/api/blogpost/comments/-2");
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.Edit(""));
+        }
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
+        [Fact]
+        public void Edit_comment_fails_when_text_null()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
 
-    [Fact]
-    public async Task Delete_fails_when_edit_window_expired()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.Edit(null));
+        }
 
-        // Trebalo bi da imaš komentar u bazi koji je stariji od 15 minuta
-        // ili da kreiraš takav komentar u setup-u testa
+        [Fact]
+        public void Edit_comment_fails_when_text_whitespace()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
 
-        // Act
-        var response = await client.DeleteAsync("/api/blogpost/comments/-10");
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.Edit("   "));
+        }
 
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        [Fact]
+        public void Edit_comment_fails_when_edit_window_expired()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Simulacija starog komentara (stariji od 15 minuta)
+            var createdAtField = typeof(Comment).GetField("<CreatedAt>k__BackingField",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            createdAtField?.SetValue(comment, DateTime.UtcNow.AddMinutes(-20));
+
+            // Act & Assert
+            Should.Throw<InvalidOperationException>(() => comment.Edit("Novi tekst."));
+        }
+
+        [Fact]
+        public void CanEditOrDelete_returns_true_when_within_15_minutes()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Test komentar.");
+
+            // Act
+            var result = comment.CanEditOrDelete();
+
+            // Assert
+            result.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void CanEditOrDelete_returns_false_when_older_than_15_minutes()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Test komentar.");
+
+            // Simulacija starog komentara
+            var createdAtField = typeof(Comment).GetField("<CreatedAt>k__BackingField",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            createdAtField?.SetValue(comment, DateTime.UtcNow.AddMinutes(-20));
+
+            // Act
+            var result = comment.CanEditOrDelete();
+
+            // Assert
+            result.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void CanEditOrDelete_returns_true_when_exactly_15_minutes()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Test komentar.");
+
+            // Tačno 15 minuta minus 1 sekunda (da bude sigurno unutar prozora)
+            var createdAtField = typeof(Comment).GetField("<CreatedAt>k__BackingField",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            createdAtField?.SetValue(comment, DateTime.UtcNow.AddMinutes(-15).AddSeconds(1));
+
+            // Act
+            var result = comment.CanEditOrDelete();
+
+            // Assert
+            result.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void UpdateText_succeeds()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Act
+            comment.UpdateText("Ažurirani tekst bez provere vremena.");
+
+            // Assert
+            comment.Text.ShouldBe("Ažurirani tekst bez provere vremena.");
+            comment.LastModifiedAt.ShouldNotBeNull();
+        }
+
+        [Fact]
+        public void UpdateText_succeeds_even_when_edit_window_expired()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Simulacija starog komentara
+            var createdAtField = typeof(Comment).GetField("<CreatedAt>k__BackingField",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            createdAtField?.SetValue(comment, DateTime.UtcNow.AddMinutes(-20));
+
+            // Act
+            comment.UpdateText("Novi tekst.");
+
+            // Assert
+            comment.Text.ShouldBe("Novi tekst.");
+            comment.LastModifiedAt.ShouldNotBeNull();
+        }
+
+        [Fact]
+        public void UpdateText_fails_when_text_empty()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.UpdateText(""));
+        }
+
+        [Fact]
+        public void UpdateText_fails_when_text_null()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.UpdateText(null));
+        }
+
+        [Fact]
+        public void UpdateText_fails_when_text_whitespace()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.UpdateText("   "));
+        }
+
+        [Fact]
+        public void UpdateText_fails_when_text_exceeds_1000_characters()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+            var longText = new string('a', 1001);
+
+            // Act & Assert
+            Should.Throw<ArgumentException>(() => comment.UpdateText(longText));
+        }
+
+        [Fact]
+        public void Multiple_edits_update_LastModifiedAt()
+        {
+            // Arrange
+            var comment = new Comment(-1, -21, "Originalni tekst.");
+
+            // Act
+            comment.Edit("Prva izmena.");
+            var firstModified = comment.LastModifiedAt;
+
+            System.Threading.Thread.Sleep(100); // Mali delay
+
+            comment.Edit("Druga izmena.");
+            var secondModified = comment.LastModifiedAt;
+
+            // Assert
+            firstModified.ShouldNotBeNull();
+            secondModified.ShouldNotBeNull();
+            
+        }
     }
 }

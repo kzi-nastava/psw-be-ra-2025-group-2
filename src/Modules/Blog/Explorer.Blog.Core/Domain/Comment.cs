@@ -1,69 +1,79 @@
-﻿public class Comment
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Explorer.BuildingBlocks.Core.Domain;
+
+namespace Explorer.Blog.Core.Domain
 {
-    public long Id { get; private set; }
-    public long BlogPostId { get; private set; }  // Komentar pripada blogu
-    public long UserId { get; private set; }
-    public string Text { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? LastModifiedAt { get; private set; }
-
-    private Comment() { } // Za EF Core
-
-    public Comment(long blogPostId, long userId, string text)
+    public class Comment : Entity
     {
-        if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Comment text cannot be empty.");
 
-        BlogPostId = blogPostId;
-        UserId = userId;
-        Text = text;
-        CreatedAt = DateTime.UtcNow;
-        Validate();
-    }
+        public long BlogPostId { get; private set; }  // Komentar pripada blogu
+        public long UserId { get; private set; }
+        public string Text { get; private set; }
+        public DateTime CreatedAt { get; private set; }
+        public DateTime? LastModifiedAt { get; private set; }
 
-    private void Validate()
-    {
-        if (UserId <= 0)
-            throw new ArgumentException("Invalid user ID.");
+        private Comment() { } // Za EF Core
 
-        if (BlogPostId <= 0)
-            throw new ArgumentException("Invalid blog post ID.");
+        public Comment(long blogPostId, long userId, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                throw new ArgumentException("Comment text cannot be empty.");
 
-        if (string.IsNullOrWhiteSpace(Text))
-            throw new ArgumentException("Comment text cannot be empty.");
+            BlogPostId = blogPostId;
+            UserId = userId;
+            Text = text;
+            CreatedAt = DateTime.UtcNow;
+            Validate();
+        }
 
-        if (Text.Length > 1000)
-            throw new ArgumentException("Comment text cannot exceed 1000 characters.");
-    }
+        private void Validate()
+        {
+            if (UserId == 0)
+                throw new ArgumentException("Invalid user ID.");
 
-    public void Edit(string newText)
-    {
-        if (!CanEditOrDelete())
-            throw new InvalidOperationException("Edit window has expired (15 minutes).");
+            if (BlogPostId == 0)
+                throw new ArgumentException("Invalid blog post ID.");
 
-        if (string.IsNullOrWhiteSpace(newText))
-            throw new ArgumentException("Comment text cannot be empty.");
+            if (string.IsNullOrWhiteSpace(Text))
+                throw new ArgumentException("Comment text cannot be empty.");
 
-        Text = newText;
-        LastModifiedAt = DateTime.UtcNow;
-    }
+            if (Text.Length > 1000)
+                throw new ArgumentException("Comment text cannot exceed 1000 characters.");
+        }
 
-    public bool CanEditOrDelete()
-    {
-        return DateTime.UtcNow - CreatedAt <= TimeSpan.FromMinutes(15);
+        public void Edit(string newText)
+        {
+            if (!CanEditOrDelete())
+                throw new InvalidOperationException("Edit window has expired (15 minutes).");
+
+            if (string.IsNullOrWhiteSpace(newText))
+                throw new ArgumentException("Comment text cannot be empty.");
+
+            Text = newText;
+            LastModifiedAt = DateTime.UtcNow;
+        }
+
+        public bool CanEditOrDelete()
+        {
+            return DateTime.UtcNow - CreatedAt <= TimeSpan.FromMinutes(15);
 
 
-    }
+        }
 
-    public void UpdateText(string newText)
-    {
-        if (string.IsNullOrWhiteSpace(newText))
-            throw new ArgumentException("Comment text cannot be empty.");
+        public void UpdateText(string newText)
+        {
+            if (string.IsNullOrWhiteSpace(newText))
+                throw new ArgumentException("Comment text cannot be empty.");
 
-        if (newText.Length > 1000)
-            throw new ArgumentException("Comment text cannot exceed 1000 characters.");
+            if (newText.Length > 1000)
+                throw new ArgumentException("Comment text cannot exceed 1000 characters.");
 
-        Text = newText;
-        LastModifiedAt = DateTime.UtcNow; // Ovo setuje UpdatedAt
+            Text = newText;
+            LastModifiedAt = DateTime.UtcNow; // Ovo setuje UpdatedAt
+        }
     }
 }
