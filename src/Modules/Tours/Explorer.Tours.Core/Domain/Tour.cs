@@ -24,7 +24,8 @@ public class Tour : AggregateRoot
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
     public List<KeyPoint> KeyPoints { get; private set; } = new();
-
+    public List<TourDuration> Durations { get; private set; } = new();
+    public DateTime? PublishedAt { get; private set; }
 
     public Tour() { }
 
@@ -53,6 +54,9 @@ public class Tour : AggregateRoot
 
     public void Update(string name, string description, int difficulty, IEnumerable<string>? tags = null)
     {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required.", nameof(name));
         if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required.", nameof(description));
         if (difficulty < 1 || difficulty > 5) throw new ArgumentException("Difficulty must be between 1 and 5.", nameof(difficulty));
@@ -124,4 +128,45 @@ public class Tour : AggregateRoot
             .ToList();
     }
 
+    public void Publish()
+    {
+        if (Status != TourStatus.Draft)
+            throw new InvalidOperationException("Only draft tours can be published.");
+
+        if (string.IsNullOrWhiteSpace(Name))
+            throw new InvalidOperationException("Tour must have a name before publishing.");
+
+        if (string.IsNullOrWhiteSpace(Description))
+            throw new InvalidOperationException("Tour must have a description before publishing.");
+
+        if (Difficulty < 1 || Difficulty > 5)
+            throw new InvalidOperationException("Tour must have a valid difficulty before publishing.");
+
+        if (Tags == null || !Tags.Any())
+            throw new InvalidOperationException("Tour must have at least one tag before publishing.");
+
+        if (KeyPoints == null || KeyPoints.Count < 2)
+            throw new InvalidOperationException("Tour must have at least two key points before publishing.");
+
+        if (Durations == null || !Durations.Any())
+            throw new InvalidOperationException("Tour must have at least one duration defined before publishing.");
+
+        Status = TourStatus.Published;
+        PublishedAt = DateTime.UtcNow;
+    }
+
+
+    public void AddOrUpdateDuration(TransportType transportType, int minutes)
+    {
+        if (minutes <= 0)
+            throw new ArgumentOutOfRangeException(nameof(minutes), "Duration must be positive.");
+
+        var existing = Durations.FirstOrDefault(d => d.TransportType == transportType);
+        if (existing != null)
+        {
+            Durations.Remove(existing);
+        }
+
+        Durations.Add(new TourDuration(transportType, minutes));
+    }
 }

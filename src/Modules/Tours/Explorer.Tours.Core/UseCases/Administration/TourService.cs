@@ -25,6 +25,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
+
+            if (dto.Durations != null)
+            {
+                foreach (var d in dto.Durations)
+                {
+                    tour.AddOrUpdateDuration((TransportType)d.TransportType, d.Minutes);
+                }
+            }
+
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
         }
@@ -98,5 +107,18 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
+        // upravljanje statusom ture
+
+        public void Publish(long tourId, long authorId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result
+                       ?? throw new Exception("Tour not found.");
+
+            if (tour.AuthorId != authorId)
+                throw new UnauthorizedAccessException("You are not authorized to publish this tour.");
+
+            tour.Publish();
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
     }
 }

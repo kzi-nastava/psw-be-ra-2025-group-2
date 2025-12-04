@@ -106,5 +106,19 @@ namespace Explorer.API.Controllers.Author
             return Ok();
         }
 
+        // upravljanje statusom ture
+
+        // PUT: api/author/tours/{id}/publish
+        [HttpPut("{id}/publish")]
+        public IActionResult Publish(long id)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            _tourService.Publish(id, authorId);
+            return NoContent();
+        }
     }
 }
