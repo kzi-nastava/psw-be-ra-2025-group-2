@@ -19,12 +19,10 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
     [Fact]
     public void Publish_succeeds_for_valid_tour()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // 1) kreiramo novu turu sa svim obaveznim podacima
         var newTour = new CreateTourDto
         {
             Name = "Test Publish Tour",
@@ -33,21 +31,19 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             AuthorId = -11,
             Tags = new List<string> { "test", "publish" },
 
-            // ⭐ OBAVEZNO – bar jedan duration
             Durations = new List<TourDurationDto>
-        {
-            new TourDurationDto
             {
-                TransportType = 0, // Walking
-                Minutes = 120
+                new TourDurationDto
+                {
+                    TransportType = 0, // Walking
+                    Minutes = 120
+                }
             }
-        }
         };
 
         var created = ((ObjectResult)controller.Create(newTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
 
-        // 2) dodamo dve ključne tačke
         controller.AddKeyPoint(created.Id, new KeyPointDto
         {
             OrdinalNo = 1,
@@ -70,10 +66,8 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             Longitude = 19.001
         });
 
-        // Act – publish
         var publishResult = controller.Publish(created.Id) as NoContentResult;
 
-        // Assert
         publishResult.ShouldNotBeNull();
         publishResult.StatusCode.ShouldBe(204);
 
@@ -82,7 +76,6 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
         stored!.Status.ShouldBe(TourStatus.Published);
         stored.PublishedAt.ShouldNotBeNull();
     }
-
 
     [Fact]
     public void Publish_fails_if_user_is_not_author()
@@ -135,8 +128,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
         var created = ((ObjectResult)controllerAsAuthor11.Create(newTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
 
-        // Act & Assert – pokušaj objave kao drugi autor
-        Should.Throw<UnauthorizedAccessException>(() => controllerAsAuthor12.Publish(created.Id));
+        var result = controllerAsAuthor12.Publish(created.Id);
+
+        result.ShouldBeOfType<ForbidResult>();
     }
 
     [Fact]
@@ -145,7 +139,12 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
 
-        Should.Throw<Exception>(() => controller.Publish(-9999));
+        // Act
+        var result = controller.Publish(-9999) as ObjectResult;
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.StatusCode.ShouldBe(500); 
     }
 
     [Fact]
@@ -162,7 +161,7 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             Difficulty = 3,
             AuthorId = -11,
             Tags = new List<string> { "tag" },
-            KeyPoints = new List<KeyPointDto>   // samo jedna tačka → treba 2
+            KeyPoints = new List<KeyPointDto>  
             {
                 new KeyPointDto
                 {
@@ -175,14 +174,16 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
                     Longitude = 19.0
                 }
             },
-            Durations = new List<TourDurationDto>() // prazno → nema trajanja
+            Durations = new List<TourDurationDto>() 
         };
 
         var created = ((ObjectResult)controller.Create(invalidTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
 
-        // Publish treba da baci InvalidOperationException iz agregata
-        Should.Throw<InvalidOperationException>(() => controller.Publish(created.Id));
+        var result = controller.Publish(created.Id) as BadRequestObjectResult;
+
+        result.ShouldNotBeNull();
+        result.StatusCode.ShouldBe(400);
     }
 
     private static TourController CreateController(IServiceScope scope, string authorId = "-11")
