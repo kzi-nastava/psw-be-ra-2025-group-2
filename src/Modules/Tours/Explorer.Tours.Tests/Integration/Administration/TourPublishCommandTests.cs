@@ -24,22 +24,31 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
         var controller = CreateController(scope, "-11");
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // 1) kreiramo novu turu sa osnovnim podacima
+        // 1) kreiramo novu turu sa svim obaveznim podacima
         var newTour = new CreateTourDto
         {
             Name = "Test Publish Tour",
             Description = "Tura za testiranje objave",
             Difficulty = 3,
             AuthorId = -11,
-            Tags = new List<string> { "test", "publish" }
-            // KeyPoints ovde ignorise servis ionako, pa ih ne moramo slati
+            Tags = new List<string> { "test", "publish" },
+
+            // ⭐ OBAVEZNO – bar jedan duration
+            Durations = new List<TourDurationDto>
+        {
+            new TourDurationDto
+            {
+                TransportType = 0, // Walking
+                Minutes = 120
+            }
+        }
         };
 
         var created = ((ObjectResult)controller.Create(newTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
 
-        // 2) dodamo dve ključne tačke preko endpointa
-        var firstKeyPoint = new KeyPointDto
+        // 2) dodamo dve ključne tačke
+        controller.AddKeyPoint(created.Id, new KeyPointDto
         {
             OrdinalNo = 1,
             Name = "Prva tačka",
@@ -48,9 +57,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             ImageUrl = "img1.jpg",
             Latitude = 45.0,
             Longitude = 19.0
-        };
+        });
 
-        var secondKeyPoint = new KeyPointDto
+        controller.AddKeyPoint(created.Id, new KeyPointDto
         {
             OrdinalNo = 2,
             Name = "Druga tačka",
@@ -59,12 +68,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             ImageUrl = "img2.jpg",
             Latitude = 45.001,
             Longitude = 19.001
-        };
+        });
 
-        controller.AddKeyPoint(created.Id, firstKeyPoint);
-        controller.AddKeyPoint(created.Id, secondKeyPoint);
-
-        // Act – sad pokušavamo da objavimo
+        // Act – publish
         var publishResult = controller.Publish(created.Id) as NoContentResult;
 
         // Assert
@@ -76,6 +82,7 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
         stored!.Status.ShouldBe(TourStatus.Published);
         stored.PublishedAt.ShouldNotBeNull();
     }
+
 
     [Fact]
     public void Publish_fails_if_user_is_not_author()

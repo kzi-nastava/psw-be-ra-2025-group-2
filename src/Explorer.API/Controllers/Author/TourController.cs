@@ -106,9 +106,6 @@ namespace Explorer.API.Controllers.Author
             return Ok();
         }
 
-        // upravljanje statusom ture
-
-        // PUT: api/author/tours/{id}/publish
         [HttpPut("{id}/publish")]
         public IActionResult Publish(long id)
         {
@@ -117,8 +114,23 @@ namespace Explorer.API.Controllers.Author
 
             long authorId = long.Parse(authorIdClaim.Value);
 
-            _tourService.Publish(id, authorId);
-            return NoContent();
+            try
+            {
+                _tourService.Publish(id, authorId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unexpected error while publishing tour." });
+            }
         }
     }
 }
