@@ -1,99 +1,104 @@
-﻿using AutoMapper;
-using Explorer.Blog.API.Dtos;
+﻿using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
+using Explorer.Blog.Core.Domain;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.API.Internal;
-using System;
+using AutoMapper;
 using System.Collections.Generic;
-public class CommentService : ICommentService
+using Explorer.Stakeholders.API.Internal;
+
+namespace Explorer.Blog.Core.UseCases
 {
-
-    private readonly ICommentRepository _commentRepository; 
-    private readonly IUsernameProvider _usernameProvider;
-    private readonly IMapper _mapper;
-
-
-    public CommentService(ICommentRepository commentRepository, IMapper mapper, IUsernameProvider usernameProvider)
+    public class CommentService : ICommentService
     {
-        _commentRepository = commentRepository;
-        _mapper = mapper;
-        _usernameProvider = usernameProvider;
-    }
+        private readonly ICommentRepository _commentRepository;
+        private readonly IUsernameProvider _userNameProvider; 
+        private readonly IMapper _mapper;
 
-    public CommentDto Create(long userId, string text)
-    {
-   
-            var username = _usernameProvider.GetNameById(userId);
-            if (string.IsNullOrEmpty(username))
-                throw new Exception("User not found.");
-
-            var comment = new Comment(userId, text);
-            _commentRepository.Create(comment);
-
-            return new CommentDto
-            {
-                Username = username,
-                Text = comment.Text,
-                CreatedAt = comment.CreatedAt,
-                LastModifiedAt = comment.LastModifiedAt
-            };
-        
-    }
-
-    public CommentDto Edit(long userId, DateTime createdAt, string newText)
-    {
-        var username = _usernameProvider.GetNameById(userId); if (string.IsNullOrEmpty(username)) throw new Exception("User not found.");
-        var comment = _commentRepository.Get(username);
-        if (comment == null)
-            throw new Exception("Comment not found.");
-        if (!comment.CanEditOrDelete())
-            throw new Exception("Edit window expired.");
-
-        comment.Edit(newText);
-        _commentRepository.Update(comment);
-
-        return new CommentDto
+        public CommentService(ICommentRepository commentRepository, IUsernameProvider userNameProvider, IMapper mapper)
         {
-            UserId = comment.UserId,
-            Username = username,
-            Text = comment.Text,
-            CreatedAt = comment.CreatedAt,
-            LastModifiedAt = comment.LastModifiedAt
-        };
-    }
+            _commentRepository = commentRepository;
+            _userNameProvider = userNameProvider;
+            _mapper = mapper;
+        }
 
-    public void Delete(long userId)
-    {
-        var username = _usernameProvider.GetNameById(userId); if (string.IsNullOrEmpty(username)) throw new Exception("User not found.");
-         
-        var comment = _commentRepository.Get(username);
-        if (comment == null)
-            throw new Exception("Comment not found.");
-        if (!comment.CanEditOrDelete())
-            throw new Exception("Delete window expired.");
+        public CommentDto Create(CommentDto commentDto)
+        {
+            // Pokupi username
+            var username = _userNameProvider.GetNameById(commentDto.UserId);
+            commentDto.UserName = username;
 
-        _commentRepository.Delete(username);
-    }
+            var entity = _mapper.Map<Comment>(commentDto);
+            var created = _commentRepository.Create(entity);
+            return _mapper.Map<CommentDto>(created);
+        }
 
-    public List<CommentDto> GetAll()
-    {
-        var comments = _commentRepository.GetAll(); if (comments == null || comments.Count == 0) return new List<CommentDto>();
-        // Prikupljanje svih userId iz komentara
-        var userIds = comments.Select(c => c.UserId).Distinct().ToList();
-        var usernames = _usernameProvider.GetNamesByIds(userIds);
+        public CommentDto Update(CommentDto commentDto, long commentId)
+        {
+            var entity = _commentRepository.Get(commentId);
+            if (entity == null)
+                throw new KeyNotFoundException($"Comment with id {commentId} not found.");
 
-        // Mapiranje komentara u DTO, dodela username-a
-        var dtos = comments.Select(c =>
-            new CommentDto
+            entity.UpdateText(commentDto.Text);
+
+            var updated = _commentRepository.Update(entity);
+            return _mapper.Map<CommentDto>(updated);
+        }
+
+        public void Delete(long id)
+        {
+            _commentRepository.Delete(id);
+        }
+
+        public List<CommentDto> GetAll()
+        {
+            var comments = _commentRepository.GetAll();
+            var dtos = _mapper.Map<List<CommentDto>>(comments);
+
+            // Efikasnije - pokupi sve usernames odjednom
+            var userIds = dtos.Select(d => d.UserId).Distinct();
+            var usernames = _userNameProvider.GetNamesByIds(userIds);
+
+            foreach (var dto in dtos)
             {
-                Username = usernames.ContainsKey(c.UserId) ? usernames[c.UserId] : string.Empty,
-                Text = c.Text,
-                CreatedAt = c.CreatedAt,
-                LastModifiedAt = c.LastModifiedAt
-            }).ToList();
+                dto.UserName = usernames.ContainsKey(dto.UserId)
+                    ? usernames[dto.UserId]
+                    : "Unknown";
+            }
 
-        return dtos;
+            return dtos;
+        }
+
+        public CommentDto Get(long id)
+        {
+            var comment = _commentRepository.Get(id);
+            if (comment == null)
+                return null;
+
+            var dto = _mapper.Map<CommentDto>(comment);
+
+            // Pokupi username
+            dto.UserName = _userNameProvider.GetNameById(comment.UserId);
+
+            return dto;
+        }
+        public List<CommentDto> GetByBlogPost(long blogPostId)
+        {
+            var comments = _commentRepository.GetByBlogPost(blogPostId);
+            var dtos = _mapper.Map<List<CommentDto>>(comments);
+
+            // Efikasnije - pokupi sve usernames odjednom
+            var userIds = dtos.Select(d => d.UserId).Distinct();
+            var usernames = _userNameProvider.GetNamesByIds(userIds);
+
+            foreach (var dto in dtos)
+            {
+                dto.UserName = usernames.ContainsKey(dto.UserId)
+                    ? usernames[dto.UserId]
+                    : "Unknown";
+            }
+
+            return dtos;
+        }
     }
-
-
 }

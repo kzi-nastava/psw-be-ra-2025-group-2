@@ -1,42 +1,69 @@
 ﻿public class Comment
 {
+    public long Id { get; private set; }
+    public long BlogPostId { get; private set; }  // Komentar pripada blogu
     public long UserId { get; private set; }
     public string Text { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastModifiedAt { get; private set; }
-    public Comment() { }
 
-    public Comment(long userId, string text)
+    private Comment() { } // Za EF Core
+
+    public Comment(long blogPostId, long userId, string text)
     {
+        if (string.IsNullOrWhiteSpace(text))
+            throw new ArgumentException("Comment text cannot be empty.");
+
+        BlogPostId = blogPostId;
         UserId = userId;
         Text = text;
         CreatedAt = DateTime.UtcNow;
-        LastModifiedAt = null;
         Validate();
     }
 
-
-    // Proverava da li je proslo 15 minuta od kreiranja komentara
-    public bool CanEditOrDelete()
+    private void Validate()
     {
-        return DateTime.UtcNow <= CreatedAt.AddMinutes(15);
-    }
+        if (UserId <= 0)
+            throw new ArgumentException("Invalid user ID.");
 
-    private void Validate(bool skipUsernameValidation = false)
-    {
+        if (BlogPostId <= 0)
+            throw new ArgumentException("Invalid blog post ID.");
+
         if (string.IsNullOrWhiteSpace(Text))
             throw new ArgumentException("Comment text cannot be empty.");
 
-        if (!skipUsernameValidation && UserId <= 0) throw new ArgumentException("Invalid user ID.");
+        if (Text.Length > 1000)
+            throw new ArgumentException("Comment text cannot exceed 1000 characters.");
     }
 
     public void Edit(string newText)
     {
         if (!CanEditOrDelete())
-            throw new InvalidOperationException("Comment can only be edited within 15 minutes of creation.");
+            throw new InvalidOperationException("Edit window has expired (15 minutes).");
+
+        if (string.IsNullOrWhiteSpace(newText))
+            throw new ArgumentException("Comment text cannot be empty.");
+
         Text = newText;
         LastModifiedAt = DateTime.UtcNow;
-        Validate();
     }
 
+    public bool CanEditOrDelete()
+    {
+        return DateTime.UtcNow - CreatedAt <= TimeSpan.FromMinutes(15);
+
+
+    }
+
+    public void UpdateText(string newText)
+    {
+        if (string.IsNullOrWhiteSpace(newText))
+            throw new ArgumentException("Comment text cannot be empty.");
+
+        if (newText.Length > 1000)
+            throw new ArgumentException("Comment text cannot exceed 1000 characters.");
+
+        Text = newText;
+        LastModifiedAt = DateTime.UtcNow; // Ovo setuje UpdatedAt
+    }
 }

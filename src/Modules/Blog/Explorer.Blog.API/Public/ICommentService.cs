@@ -9,11 +9,20 @@ namespace Explorer.Blog.API.Public
 {
     public interface ICommentService
     {
-        CommentDto Create(long userId, string text); // Autor iz IUsernameProvider, vreme je DateTime.Now
-        CommentDto Edit(long id, DateTime createdAt, string newText); // Pronalazi po autoru i vremenu
-        void Delete(long id); // Pronalazi po autoru i vremenu 
-        public List<CommentDto> GetAll();
-    }
+        
+            
+                // Osnovne CRUD operacije
+                CommentDto Create(CommentDto commentDto);
+                CommentDto Update(CommentDto commentDto, long commentId);
+                void Delete(long id);
 
+                // Preuzimanje komentara
+                List<CommentDto> GetAll();
+                CommentDto Get(long id);
+                List<CommentDto> GetByBlogPost(long blogPostId);
+            
+        
+
+    }
 
 }

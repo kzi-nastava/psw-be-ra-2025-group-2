@@ -1,5 +1,6 @@
 ﻿using Explorer.Blog.Infrastructure.Database;
 using Explorer.BuildingBlocks.Tests;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,4 +16,6 @@ public class BlogTestFactory : BaseTestFactory<BlogContext>
 
         return services;
     }
+
+    
 }
