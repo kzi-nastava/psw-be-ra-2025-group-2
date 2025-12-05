@@ -122,7 +122,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 keyPointData.Add(dto);
             }
 
-            return new TourExecutionDto { TouristId = touristId, KeyPointData = keyPointData };
+            return new TourExecutionDto { Id = executionId, TourId = tour.Id, TouristId = touristId, KeyPointData = keyPointData };
         }
     }
 }
