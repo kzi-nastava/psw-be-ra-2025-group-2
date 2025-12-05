@@ -46,5 +46,12 @@ namespace Explorer.Blog.Infrastructure.Database.Repositories
             _context.BlogPosts.Update(blogPost);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<BlogPost>> GetAllAsync()
+        {
+            return await _context.BlogPosts
+                .Include(b => b.Images)
+                .ToListAsync();
+        }
     }
 }

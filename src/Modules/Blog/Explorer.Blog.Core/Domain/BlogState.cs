@@ -12,6 +12,7 @@ namespace Explorer.Blog.Core.Domain
         Published = 1,
         Active = 2,
         Famous = 3,
-        Closed = 4
+        Closed = 4,
+        Archived = 5
     }
 }

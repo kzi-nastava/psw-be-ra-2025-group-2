@@ -65,15 +65,30 @@ namespace Explorer.Blog.Core.UseCases
             return dtos;
         }
 
-        public async Task<BlogPostDto> UpdateAsync(long id, UpdateBlogPostDto dto)
+        public async Task<BlogPostDto> UpdateAsync(long id, UpdateBlogPostDto dto, long userId)
         {
             var blog = await _repository.GetByIdAsync(id);
             if (blog == null)
                 throw new KeyNotFoundException("Blog not found");
 
-            var images = dto.ImageUrls?.Select(url => new BlogImage(url)).ToList() ?? new List<BlogImage>();
+            if (blog.AuthorId != userId)
+                throw new UnauthorizedAccessException("You can update only your own blogs.");
 
-            blog.Edit(dto.Title, dto.Description, images);
+
+            if (blog.State == BlogState.Draft)
+            {
+                var images = dto.ImageUrls?.Select(url => new BlogImage(url)).ToList() ?? new List<BlogImage>();
+
+                blog.Edit(dto.Title, dto.Description, images);
+            }
+            else if (blog.State == BlogState.Published)
+            {
+                blog.EditDescription(dto.Description);
+            }
+            else if (blog.State == BlogState.Archived)
+            {
+                throw new InvalidOperationException("Archived blogs cannot be edited.");
+            }
 
             await _repository.UpdateAsync(blog);
 
@@ -97,5 +112,41 @@ namespace Explorer.Blog.Core.UseCases
             await _repository.UpdateAsync(blog);
         }
 
+        public async Task ArchiveAsync(long id, long userId)
+        {
+            var blog = await _repository.GetByIdAsync(id);
+            if (blog == null)
+                throw new KeyNotFoundException();
+
+            if (blog.AuthorId != userId)
+                throw new UnauthorizedAccessException();
+
+            blog.Archive();
+            await _repository.UpdateAsync(blog);
+        }
+
+        public async Task<IEnumerable<BlogPostDto>> GetVisibleBlogsAsync(long? currentUserId, int? filterStatus = null)
+        {
+            var allBlogs = await _repository.GetAllAsync();
+
+            var visibleBlogs = allBlogs.Where(b =>
+                b.State != BlogState.Draft || (currentUserId.HasValue && b.AuthorId == currentUserId.Value)
+            );
+
+            if (filterStatus.HasValue)
+            {
+                visibleBlogs = visibleBlogs.Where(b => (int)b.State == filterStatus.Value);
+            }
+
+            var dtos = _mapper.Map<IEnumerable<BlogPostDto>>(visibleBlogs);
+
+            foreach (var dto in dtos)
+            {
+                var blog = visibleBlogs.First(b => b.Id == dto.Id);
+                dto.State = (int)blog.State;
+            }
+
+            return dtos;
+        }
     }
 }

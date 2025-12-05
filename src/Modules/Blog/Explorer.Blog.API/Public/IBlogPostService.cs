@@ -13,8 +13,9 @@ namespace Explorer.Blog.API.Public
         Task<BlogPostDto> CreateAsync(CreateBlogPostDto dto, long authorId);
         Task<BlogPostDto?> GetByIdAsync(long id, long? currentUserId = null);
         Task<IEnumerable<BlogPostDto>> GetByAuthorAsync(long authorId, long? currentUserId = null);
-        Task<BlogPostDto> UpdateAsync(long id, UpdateBlogPostDto dto);
+        Task<BlogPostDto> UpdateAsync(long id, UpdateBlogPostDto dto, long userId);
         Task PublishAsync(long id, long userId);
-
+        Task ArchiveAsync(long id, long userId);
+        Task<IEnumerable<BlogPostDto>> GetVisibleBlogsAsync(long? currentUserId, int? filterStatus = null);
     }
 }
