@@ -35,6 +35,8 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IShoppingCartService, ShoppingCartService>();
+
 
         services.AddScoped<ITouristPositionService, TouristPositionService>();
     }
@@ -48,6 +50,8 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 

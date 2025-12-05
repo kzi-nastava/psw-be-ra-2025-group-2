@@ -21,5 +21,7 @@ namespace Explorer.Tours.API.Public.Administration
         void Archive(long id);
         void Reactivate(long id);
         PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize);
+        TourDto? GetPublishedTour(long tourId); // Vraća objavljenu turu bez provere autora
+
     }
 }
