@@ -140,6 +140,26 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.RemoveKeyPoint(ordinalNo);
             _tourRepository.UpdateAsync(tour).Wait();
         }
+        
+        public void Archive(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result 
+                       ?? throw new Exception("Tour not found.");
+            
+            tour.Archive(DateTime.UtcNow);
+
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public void Reactivate(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result
+                       ?? throw new Exception("Tour not found.");
+
+            tour.Reactivate();
+
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
 
     }
 }

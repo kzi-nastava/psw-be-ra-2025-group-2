@@ -4,6 +4,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.BuildingBlocks.Core.Exceptions;
 
 namespace Explorer.API.Controllers.Author
 {
@@ -107,6 +108,59 @@ namespace Explorer.API.Controllers.Author
         {
             _tourService.RemoveKeyPoint(tourId, ordinalNo);
             return Ok();
+        }
+
+        // POST: api/author/tours/{id}/archive
+        [HttpPost("{id}/archive")]
+        public IActionResult Archive(long id)
+        {
+            try
+            {
+                _tourService.Archive(id);
+                return Ok(new { message = "Tura je uspešno arhivirana." });
+            }
+            catch (AggregateException ex) when (ex.InnerException is InvalidOperationException || ex.InnerException is DomainException)
+            {
+                // async .Result je zamotao našu domensku grešku u AggregateException
+                return BadRequest(new { message = ex.InnerException!.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // direktan slučaj, ako se ikad desi
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DomainException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                // ostale neočekivane greške
+                return StatusCode(500, new { message = "Došlo je do greške prilikom arhiviranja ture." });
+            }
+        }
+
+
+
+
+        // POST: api/author/tours/{id}/reactivate
+        [HttpPost("{id}/reactivate")]
+        public IActionResult Reactivate(long id)
+        {
+            try
+            {
+                _tourService.Reactivate(id);
+                return Ok(new { message = "Tura je uspešno ponovo aktivirana." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // npr. tura nije arhivirana
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Došlo je do greške prilikom reaktivacije ture." });
+            }
         }
 
         // GetByRange: 
