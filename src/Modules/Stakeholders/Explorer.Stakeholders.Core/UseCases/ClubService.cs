@@ -5,6 +5,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Stakeholders.Core.UseCases
 {
@@ -12,13 +13,15 @@ namespace Explorer.Stakeholders.Core.UseCases
     {
         private readonly IClubRepository _clubRepository;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
 
-        public ClubService(IClubRepository clubRepository, IMapper mapper)
+        public ClubService(IClubRepository clubRepository, IMapper mapper, INotificationService notificationService)
         {
             _clubRepository = clubRepository;
             _mapper = mapper;
+            _notificationService = notificationService;
         }
-        
+
         public ClubDto Get(long id)
         {
             var club = _clubRepository.Get(id); 
@@ -61,6 +64,7 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new System.UnauthorizedAccessException("Only the owner can invite tourists.");
 
             club.InviteTourist(touristId);
+            _notificationService.SendInvitation(touristId, clubId);
 
             _clubRepository.Update(club);
         }
@@ -131,6 +135,7 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new System.UnauthorizedAccessException("Only the owner can accept membership requests.");
 
             club.AcceptRequest(touristId);
+            _notificationService.SendMembershipAccepted(touristId, clubId);
 
             _clubRepository.Update(club);
         }
@@ -144,6 +149,7 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new System.UnauthorizedAccessException("Only the owner can reject membership requests.");
 
             club.RejectRequest(touristId);
+            _notificationService.SendMembershipRejected(touristId, clubId);
 
             _clubRepository.Update(club);
         }
