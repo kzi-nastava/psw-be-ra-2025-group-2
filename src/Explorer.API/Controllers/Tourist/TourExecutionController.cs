@@ -74,5 +74,19 @@ namespace Explorer.API.Controllers.Tourist
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("query-key-point-visit/{id:long}")]
+        public ActionResult<KeyPointVisitResponseDto> QueryKeyPointVisit(long id, [FromBody] PositionDto position)
+        {
+            try
+            {
+                var response = _executionService.QueryKeyPointVisit(User.UserId(), id, position);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

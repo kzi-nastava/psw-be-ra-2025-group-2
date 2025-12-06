@@ -72,15 +72,23 @@ namespace Explorer.Tours.Core.UseCases.Execution
             _executionRepository.Update(execution);
         }
 
-        public void ArriveAtKeyPointOrdinal(long touristId, long executionId, int keyPointOrdinal)
+        public KeyPointVisitResponseDto QueryKeyPointVisit(long touristId, long executionId, PositionDto position)
         {
             var execution = _executionRepository.GetActiveByTouristId(touristId);
 
             if (execution == null || execution.Id != executionId)
                 throw new ArgumentException("Invalid arguments.");
 
-            execution.ArriveAtKeyPointByOrdinal(keyPointOrdinal);
+            var tour = _tourRepository.GetByIdAsync(execution.TourId).Result;
+
+            if (tour == null)
+                throw new InvalidDataException("Invalid tour data.");
+
+            int? visitOrdinal = execution.QueryKeyPointVisit(tour.KeyPoints, position.Latitude, position.Longitude);
+
             _executionRepository.Update(execution);
+
+            return new KeyPointVisitResponseDto { IsNewVisit = visitOrdinal.HasValue, KeyPointOrdinal = visitOrdinal };
         }
 
         public void Complete(long touristId,long executionId)
@@ -110,7 +118,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 dto.Description = keyPoint.Description;
                 dto.OrdinalNo = keyPoint.OrdinalNo;
 
-                if (execution.HasTouristVisitedKeyPoint(dto.OrdinalNo))
+                if (execution.ShouldShowKeyPointSecret(dto.OrdinalNo))
                     dto.SecretText = dto.SecretText;
                 else
                     dto.SecretText = null;
