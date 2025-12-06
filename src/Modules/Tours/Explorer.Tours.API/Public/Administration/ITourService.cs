@@ -19,5 +19,7 @@ namespace Explorer.Tours.API.Public.Administration
         void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto);
         void RemoveKeyPoint(long tourId, int ordinalNo);
         PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize);
+        TourDto? GetPublishedTour(long tourId); // Vraća objavljenu turu bez provere autora
+
     }
 }

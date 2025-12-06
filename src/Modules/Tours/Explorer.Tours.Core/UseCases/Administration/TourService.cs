@@ -114,6 +114,19 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
+        public TourDto? GetPublishedTour(long tourId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+
+            // Vraća turu samo ako postoji i ako je objavljena
+            if (tour == null || tour.Status != TourStatus.Published)
+            {
+                return null;
+            }
+
+            return _mapper.Map<TourDto>(tour);
+        }
+
         public void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto)
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result
