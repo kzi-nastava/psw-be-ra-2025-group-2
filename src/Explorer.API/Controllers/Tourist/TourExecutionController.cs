@@ -20,12 +20,12 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpGet("start/{id:long}")]
-        public IActionResult Proceed(long id)
+        public ActionResult<TourExecutionDto> Proceed(long id)
         {
             try
             {
-                _executionService.Proceed(User.UserId(), id);
-                return Ok();
+                var data = _executionService.Proceed(User.UserId(), id);
+                return Ok(data);
             }
             catch (Exception ex)
             {

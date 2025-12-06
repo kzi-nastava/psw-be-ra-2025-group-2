@@ -27,7 +27,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
             _tourRepository = tourRepository;
         }
 
-        public long Proceed(long touristId, long tourId)
+        public TourExecutionDto Proceed(long touristId, long tourId)
         {
             var activeTourId = _userService.GetActiveTourIdByUserId(touristId);
 
@@ -40,8 +40,8 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 var execution = _executionRepository.GetActiveByTouristId(touristId);
                 if (execution == null || execution.TourId != activeTourId)
                     throw new InvalidDataException("Active tour data is not consistent.");
-                
-                return execution.Id;
+
+                return GetExecutionData(touristId, execution.Id);
             }
             else
             {
@@ -50,7 +50,8 @@ namespace Explorer.Tours.Core.UseCases.Execution
                     var execution = new TourExecution(touristId, tourId, tour.KeyPoints.Count());
                     execution.Start();
                     _userService.SetActiveTourIdByUserId(touristId, tourId);
-                    return _executionRepository.Create(execution).Id;
+                    execution = _executionRepository.Create(execution);
+                    return GetExecutionData(touristId, execution.Id);
                 }
                 else
                 {
@@ -119,7 +120,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 dto.OrdinalNo = keyPoint.OrdinalNo;
 
                 if (execution.ShouldShowKeyPointSecret(dto.OrdinalNo))
-                    dto.SecretText = dto.SecretText;
+                    dto.SecretText = keyPoint.SecretText;
                 else
                     dto.SecretText = null;
 
