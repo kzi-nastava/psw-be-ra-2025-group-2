@@ -58,11 +58,31 @@ namespace Explorer.Blog.API.Controllers.Tourist.Blog
         [HttpPost]
         public ActionResult<CommentDto> Create([FromBody] CommentDto dto)
         {
-            var currentUserId = GetCurrentUserId();
-            dto.UserId = currentUserId; // Setuj userId iz tokena
+            try
+            {
+                var currentUserId = GetCurrentUserId();
 
-            var result = _commentService.Create(dto);
-            return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+                // DEBUG LOG
+                Console.WriteLine("=== CREATE COMMENT ===");
+                Console.WriteLine($"Current UserId from token: {currentUserId}");
+                Console.WriteLine($"DTO BlogPostId: {dto.BlogPostId}");
+                Console.WriteLine($"DTO Text: {dto.Text}");
+                Console.WriteLine($"DTO UserName (before set): {dto.UserName}");
+                Console.WriteLine("======================");
+
+                dto.UserId = currentUserId; // Setuj userId iz tokena
+                var result = _commentService.Create(dto);
+
+                Console.WriteLine($"✅ Comment created successfully: ID={result.Id}");
+
+                return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ ERROR creating comment: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         // PUT: api/blogpost/comments/5
