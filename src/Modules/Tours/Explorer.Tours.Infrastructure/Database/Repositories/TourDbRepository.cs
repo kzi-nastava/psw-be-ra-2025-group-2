@@ -1,5 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,13 @@ public class TourDbRepository : ITourRepository
              .Include(t => t.KeyPoints)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
+    }
+
+    public List<Tour> GetAllPublished(int page, int pageSize)
+    {
+        var tours = _dbSet.Include(t => t.KeyPoints).Where(t => t.Status == TourStatus.Published).ToList();
+        return tours;
+
     }
 
     public async Task UpdateAsync(Tour tour)

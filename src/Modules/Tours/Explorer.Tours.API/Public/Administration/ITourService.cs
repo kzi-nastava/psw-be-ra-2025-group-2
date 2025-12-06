@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Tours.API.Dtos;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Explorer.Tours.API.Dtos;
 
 namespace Explorer.Tours.API.Public.Administration
 {
@@ -19,5 +20,6 @@ namespace Explorer.Tours.API.Public.Administration
         void RemoveKeyPoint(long tourId, int ordinalNo);
         void Archive(long id);
         void Reactivate(long id);
+        PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize);
     }
 }
