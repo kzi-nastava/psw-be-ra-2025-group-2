@@ -9,6 +9,8 @@ public class User : Entity
     public UserRole Role { get; private set; }
     public bool IsActive { get; set; }
 
+    public long? ActiveTourId { get; private set; }
+
     public User(string username, string password, UserRole role, bool isActive)
     {
         Username = username;
@@ -27,6 +29,19 @@ public class User : Entity
     public string GetPrimaryRoleName()
     {
         return Role.ToString().ToLower();
+    }
+
+    public void SetActiveTourId(long tourId)
+    {
+        if (Role != UserRole.Tourist)
+            throw new InvalidOperationException("Only the tourist can have an active tour.");
+
+        ActiveTourId = tourId;
+    }
+
+    public void ResetActiveTourId()
+    {
+        ActiveTourId = null;
     }
 }
 public enum UserRole

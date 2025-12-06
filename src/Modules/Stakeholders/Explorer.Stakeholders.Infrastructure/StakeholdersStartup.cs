@@ -1,10 +1,12 @@
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
+using Explorer.Stakeholders.Core.UseCases.Internal;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Stakeholders.Infrastructure.Database.Repositories;
@@ -37,6 +39,9 @@ public static class StakeholdersStartup
         services.AddScoped<IPersonService, PersonService>();
 
         services.AddScoped<ITouristPositionService, TouristPositionService>();
+
+        /* Internal */
+        services.AddScoped<IInternalUserService, InternalUserService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)

@@ -17,5 +17,8 @@ namespace Explorer.Tours.API.Dtos
         public string Status { get; set; }
         public decimal Price { get; set; }
         public List<KeyPointDto> KeyPoints { get; set; } = new();
+
+        public bool IsActive { get; set; }
+        public bool CanBeStarted { get; set; }
     }
 }
