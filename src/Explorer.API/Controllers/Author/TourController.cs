@@ -172,6 +172,58 @@ namespace Explorer.API.Controllers.Author
             var result = _tourService.GetByRange(lat, lon, range, page, pageSize);
             return Ok(result);
         }
+        
+        [HttpGet("{tourId}/equipment")]
+        public ActionResult<List<TourEquipmentItemDto>> GetEquipmentForTour(long tourId)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                var result = _tourService.GetEquipmentForTour(tourId, authorId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        [HttpPut("{tourId}/equipment")]
+        public IActionResult UpdateEquipmentForTour(long tourId, [FromBody] UpdateTourEquipmentDto dto)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                _tourService.UpdateEquipmentForTour(tourId, authorId, dto.EquipmentIds);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
 
     }
 }

@@ -23,7 +23,8 @@ public class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
-    
+    public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
+
     public DateTime? ArchivedAt { get; private set; }
    
 
@@ -158,5 +159,21 @@ public class Tour : AggregateRoot
         _keyPoints.Clear();
         _keyPoints.AddRange(ordered);
     }
+    
+    public void SetRequiredEquipment(IEnumerable<Equipment> equipment)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Nije moguće menjati opremu za arhiviranu turu.");
+        Equipment.Clear();
+
+        if (equipment == null) return;
+
+        foreach (var item in equipment)
+        {
+            Equipment.Add(item);
+        }
+    }
+
+
 
 }
