@@ -37,6 +37,18 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
+            if (dto.RequiredEquipmentIds != null && dto.RequiredEquipmentIds.Any())
+            {
+                if (_equipmentRepository == null)
+                    throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
+                
+                var requestedEquipment = _equipmentRepository.GetByIdsAsync(dto.RequiredEquipmentIds).Result;
+
+                if (requestedEquipment.Count != dto.RequiredEquipmentIds.Distinct().Count())
+                    throw new InvalidOperationException("Some of the selected equipment items do not exist.");
+
+                tour.SetRequiredEquipment(requestedEquipment);
+            }
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
         }
@@ -191,6 +203,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 IsRequiredForTour = tour.Equipment.Any(te => te.Id == eq.Id)
             }).ToList();
         }
+        
 
         public void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds)
         {
@@ -211,6 +224,21 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.SetRequiredEquipment(requestedEquipment);
 
             _tourRepository.UpdateAsync(tour).Wait();
+        }
+        
+        public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId)
+        {
+            if (_equipmentRepository == null)
+                throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
+
+            var allEquipment = _equipmentRepository.GetAllAsync().Result;
+
+            return allEquipment.Select(eq => new TourEquipmentItemDto
+            {
+                Id = eq.Id,
+                Name = eq.Name,
+                IsRequiredForTour = false
+            }).ToList();
         }
 
         

@@ -173,6 +173,7 @@ namespace Explorer.API.Controllers.Author
             return Ok(result);
         }
         
+        //GET api/author/{tourId}/equipment
         [HttpGet("{tourId}/equipment")]
         public ActionResult<List<TourEquipmentItemDto>> GetEquipmentForTour(long tourId)
         {
@@ -196,6 +197,7 @@ namespace Explorer.API.Controllers.Author
             }
         }
         
+        //PUT api/author/{tourId}/equipment
         [HttpPut("{tourId}/equipment")]
         public IActionResult UpdateEquipmentForTour(long tourId, [FromBody] UpdateTourEquipmentDto dto)
         {
@@ -223,6 +225,16 @@ namespace Explorer.API.Controllers.Author
                 return BadRequest(new { message = ex.Message });
             }
         }
+        
+        // GET api/author/tours/equipment
+        [HttpGet("equipment")]
+        public ActionResult<List<TourEquipmentItemDto>> GetAllEquipmentForAuthor()
+        {
+            var authorId = long.Parse(User.FindFirst("id")!.Value);
+            var result = _tourService.GetAllEquipmentForAuthor(authorId);
+            return Ok(result);
+        }
+
 
 
     }
