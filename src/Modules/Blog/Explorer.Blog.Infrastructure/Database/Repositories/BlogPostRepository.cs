@@ -29,8 +29,9 @@ namespace Explorer.Blog.Infrastructure.Database.Repositories
         public async Task<BlogPost?> GetByIdAsync(long id)
         {
             return await _context.BlogPosts
-         .Include(b => b.Images)
-         .FirstOrDefaultAsync(b => b.Id == id);
+                 .Include(b => b.Images)
+                 .Include(b => b.Votes) 
+                 .FirstOrDefaultAsync(b => b.Id == id);
         }
 
         public async Task<IEnumerable<BlogPost>> GetByAuthorAsync(long authorId)

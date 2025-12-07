@@ -18,8 +18,10 @@ namespace Explorer.Blog.Core.Domain
         private readonly List<BlogImage> _images = new();
         public IReadOnlyCollection<BlogImage> Images => _images.AsReadOnly();
 
-        public BlogState State { get; private set; }
+        private readonly List<Vote> _votes = new();
+        public IReadOnlyCollection<Vote> Votes => _votes.AsReadOnly();
 
+        public BlogState State { get; private set; }
         public DateTime? LastModifiedAt { get; private set; }
 
         private BlogPost() { }
@@ -96,5 +98,52 @@ namespace Explorer.Blog.Core.Domain
             State = BlogState.Archived;
         }
 
+        public void AddVote(long userId, VoteValue voteValue)
+        {
+            if (State != BlogState.Published) 
+                throw new InvalidOperationException("Can only vote on published blog posts.");
+
+            var existingVote = _votes.FirstOrDefault(v => v.UserId == userId);
+
+            if(existingVote != null)
+            {
+                if (existingVote.Value.Equals(voteValue))
+                    return;
+
+                _votes.Remove(existingVote);
+            }
+
+            _votes.Add(new Vote(userId, voteValue));
+        }
+
+        public void RemoveVote(long userId)
+        {
+            var vote = _votes.FirstOrDefault(v => v.UserId == userId);
+
+            if(vote != null)
+            {
+                _votes.Remove(vote);
+            }
+        }
+
+        public int GetScore()
+        {
+            return _votes.Sum(v => v.Value.Value);
+        }
+
+        public VoteValue? GetUserVote(long userId)
+        {
+            return _votes.FirstOrDefault(v => v.UserId == userId)?.Value;
+        }
+
+        public int GetUpvoteCount()
+        {
+            return _votes.Count(v => v.Value.Value == 1);
+        }
+
+        public int GetDownvoteCount()
+        {
+            return _votes.Count(v => v.Value.Value == -1);
+        }
     }
 }

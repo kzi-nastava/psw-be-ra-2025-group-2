@@ -148,5 +148,62 @@ namespace Explorer.Blog.Core.UseCases
 
             return dtos;
         }
+
+        public async Task<VoteResultDto> AddVoteAsync(long blogPostId, int voteValue, long userId)
+        {
+            if (voteValue != 1 && voteValue != -1)
+                throw new ArgumentException("Vote value must be 1 or -1");
+
+            var blog = await _repository.GetByIdAsync(blogPostId);
+            if (blog == null)
+                throw new KeyNotFoundException("Blog post not found");
+
+            var vote = voteValue == 1 ? VoteValue.Upvote : VoteValue.Downvote;
+
+            blog.AddVote(userId, vote);
+
+            await _repository.UpdateAsync(blog);
+
+            return new VoteResultDto
+            {
+                Score = blog.GetScore(),
+                UpvoteCount = blog.GetUpvoteCount(),
+                DownvoteCount = blog.GetDownvoteCount(),
+                UserVote = blog.GetUserVote(userId)?.Value
+            };
+        }
+
+        public async Task<VoteResultDto> RemoveVoteAsync(long blogPostId, long userId)
+        {
+            var blog = await _repository.GetByIdAsync(blogPostId);
+            if (blog == null)
+                throw new KeyNotFoundException("Blog post not found");
+
+            blog.RemoveVote(userId);
+
+            await _repository.UpdateAsync(blog);
+
+            return new VoteResultDto
+            {
+                Score = blog.GetScore(),
+                UpvoteCount = blog.GetUpvoteCount(),
+                DownvoteCount = blog.GetDownvoteCount(),
+                UserVote = null
+            };
+        }
+
+        // Helper metoda za mapiranje sa Vote informacijama
+        private BlogPostDto MapToDtoWithVotes(BlogPost blog, long? currentUserId)
+        {
+            var dto = _mapper.Map<BlogPostDto>(blog);
+            dto.State = (int)blog.State;
+
+            dto.Score = blog.GetScore();
+            dto.UpvoteCount = blog.GetUpvoteCount();
+            dto.DownvoteCount = blog.GetDownvoteCount();
+            dto.UserVote = currentUserId.HasValue ? blog.GetUserVote(currentUserId.Value)?.Value : null;
+
+            return dto;
+        }
     }
 }
