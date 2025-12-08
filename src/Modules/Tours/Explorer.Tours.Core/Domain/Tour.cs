@@ -24,7 +24,7 @@ public class Tour : AggregateRoot
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
 
-    public decimal LengthKm { get; private set; }
+    public decimal? LengthKm { get; private set; }
 
     public DateTime? ArchivedAt { get; private set; }
    
