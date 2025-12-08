@@ -26,6 +26,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
+           
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
         }
@@ -83,7 +84,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tour = _tourRepository.GetByIdAsync(id).Result ?? throw new Exception("Tour not found.");
 
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
-            
+            if (dto.LengthKm.HasValue)
+            {
+                tour.SetLength(dto.LengthKm.Value);
+            }
+
             _tourRepository.UpdateAsync(tour).Wait();
 
             return _mapper.Map<TourDto>(tour);
