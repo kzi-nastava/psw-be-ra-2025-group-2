@@ -17,5 +17,8 @@ namespace Explorer.Blog.API.Public
         Task PublishAsync(long id, long userId);
         Task ArchiveAsync(long id, long userId);
         Task<IEnumerable<BlogPostDto>> GetVisibleBlogsAsync(long? currentUserId, int? filterStatus = null);
+
+        Task<VoteResultDto> AddVoteAsync(long blogPostId, int voteValue, long userId);
+        Task<VoteResultDto> RemoveVoteAsync(long blogPostId, long userId);
     }
 }

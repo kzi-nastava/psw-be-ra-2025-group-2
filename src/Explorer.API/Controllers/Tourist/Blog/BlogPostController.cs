@@ -144,5 +144,49 @@ namespace Explorer.API.Controllers.Tourist.Blog
             return Ok(blogs);
         }
 
+        //Dodavanje ili promena glasa na blogu
+        [HttpPost("{id}/vote")]
+        [Authorize]
+        public async Task<ActionResult<VoteResultDto>> Vote(long id, [FromQuery] int value)
+        {
+            var userId = User.PersonId();
+
+            try
+            {
+                var result = await _service.AddVoteAsync(id, value, userId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Blog post not found." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        //Uklanjane glasa na blogu
+        [HttpDelete("{id}/vote")]
+        [Authorize]
+        public async Task<ActionResult<VoteResultDto>> RemoveVote(long id)
+        {
+            var userId = User.PersonId();
+
+            try
+            {
+                var result = await _service.RemoveVoteAsync(id, userId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new {message = "Blog post not found."});
+            }
+        }
+
     }
 }

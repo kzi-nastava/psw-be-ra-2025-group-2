@@ -10,5 +10,10 @@
         public List<string> ImageUrls { get; set; } = new();
         public int State { get; set; }
 
+        public int Score { get; set; }
+        public int UpvoteCount { get; set; }
+        public int DownvoteCount { get; set; }
+        public int? UserVote {  get; set; }
+
     }
 }
