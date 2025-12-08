@@ -42,10 +42,9 @@ public class ShoppingCartService : IShoppingCartService
             _cartRepository.Create(cart);
         }
 
-        // OVDE JE BITNO: Kastujemo 'double' (iz API-ja) u 'decimal' (za Domain)
         var moneyPrice = new Money((decimal)price, "AC");
 
-        cart.AddItem(tourId, tourName, moneyPrice, "Published"); // Status možemo hardkodirati ili proslediti
+        cart.AddItem(tourId, tourName, moneyPrice, "Published"); 
 
         _cartRepository.Update(cart);
 

@@ -5,12 +5,14 @@ namespace Explorer.Tours.Core.Domain;
 public class KeyPoint : Entity
 {
     public int OrdinalNo { get; private set; }
-    public string Name { get; init; }
-    public string Description { get; init; }
-    public string SecretText { get; init; }
-    public string ImageUrl { get; init; }
-    public double Latitude { get; init; }
-    public double Longitude { get; init; }
+    public string Name { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
+    public string SecretText { get; private set; } = string.Empty;
+    public string? ImageUrl { get; private set; } = string.Empty;
+    public double Latitude { get; private set; }
+    public double Longitude { get; private set; }
+
+    private KeyPoint() { }
 
     public KeyPoint(
         int ordinalNo,
@@ -28,7 +30,6 @@ public class KeyPoint : Entity
         ImageUrl = imageUrl;
         Latitude = latitude;
         Longitude = longitude;
-
         Validate();
     }
 
@@ -36,19 +37,14 @@ public class KeyPoint : Entity
     {
         if (OrdinalNo <= 0)
             throw new ArgumentException("OrdinalNo must be positive.");
-
         if (string.IsNullOrWhiteSpace(Name))
             throw new ArgumentException("Name cannot be empty.");
-
         if (string.IsNullOrWhiteSpace(Description))
             throw new ArgumentException("Description cannot be empty.");
-
         if (string.IsNullOrWhiteSpace(SecretText))
             throw new ArgumentException("SecretText cannot be empty.");
-
         if (Latitude < -90 || Latitude > 90)
             throw new ArgumentException("Latitude must be between -90 and 90 degrees.");
-
         if (Longitude < -180 || Longitude > 180)
             throw new ArgumentException("Longitude must be between -180 and 180 degrees.");
     }
@@ -57,7 +53,6 @@ public class KeyPoint : Entity
     {
         if (newOrdinal <= 0)
             throw new ArgumentException("OrdinalNo must be positive.");
-
         OrdinalNo = newOrdinal;
     }
 }

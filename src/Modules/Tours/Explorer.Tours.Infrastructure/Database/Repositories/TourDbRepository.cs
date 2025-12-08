@@ -4,7 +4,6 @@ using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Explorer.Tours.Infrastructure.Database.Repositories;
 
@@ -30,22 +29,32 @@ public class TourDbRepository : ITourRepository
     {
         return await _dbSet
             .Include(t => t.KeyPoints)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<Tour?> GetByIdWithTrackingAsync(long id)
+    {
+        return await _dbSet
+            .Include(t => t.KeyPoints)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
         return await _dbSet
-             .Include(t => t.KeyPoints)
+            .Include(t => t.KeyPoints)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
     }
 
     public List<Tour> GetAllPublished(int page, int pageSize)
     {
-        var tours = _dbSet.Include(t => t.KeyPoints).Where(t => t.Status == TourStatus.Published).ToList();
+        var tours = _dbSet
+            .Include(t => t.KeyPoints)
+            .Where(t => t.Status == TourStatus.Published)
+            .ToList();
         return tours;
-
     }
 
     public async Task UpdateAsync(Tour tour)

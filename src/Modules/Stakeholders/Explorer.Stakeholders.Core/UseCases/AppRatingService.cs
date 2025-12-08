@@ -22,7 +22,6 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var existingRatings = _repository.GetByUserId(dto.UserId);
 
-            // Ako korisnik već ima rating — vrati taj umesto da bacaš grešku
             if (existingRatings.Any())
             {
                 var existing = existingRatings.First();

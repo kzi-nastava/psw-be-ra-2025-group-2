@@ -44,16 +44,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 .ToList();
             var totalCount = filteredTours.Count;
 
-          /*  foreach (var tour in filteredTours)
-            {
-                if (tour.KeyPoints.Count > 1)
-                {
-                    var firstKeyPoint = tour.KeyPoints.First();
-                    tour.KeyPoints.Clear();
-                    tour.KeyPoints.Add(firstKeyPoint);
-                }
-            }*/
-
             var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
             var items = pagedResult.Results.Select(_mapper.Map<TourDto>).ToList();
             return new PagedResult<TourDto>(items, pagedResult.TotalCount);
@@ -118,7 +108,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result;
 
-            // Vraća turu samo ako postoji i ako je objavljena
             if (tour == null || tour.Status != TourStatus.Published)
             {
                 return null;

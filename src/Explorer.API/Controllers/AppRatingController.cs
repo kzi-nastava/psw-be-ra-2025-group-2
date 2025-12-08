@@ -29,7 +29,7 @@ namespace Explorer.API.Controllers
         }
 
         [HttpGet("my-rating")]
-        [Authorize(Roles = "author, tourist")] // Eksplicitno samo za autore i turiste
+        [Authorize(Roles = "author, tourist")] 
         public ActionResult<IEnumerable<AppRatingDto>> GetMyRating()
         {
             var userId = User.PersonId();

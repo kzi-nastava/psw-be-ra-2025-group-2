@@ -9,17 +9,17 @@ public class ToursContext : DbContext
     public DbSet<TouristObject> TouristObject { get; set; }
     public DbSet<TouristEquipment> TouristEquipment { get; set; }
     public DbSet<TourProblem> TourProblems { get; set; }
-
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
-   
+    public DbSet<PublicKeyPoint> PublicKeyPoints { get; set; }
+    public DbSet<PublicKeyPointRequest> PublicKeyPointRequests { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("tours");
-
 
         modelBuilder.Entity<Tour>(builder =>
         {
@@ -35,10 +35,66 @@ public class ToursContext : DbContext
                 kp.Property(k => k.Longitude);
             });
 
-           
             builder.Navigation(t => t.KeyPoints)
                    .HasField("_keyPoints")
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<PublicKeyPoint>(entity =>
+        {
+            entity.ToTable("PublicKeyPoints");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.SecretText).HasMaxLength(1000);
+            entity.Property(e => e.ImageUrl).HasMaxLength(500);
+            entity.Property(e => e.Latitude).IsRequired();
+            entity.Property(e => e.Longitude).IsRequired();
+            entity.Property(e => e.AuthorId).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasIndex(e => e.AuthorId);
+        });
+
+        modelBuilder.Entity<PublicKeyPointRequest>(entity =>
+        {
+            entity.ToTable("PublicKeyPointRequests");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PublicKeyPointId).IsRequired();
+            entity.Property(e => e.AuthorId).IsRequired();
+            entity.Property(e => e.Status)
+                  .IsRequired();
+
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.RejectionReason).HasMaxLength(500);
+
+            entity.HasOne(e => e.PublicKeyPoint)
+                  .WithMany()
+                  .HasForeignKey(e => e.PublicKeyPointId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.AuthorId);
+            entity.HasIndex(e => e.Status);
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("Notifications");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Type)
+                  .IsRequired()
+                  .HasConversion<string>();
+            entity.Property(e => e.IsRead).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ReadAt);
+            entity.Property(e => e.RelatedEntityId);
+            entity.Property(e => e.RelatedEntityType).HasMaxLength(100);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
         });
     }
 }
