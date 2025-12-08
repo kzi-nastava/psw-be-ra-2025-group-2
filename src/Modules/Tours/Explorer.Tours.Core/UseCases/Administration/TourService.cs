@@ -11,6 +11,8 @@ using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 
+
+
 namespace Explorer.Tours.Core.UseCases.Administration
 {
     public class TourService : ITourService
@@ -18,17 +20,32 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly ITourRepository _tourRepository;
         private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
-
-        public TourService(ITourRepository tourRepository, IInternalUserService userService, IMapper mapper)
+        private readonly IEquipmentRepository? _equipmentRepository;
+     
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService)
         {
             _tourRepository = tourRepository;
             _userService = userService;
             _mapper = mapper;
+            _equipmentRepository = equipmentRepository;
         }
-
+       
+       
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
+            if ( dto.RequiredEquipmentIds.Any())
+            {
+                if (_equipmentRepository == null)
+                    throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
+                
+                var requestedEquipment = _equipmentRepository.GetByIdsAsync(dto.RequiredEquipmentIds).Result;
+
+                if (requestedEquipment.Count != dto.RequiredEquipmentIds.Distinct().Count())
+                    throw new InvalidOperationException("Some of the selected equipment items do not exist.");
+
+                tour.SetRequiredEquipment(requestedEquipment);
+            }
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
         }
@@ -143,6 +160,85 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.RemoveKeyPoint(ordinalNo);
             _tourRepository.UpdateAsync(tour).Wait();
         }
+        
+        public void Archive(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result 
+                       ?? throw new Exception("Tour not found.");
+            
+            tour.Archive(DateTime.UtcNow);
+
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public void Reactivate(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result
+                       ?? throw new Exception("Tour not found.");
+
+            tour.Reactivate();
+
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+        public List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId)
+        {
+            if (_equipmentRepository == null)
+                throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
+
+            var tour = _tourRepository.GetByIdAsync(tourId).Result
+                       ?? throw new Exception("Tour not found.");
+
+            if (tour.AuthorId != authorId)
+                throw new UnauthorizedAccessException("You are not the author of this tour.");
+
+            var allEquipment = _equipmentRepository.GetAllAsync().Result;
+
+            return allEquipment.Select(eq => new TourEquipmentItemDto
+            {
+                Id = eq.Id,
+                Name = eq.Name,
+                IsRequiredForTour = tour.Equipment.Any(te => te.Id == eq.Id)
+            }).ToList();
+        }
+        
+
+        public void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds)
+        {
+            if (_equipmentRepository == null)
+                throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
+
+            var tour = _tourRepository.GetByIdAsync(tourId).Result
+                       ?? throw new Exception("Tour not found.");
+
+            if (tour.AuthorId != authorId)
+                throw new UnauthorizedAccessException("You are not the author of this tour.");
+
+            var requestedEquipment = _equipmentRepository.GetByIdsAsync(equipmentIds).Result;
+
+            if (requestedEquipment.Count != equipmentIds.Distinct().Count())
+                throw new InvalidOperationException("Some of the selected equipment items do not exist.");
+
+            tour.SetRequiredEquipment(requestedEquipment);
+
+            _tourRepository.UpdateAsync(tour).Wait();
+        }
+        
+        public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId)
+        {
+            if (_equipmentRepository == null)
+                throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
+
+            var allEquipment = _equipmentRepository.GetAllAsync().Result;
+
+            return allEquipment.Select(eq => new TourEquipmentItemDto
+            {
+                Id = eq.Id,
+                Name = eq.Name,
+                IsRequiredForTour = false
+            }).ToList();
+        }
+
+        
 
         public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
         {

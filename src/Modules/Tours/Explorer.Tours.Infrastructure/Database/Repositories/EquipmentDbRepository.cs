@@ -59,4 +59,16 @@ public class EquipmentDbRepository : IEquipmentRepository
         _dbSet.Remove(entity);
         DbContext.SaveChanges();
     }
+    
+    public async Task<List<Equipment>> GetAllAsync()
+    {
+        return await  DbContext.Equipment.ToListAsync();
+    }
+
+    public async Task<List<Equipment>> GetByIdsAsync(List<long> ids)
+    {
+        return await  DbContext.Equipment
+            .Where(e => ids.Contains(e.Id))
+            .ToListAsync();
+    }
 }
