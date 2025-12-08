@@ -72,8 +72,39 @@ public class PublicKeyPointService : IPublicKeyPointService
     public async Task<IEnumerable<PublicKeyPointDto>> GetAuthorPublicKeyPointsAsync(long authorId)
     {
         authorId = Math.Abs(authorId);
+
         var publicKeyPoints = await _publicKeyPointRepository.GetByAuthorIdAsync(authorId);
-        return _mapper.Map<IEnumerable<PublicKeyPointDto>>(publicKeyPoints);
+        var publicKeyPointIds = publicKeyPoints.Select(p => p.Id).ToList();
+
+        var allRequests = await _requestRepository.GetByPublicKeyPointIdsAsync(publicKeyPointIds);
+
+        var latestRequests = allRequests
+            .GroupBy(r => r.PublicKeyPointId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(r => r.CreatedAt).First()
+            );
+
+        var result = publicKeyPoints.Select(pkp =>
+        {
+            var dto = _mapper.Map<PublicKeyPointDto>(pkp);
+
+            if (latestRequests.TryGetValue(pkp.Id, out var request))
+            {
+                dto.RequestStatus = request.Status.ToString();
+                dto.RequestCreatedAt = request.CreatedAt;
+                dto.ProcessedAt = request.ProcessedAt;
+                dto.RejectionReason = request.RejectionReason;
+            }
+            else
+            {
+                dto.RequestStatus = "Pending";
+            }
+
+            return dto;
+        }).ToList();
+
+        return result;
     }
 
     public async Task<IEnumerable<PublicKeyPointRequestDto>> GetPendingRequestsAsync()
@@ -106,7 +137,37 @@ public class PublicKeyPointService : IPublicKeyPointService
     public async Task<IEnumerable<PublicKeyPointDto>> GetApprovedPublicKeyPointsAsync()
     {
         var approved = await _publicKeyPointRepository.GetApprovedAsync();
-        return _mapper.Map<IEnumerable<PublicKeyPointDto>>(approved);
+        var approvedIds = approved.Select(p => p.Id).ToList();
+
+        var allRequests = await _requestRepository.GetByPublicKeyPointIdsAsync(approvedIds);
+
+        var latestRequests = allRequests
+            .GroupBy(r => r.PublicKeyPointId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(r => r.CreatedAt).First()
+            );
+
+        var result = approved.Select(pkp =>
+        {
+            var dto = _mapper.Map<PublicKeyPointDto>(pkp);
+
+            if (latestRequests.TryGetValue(pkp.Id, out var request))
+            {
+                dto.RequestStatus = request.Status.ToString();
+                dto.RequestCreatedAt = request.CreatedAt;
+                dto.ProcessedAt = request.ProcessedAt;
+                dto.RejectionReason = request.RejectionReason;
+            }
+            else
+            {
+                dto.RequestStatus = "Approved"; 
+            }
+
+            return dto;
+        }).ToList();
+
+        return result;
     }
 
     public async Task<PublicKeyPointDto> ApproveAsync(long publicKeyPointId, long adminId)
@@ -122,7 +183,13 @@ public class PublicKeyPointService : IPublicKeyPointService
             Math.Abs(request.AuthorId),
             request.PublicKeyPoint.Name);
 
-        return _mapper.Map<PublicKeyPointDto>(request.PublicKeyPoint);
+        var dto = _mapper.Map<PublicKeyPointDto>(request.PublicKeyPoint);
+        dto.RequestStatus = request.Status.ToString();
+        dto.RequestCreatedAt = request.CreatedAt;
+        dto.ProcessedAt = request.ProcessedAt;
+        dto.RejectionReason = request.RejectionReason;
+
+        return dto;
     }
     public async Task<PublicKeyPointDto> RejectAsync(long publicKeyPointId, long adminId, string? reason)
     {
@@ -143,7 +210,13 @@ public class PublicKeyPointService : IPublicKeyPointService
             publicKeyPoint.Name,
             reason);
 
-        return _mapper.Map<PublicKeyPointDto>(publicKeyPoint);
+        var dto = _mapper.Map<PublicKeyPointDto>(publicKeyPoint);
+        dto.RequestStatus = request.Status.ToString();
+        dto.RequestCreatedAt = request.CreatedAt;
+        dto.ProcessedAt = request.ProcessedAt;
+        dto.RejectionReason = request.RejectionReason;
+
+        return dto;
     }
 
     public async Task AddPublicKeyPointToTourAsync(long publicKeyPointId, long tourId, int ordinalNo, long authorId)

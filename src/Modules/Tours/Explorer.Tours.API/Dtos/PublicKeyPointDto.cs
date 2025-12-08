@@ -13,7 +13,12 @@ public class PublicKeyPointDto
     public DateTime CreatedAt { get; set; }
     public long? SourceTourId { get; set; }
     public int? SourceOrdinalNo { get; set; }
+    public string RequestStatus { get; set; } = "Pending";
+    public DateTime? RequestCreatedAt { get; set; }
+    public DateTime? ProcessedAt { get; set; }
+    public string? RejectionReason { get; set; }
 }
+
 
 public class SubmitPublicKeyPointRequestDto
 {

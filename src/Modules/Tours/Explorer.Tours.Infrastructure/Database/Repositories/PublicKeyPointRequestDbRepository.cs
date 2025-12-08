@@ -56,4 +56,23 @@ public class PublicKeyPointRequestDbRepository : IPublicKeyPointRequestRepositor
             .AnyAsync(r => r.PublicKeyPointId == publicKeyPointId &&
                           r.Status == PublicKeyPointRequestStatus.Pending);
     }
+
+    public async Task<PublicKeyPointRequest?> GetLatestByPublicKeyPointIdAsync(long publicKeyPointId)
+    {
+        return await _context.PublicKeyPointRequests
+            .Include(r => r.PublicKeyPoint)
+            .Where(r => r.PublicKeyPointId == publicKeyPointId)
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    // NOVO: Dohvata sve request-e za listu PublicKeyPointId-eva
+    public async Task<IEnumerable<PublicKeyPointRequest>> GetByPublicKeyPointIdsAsync(IEnumerable<long> publicKeyPointIds)
+    {
+        var idsList = publicKeyPointIds.ToList();
+        return await _context.PublicKeyPointRequests
+            .Include(r => r.PublicKeyPoint)
+            .Where(r => idsList.Contains(r.PublicKeyPointId))
+            .ToListAsync();
+    }
 }

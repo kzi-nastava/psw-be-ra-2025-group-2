@@ -10,4 +10,6 @@ public interface IPublicKeyPointRequestRepository
     Task AddAsync(PublicKeyPointRequest request);
     Task UpdateAsync(PublicKeyPointRequest request);
     Task<bool> ExistsPendingForKeyPointAsync(long publicKeyPointId);
+    Task<PublicKeyPointRequest?> GetLatestByPublicKeyPointIdAsync(long publicKeyPointId);
+    Task<IEnumerable<PublicKeyPointRequest>> GetByPublicKeyPointIdsAsync(IEnumerable<long> publicKeyPointIds);
 }
