@@ -100,7 +100,7 @@ namespace Explorer.Blog.Core.Domain
 
         public void AddVote(long userId, VoteValue voteValue)
         {
-            if (State != BlogState.Published) 
+            if (State != BlogState.Published && State != BlogState.Active && State != BlogState.Famous) 
                 throw new InvalidOperationException("Can only vote on published blog posts.");
 
             var existingVote = _votes.FirstOrDefault(v => v.UserId == userId);
@@ -145,5 +145,41 @@ namespace Explorer.Blog.Core.Domain
         {
             return _votes.Count(v => v.Value.Value == -1);
         }
+        public void UpdateStatus(int commentCount)
+        {
+            if (State == BlogState.Draft || State == BlogState.Archived)
+                return;
+
+            int score = GetScore();
+
+            // 1) CLOSED
+            if (score < -10)
+            {
+                State = BlogState.Closed;
+                return;
+            }
+
+            if (State == BlogState.Closed)
+                return;
+
+            // 2) FAMOUS
+            if (score > 500 || commentCount > 30)
+            {
+                State = BlogState.Famous;
+                return;
+            }
+
+            // 3) ACTIVE
+            if (score > 100 || commentCount > 10)
+            {
+                State = BlogState.Active;
+                return;
+            }
+            if (State == BlogState.Active || State == BlogState.Famous)
+            {
+                State = BlogState.Published;
+            }
+        }
+
     }
 }
