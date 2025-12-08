@@ -32,6 +32,12 @@ namespace Explorer.Stakeholders.Core.Domain
             Validate();
         }
 
+        protected Club()
+        {
+            ImageUrls = new List<string>();
+            Status = ClubStatus.Active;
+        }
+
         private void Validate()
         {
             if (string.IsNullOrWhiteSpace(Name))
@@ -82,7 +88,12 @@ namespace Explorer.Stakeholders.Core.Domain
 
         public void WithdrawRequest(long touristId)
         {
-            var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+            // PRE:
+            // var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+
+            // POSLE:
+            var request = _joinRequests.FirstOrDefault(r => r.TouristId == touristId);
+
             if (request == null)
                 throw new InvalidOperationException("Join request not found.");
 
@@ -91,23 +102,31 @@ namespace Explorer.Stakeholders.Core.Domain
 
         public void AcceptRequest(long touristId)
         {
-            var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+            // PRE:
+            // var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+
+            // POSLE:
+            var request = _joinRequests.FirstOrDefault(r => r.TouristId == touristId);
+
             if (request == null)
                 throw new InvalidOperationException("Join request not found.");
 
             _joinRequests.Remove(request);
             _members.Add(new ClubMember(touristId));
-
         }
 
         public void RejectRequest(long touristId)
         {
-            var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+            // PRE:
+            // var request = _joinRequests.SingleOrDefault(r => r.TouristId == touristId);
+
+            // POSLE:
+            var request = _joinRequests.FirstOrDefault(r => r.TouristId == touristId);
+
             if (request == null)
                 throw new InvalidOperationException("Join request not found.");
 
             _joinRequests.Remove(request);
-
         }
 
         public void InviteTourist(long touristId)

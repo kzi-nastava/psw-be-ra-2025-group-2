@@ -38,8 +38,18 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public ClubDto Update(ClubDto club)
         {
-            var entity = _mapper.Map<Club>(club);
-            var updated = _clubRepository.Update(entity);
+            // 1) Učitaj postojeći klub iz baze (EF ga već prati)
+            var existing = _clubRepository.Get(club.Id);
+            if (existing == null)
+                throw new KeyNotFoundException($"Club {club.Id} not found.");
+
+            // 2) Izmeni vrednosti preko domenske metode koju već imaš u Club.cs
+            existing.Update(club.Name, club.Description, club.ImageUrls);
+
+            // 3) Sačuvaj promene
+            var updated = _clubRepository.Update(existing);
+
+            // 4) Vrati DTO
             return _mapper.Map<ClubDto>(updated);
         }
 
