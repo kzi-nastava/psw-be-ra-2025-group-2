@@ -23,6 +23,8 @@ public class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
+    
+    public DateTime? ArchivedAt { get; private set; }
    
 
    
@@ -54,6 +56,7 @@ public class Tour : AggregateRoot
 
         Status = TourStatus.Draft;
         Price = 0m;
+        ArchivedAt = null;
     }
 
     public void Update(string name, string description, int difficulty, IEnumerable<string>? tags = null)
@@ -70,7 +73,30 @@ public class Tour : AggregateRoot
     }
 
     public void SetStatus(TourStatus status) => Status = status;
+    public void Archive(DateTime now)
+    {
+        if (Status != TourStatus.Published)
+        {
+            // Acceptance criteria poruka
+            throw new InvalidOperationException("Turu je moguće arhivirati samo ako je u stanju 'objavljena'.");
+        }
 
+        Status = TourStatus.Archived;
+        ArchivedAt = now;
+    }
+
+    
+    public void Reactivate()
+    {
+        if (Status != TourStatus.Archived)
+        {
+            // Acceptance criteria poruka
+            throw new InvalidOperationException("Ova tura nije arhivirana i ne može se reaktivirati.");
+        }
+
+        Status = TourStatus.Published;
+        ArchivedAt = null;
+    }
     public void SetPrice(decimal price)
     {
         if (price < 0) throw new ArgumentException("Price cannot be negative.", nameof(price));
