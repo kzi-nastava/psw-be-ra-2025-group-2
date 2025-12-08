@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Explorer.Tours.Tests.Integration.Administration;
 
-public class TourEquipmentTests
+public class TourEquipmentCommandTests
 {
     private static Equipment CreateEquipment(long id, string name)
     {

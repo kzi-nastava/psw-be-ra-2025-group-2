@@ -28,16 +28,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _equipmentRepository = equipmentRepository;
         }
        
-        public TourService(ITourRepository tourRepository, IMapper mapper)
-        {
-            _tourRepository = tourRepository;
-            _mapper = mapper;
-            _equipmentRepository = null; 
-        }
+       
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
-            if (dto.RequiredEquipmentIds != null && dto.RequiredEquipmentIds.Any())
+            if ( dto.RequiredEquipmentIds.Any())
             {
                 if (_equipmentRepository == null)
                     throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
