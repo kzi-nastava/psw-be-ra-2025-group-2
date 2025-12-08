@@ -23,7 +23,9 @@ public class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
-    
+
+    public decimal LengthKm { get; private set; }
+
     public DateTime? ArchivedAt { get; private set; }
    
 
@@ -56,6 +58,8 @@ public class Tour : AggregateRoot
 
         Status = TourStatus.Draft;
         Price = 0m;
+        LengthKm = 0m;
+
         ArchivedAt = null;
     }
 
@@ -122,6 +126,7 @@ public class Tour : AggregateRoot
         var kp = _keyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
         if (kp != null)
             _keyPoints.Remove(kp);
+        UpdateLengthForKeyPoints();
     }
 
     public void UpdateKeyPoint(int ordinalNo, KeyPointUpdate update)
@@ -146,7 +151,11 @@ public class Tour : AggregateRoot
         _keyPoints[_keyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
     }
 
-    public void ClearKeyPoints() => _keyPoints.Clear();
+    public void ClearKeyPoints()
+    {
+        _keyPoints.Clear();
+        LengthKm = 0m;
+    }
 
     private void RecalculateKeyPointOrdinals()
     {
@@ -157,6 +166,32 @@ public class Tour : AggregateRoot
         }
         _keyPoints.Clear();
         _keyPoints.AddRange(ordered);
+    }
+
+    public void SetLength(decimal lengthKm)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("It is not possible to change the length of an archived tour.");
+
+        UpdateLengthForKeyPoints();
+
+        if (lengthKm < 0)
+            throw new ArgumentOutOfRangeException(nameof(lengthKm), "Distance cannot be negative.");
+        if (lengthKm > 2000)
+            throw new ArgumentOutOfRangeException(nameof(lengthKm), "Distance cannot exceed 2000 km.");
+
+        LengthKm = lengthKm;
+    }
+
+    private void UpdateLengthForKeyPoints()
+    {
+        if (_keyPoints.Count < 2)
+        {
+            LengthKm = 0m;
+            return;
+        }
+
+        
     }
 
 }
