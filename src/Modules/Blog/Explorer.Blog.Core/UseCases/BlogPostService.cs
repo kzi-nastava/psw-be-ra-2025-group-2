@@ -81,19 +81,17 @@ namespace Explorer.Blog.Core.UseCases
                 throw new InvalidOperationException("Closed blog cannot be edited.");
 
 
-            if (blog.State == BlogState.Draft)
+            if (blog.State == BlogState.Archived)
+                throw new InvalidOperationException("Archived blogs cannot be edited.");
+
+            if (blog.State == BlogState.Draft || blog.State == BlogState.Active || blog.State == BlogState.Famous)
             {
                 var images = dto.ImageUrls?.Select(url => new BlogImage(url)).ToList() ?? new List<BlogImage>();
-
                 blog.Edit(dto.Title, dto.Description, images);
             }
             else if (blog.State == BlogState.Published)
             {
                 blog.EditDescription(dto.Description);
-            }
-            else if (blog.State == BlogState.Archived)
-            {
-                throw new InvalidOperationException("Archived blogs cannot be edited.");
             }
 
             await _repository.UpdateAsync(blog);
