@@ -23,17 +23,12 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
-        modelBuilder.Entity<TourExecution>()
-            .HasMany(te => te.KeyPointVisits)
-            .WithOne()
-            .HasForeignKey("TourExecutionId")
-            .OnDelete(DeleteBehavior.Cascade);
-       
+
         modelBuilder.Entity<Tour>(builder =>
         {
-            builder.OwnsMany(t => t.KeyPoints, kp =>
+            builder.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
             {
-                kp.WithOwner().HasForeignKey("TourId"); 
+                kp.WithOwner().HasForeignKey("TourId");
                 kp.Property(k => k.OrdinalNo).IsRequired();
                 kp.Property(k => k.Name).IsRequired();
                 kp.Property(k => k.Description).IsRequired();
@@ -42,6 +37,19 @@ public class ToursContext : DbContext
                 kp.Property(k => k.Latitude);
                 kp.Property(k => k.Longitude);
             });
+
+           
+            builder.Navigation(t => t.KeyPoints)
+                   .HasField("_keyPoints")
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+            
+            builder
+                .HasMany(t => t.Equipment)
+                .WithMany() 
+                .UsingEntity(j =>
+                {
+                    j.ToTable("TourEquipment"); 
+                });
         });
     }
 }
