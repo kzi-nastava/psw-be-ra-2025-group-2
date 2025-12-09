@@ -55,7 +55,7 @@ namespace Explorer.Blog.Core.Domain
         }
         public void Edit(string title, string description, List<BlogImage> images)
         {
-            if (State != BlogState.Draft)
+            if (State != BlogState.Draft && State != BlogState.Active && State != BlogState.Famous)
                 throw new InvalidOperationException("Blog can be edited only while in Draft state.");
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.");
@@ -65,6 +65,7 @@ namespace Explorer.Blog.Core.Domain
 
             Title = title;
             Description = description;
+
 
             _images.Clear();
             _images.AddRange(images);
