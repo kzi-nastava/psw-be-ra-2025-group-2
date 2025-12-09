@@ -16,4 +16,6 @@ public interface IEquipmentRepository
     Equipment Create(Equipment map);
     Equipment Update(Equipment map);
     void Delete(long id);
+    Task<List<Equipment>> GetAllAsync();
+    Task<List<Equipment>> GetByIdsAsync(List<long> ids);
 }

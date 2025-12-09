@@ -23,5 +23,9 @@ namespace Explorer.Tours.API.Public.Administration
         PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize);
         TourDto? GetPublishedTour(long tourId); 
 
+        List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId);
+        public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId);
+        void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
     }
+    
 }

@@ -28,6 +28,7 @@ public class TourDbRepository : ITourRepository
     public async Task<Tour?> GetByIdAsync(long id)
     {
         return await _dbSet
+            .Include(t => t.Equipment)
             .Include(t => t.KeyPoints)
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id);

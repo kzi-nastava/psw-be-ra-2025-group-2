@@ -38,6 +38,14 @@ public class ToursContext : DbContext
             builder.Navigation(t => t.KeyPoints)
                    .HasField("_keyPoints")
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            
+            builder
+                .HasMany(t => t.Equipment)
+                .WithMany() 
+                .UsingEntity(j =>
+                {
+                    j.ToTable("TourEquipment"); 
+                });
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>
