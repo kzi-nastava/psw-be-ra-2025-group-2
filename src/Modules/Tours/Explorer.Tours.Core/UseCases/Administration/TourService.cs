@@ -38,25 +38,33 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize)
         {
-            var tours = _tourRepository.GetAllPublished(page, pageSize);
+            var tours = _tourRepository.GetAllPublished();
             var filteredTours = tours
                 .Where(Tour =>Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
                 .ToList();
             var totalCount = filteredTours.Count;
 
-          /*  foreach (var tour in filteredTours)
+            /*  foreach (var tour in filteredTours)
+              {
+                  if (tour.KeyPoints.Count > 1)
+                  {
+                      var firstKeyPoint = tour.KeyPoints.First();
+                      tour.KeyPoints.Clear();
+                      tour.KeyPoints.Add(firstKeyPoint);
+                  }
+              }*/
+            if(page>0)
             {
-                if (tour.KeyPoints.Count > 1)
-                {
-                    var firstKeyPoint = tour.KeyPoints.First();
-                    tour.KeyPoints.Clear();
-                    tour.KeyPoints.Add(firstKeyPoint);
-                }
-            }*/
+                var pagedResult = filteredTours.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+                var items = pagedResult.Select(_mapper.Map<TourDto>).ToList();
+                return new PagedResult<TourDto>(items, pagedResult.Count);
+            }
+            else
+            {
+                var items = filteredTours.Select(_mapper.Map<TourDto>).ToList();
+                return new PagedResult<TourDto>(items, items.Count);
 
-            var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
-            var items = pagedResult.Results.Select(_mapper.Map<TourDto>).ToList();
-            return new PagedResult<TourDto>(items, pagedResult.TotalCount);
+            }
 
         }
 
