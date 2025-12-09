@@ -23,6 +23,11 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
+        modelBuilder.Entity<TourExecution>()
+            .HasMany(te => te.KeyPointVisits)
+            .WithOne()
+            .HasForeignKey("TourExecutionId")
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Tour>(builder =>
         {

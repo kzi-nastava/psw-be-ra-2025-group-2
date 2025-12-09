@@ -8,27 +8,39 @@ using System.Threading.Tasks;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using System.Runtime;
 using Explorer.Tours.Core.Domain.Exceptions;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Explorer.Tours.Core.Domain.Execution
 
 {
     public class TourExecution : AggregateRoot
     {
+        private readonly Distance ClosenessDistance = Distance.FromMeters(100);
+
         public long TouristId { get; init; }
         public long TourId { get; init; }
         public TourExecutionState State { get; private set; } = TourExecutionState.NotStarted;
         public DateTime LastActivityTimestamp { get; private set; }
         public DateTime? CompletionTimestamp { get; private set; }
 
-        private readonly List<KeyPointVisit> _keyPointVisits;
+        private readonly List<KeyPointVisit> _keyPointVisits = new();
         public IReadOnlyList<KeyPointVisit> KeyPointVisits => _keyPointVisits.AsReadOnly();
+
+        public int KeyPointsCount { get; init; }
 
         private TourExecution()
         {
-            _keyPointVisits = new List<KeyPointVisit>();
+
         }
 
-        public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp)
+        public TourExecution(long touristId, long tourId, int keyPointsCount)
+        {
+            TouristId = touristId;
+            TourId = tourId;
+            KeyPointsCount = keyPointsCount;
+        }
+
+        public TourExecution(long touristId, long tourId, List<KeyPointVisit> keyPointVisits, TourExecutionState state, DateTime lastActivityTimestamp, DateTime? completionTimestamp, int KeyPointsCount)
         {
             LastActivityTimestamp = EnsureUtc(lastActivityTimestamp);
             CompletionTimestamp = completionTimestamp == null ? null : EnsureUtc(completionTimestamp.Value);
@@ -66,27 +78,63 @@ namespace Explorer.Tours.Core.Domain.Execution
             if (State != TourExecutionState.InProgress)
                 throw new TourExecutionStateException("Cannot complete a tour which is not in progress.");
 
+            if (GetLastVisitedKeyPointOrdinal() != KeyPointsCount)
+                throw new InvalidOperationException("Cannot complete a tour before all the key points have been visited.");
+
             State = TourExecutionState.Completed;
             CompletionTimestamp = DateTime.UtcNow;
         }
 
         public int GetLastVisitedKeyPointOrdinal()
         {
-            return _keyPointVisits.LastOrDefault()?.KeyPointOrdinal ?? 0;
+            return _keyPointVisits.MaxBy(kpv => kpv.KeyPointOrdinal)?.KeyPointOrdinal ?? 0;
         }
 
-        public void ArriveAtKeyPointByOrdinal(int ordinal)
+        public int? QueryKeyPointVisit(IReadOnlyList<IKeyPointInfo> keyPoints, double latitude, double longitude)
         {
-            if(ordinal < 1)
+            if (State != TourExecutionState.InProgress)
+                throw new TourExecutionStateException("Cannot query for key point visits of an execution which is not in progress.");
+
+            if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180)
+                throw new ArgumentException("Invalid coordinates.");
+
+            if (keyPoints.Count != KeyPointsCount)
+                throw new InvalidDataException("KeyPoint data is inconsistent.");
+
+            RecordActivity();
+
+            foreach(var keyPoint in keyPoints)
+            {
+                bool hasBeenVisited = HasTouristVisitedKeyPoint(keyPoint.OrdinalNo);
+                bool isNext = keyPoint.OrdinalNo == GetLastVisitedKeyPointOrdinal() + 1;
+
+                if(!hasBeenVisited && isNext)
+                {
+                    if(Haversine.CalculateDistance(latitude, longitude, keyPoint.Latitude, keyPoint.Longitude) <= ClosenessDistance)
+                    {
+                        _keyPointVisits.Add(new KeyPointVisit(keyPoint.OrdinalNo, LastActivityTimestamp));
+                        return keyPoint.OrdinalNo;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public bool HasTouristVisitedKeyPoint(int ordinal)
+        {
+            if (ordinal < 1 || ordinal > KeyPointsCount)
                 throw new ArgumentException("Invalid key point ordinal.");
 
-            int lastVisited = GetLastVisitedKeyPointOrdinal();
+            if(_keyPointVisits.Any(kpv => kpv.KeyPointOrdinal == ordinal))
+                    return true;
 
-            if (ordinal != lastVisited + 1)
-                throw new KeyPointVisitException($"Cannot visit key point #{ordinal} after #{lastVisited}");
+            return false;
+        }
 
-            _keyPointVisits.Add(new KeyPointVisit(ordinal, DateTime.UtcNow));
-
+        public bool ShouldShowKeyPointSecret(int ordinal)
+        {
+            return HasTouristVisitedKeyPoint(ordinal);
         }
 
         public void RecordActivity()
@@ -101,6 +149,11 @@ namespace Explorer.Tours.Core.Domain.Execution
 
             if (CompletionTimestamp.HasValue && CompletionTimestamp.Value > DateTime.UtcNow)
                 throw new EntityValidationException("Completion time must be in the past.");
+
+            if(KeyPointsCount <= 0)
+            {
+                throw new EntityValidationException("Key point count must be greater than 0.");
+            }
         }
 
 

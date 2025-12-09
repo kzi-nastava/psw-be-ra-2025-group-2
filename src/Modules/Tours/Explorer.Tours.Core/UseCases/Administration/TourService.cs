@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
@@ -17,13 +18,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
     public class TourService : ITourService
     {
         private readonly ITourRepository _tourRepository;
+        private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
         private readonly IEquipmentRepository? _equipmentRepository;
-
      
-        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository)
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService)
         {
             _tourRepository = tourRepository;
+            _userService = userService;
             _mapper = mapper;
             _equipmentRepository = equipmentRepository;
         }
@@ -238,5 +240,49 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         
 
+        public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
+        {
+            // TODO refaktorisati kasnije
+            var tours = _tourRepository.GetAllAsync().Result;
+
+            var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
+
+            var activeTourId = _userService.GetActiveTourIdByUserId(touristId);
+
+            if (activeTourId.HasValue)
+            {
+                var tour = tours.Where(t => t.Id == activeTourId).FirstOrDefault();
+                if (tour == null)
+                {
+                    _userService.ResetActiveTourIdByUserId(touristId);
+                    activeTourId = null;
+                }
+            }
+
+            foreach(var dto in dtos)
+            {
+                if(activeTourId == null)
+                {
+                    dto.IsActive = false;
+                    dto.CanBeStarted = true;
+                }
+                else
+                {
+                    if (dto.Id == activeTourId)
+                    {
+                        dto.IsActive = true;
+                        dto.CanBeStarted = true;
+                    }
+                    else
+                    {
+                        dto.IsActive = false;
+                        dto.CanBeStarted = false;
+                    }
+                }
+                dto.KeyPoints = new List<KeyPointDto>();
+            }
+
+            return dtos;
+        }
     }
 }
