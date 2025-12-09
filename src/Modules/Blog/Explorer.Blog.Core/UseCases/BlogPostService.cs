@@ -15,11 +15,14 @@ namespace Explorer.Blog.Core.UseCases
     public class BlogPostService : IBlogPostService
     {
         private readonly IBlogPostRepository _repository;
+        private readonly ICommentRepository _commentRepository;
         private readonly IMapper _mapper;
 
-        public BlogPostService(IBlogPostRepository repository, IMapper mapper)
+
+        public BlogPostService(IBlogPostRepository repository, ICommentRepository commentRepository, IMapper mapper)
         {
             _repository = repository;
+            _commentRepository = commentRepository;
             _mapper = mapper;
         }
 
@@ -73,6 +76,9 @@ namespace Explorer.Blog.Core.UseCases
 
             if (blog.AuthorId != userId)
                 throw new UnauthorizedAccessException("You can update only your own blogs.");
+
+            if (blog.State == BlogState.Closed)
+                throw new InvalidOperationException("Closed blog cannot be edited.");
 
 
             if (blog.State == BlogState.Draft)
@@ -160,7 +166,15 @@ namespace Explorer.Blog.Core.UseCases
 
             var vote = voteValue == 1 ? VoteValue.Upvote : VoteValue.Downvote;
 
+            if (blog.State == BlogState.Closed)
+                throw new InvalidOperationException("Cannot vote on a closed blog.");
+
+
+            var comments =  _commentRepository.GetByBlogPost(blogPostId); // treba da dodaš ICommentRepository u konstruktor
+            
+
             blog.AddVote(userId, vote);
+            blog.UpdateStatus(comments.Count);
 
             await _repository.UpdateAsync(blog);
 

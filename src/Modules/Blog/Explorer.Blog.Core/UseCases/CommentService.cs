@@ -12,12 +12,14 @@ namespace Explorer.Blog.Core.UseCases
     public class CommentService : ICommentService
     {
         private readonly ICommentRepository _commentRepository;
-        private readonly IUsernameProvider _userNameProvider; 
+        private readonly IUsernameProvider _userNameProvider;
+        private readonly IBlogPostRepository _blogPostRepository;
         private readonly IMapper _mapper;
 
-        public CommentService(ICommentRepository commentRepository, IUsernameProvider userNameProvider, IMapper mapper)
+        public CommentService(ICommentRepository commentRepository, IBlogPostRepository blogPostRepository, IUsernameProvider userNameProvider, IMapper mapper)
         {
             _commentRepository = commentRepository;
+            _blogPostRepository = blogPostRepository;
             _userNameProvider = userNameProvider;
             _mapper = mapper;
         }
@@ -28,8 +30,20 @@ namespace Explorer.Blog.Core.UseCases
             var username = _userNameProvider.GetNameById(commentDto.UserId);
             commentDto.UserName = username;
 
+            var blog = _blogPostRepository.GetByIdAsync(commentDto.BlogPostId).GetAwaiter().GetResult();
+            if (blog == null)
+                throw new KeyNotFoundException("Blog not found.");
+
+            if (blog.State == BlogState.Closed)
+                throw new InvalidOperationException("Cannot comment on a closed blog.");
+
             var entity = _mapper.Map<Comment>(commentDto);
             var created = _commentRepository.Create(entity);
+
+            var comments = _commentRepository.GetByBlogPost(blog.Id);
+
+            blog.UpdateStatus(comments.Count);
+            _blogPostRepository.UpdateAsync(blog).GetAwaiter().GetResult();
             return _mapper.Map<CommentDto>(created);
         }
 
