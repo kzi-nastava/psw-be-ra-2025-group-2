@@ -19,7 +19,7 @@ namespace Explorer.API.Controllers.Tourist
             _executionService = executionService;
         }
 
-        [HttpGet("start/{id:long}")]
+        [HttpPost("start/{id:long}")]
         public ActionResult<TourExecutionDto> Proceed(long id)
         {
             try
@@ -33,7 +33,7 @@ namespace Explorer.API.Controllers.Tourist
             }
         }
 
-        [HttpGet("abandon/{id:long}")]
+        [HttpPost("abandon/{id:long}")]
         public IActionResult Abandon(long id)
         {
             try
@@ -47,7 +47,7 @@ namespace Explorer.API.Controllers.Tourist
             }
         }
 
-        [HttpGet("complete/{id:long}")]
+        [HttpPost("complete/{id:long}")]
         public IActionResult Complete(long id)
         {
             try
@@ -61,7 +61,7 @@ namespace Explorer.API.Controllers.Tourist
             }
         }
 
-        [HttpGet("data/{executionId:long}")]
+        [HttpPost("data/{executionId:long}")]
         public ActionResult<TourExecutionDto> GetExecutionData(long executionId)
         {
             try
