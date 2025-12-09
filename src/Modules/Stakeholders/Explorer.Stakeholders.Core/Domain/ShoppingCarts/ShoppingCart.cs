@@ -33,8 +33,8 @@ public class ShoppingCart : Entity
         {
             throw new ArgumentException("Tour price must be greater than 0");
         }
-        var item = new OrderItem(this.Id, tourId, tourName, price);
-        Items.Add(item);
+        var priceInEur = new Money(price.Amount); 
+        var item = new OrderItem(this.Id, tourId, tourName, priceInEur); Items.Add(item);
         RecalculateTotalPrice();
     }
     public void RemoveItem(long itemId)
@@ -61,7 +61,7 @@ public class ShoppingCart : Entity
             TotalPrice = Money.Zero;
             return;
         }
-        var currency = Items.First().Price.Currency;
-        TotalPrice = Items.Aggregate(new Money(0, currency), (sum, item) => sum + item.Price);
+        TotalPrice = Items.Aggregate(new Money(0), (sum, item) => sum + item.Price); 
+
     }
 }

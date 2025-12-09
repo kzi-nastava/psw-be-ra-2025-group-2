@@ -9,13 +9,13 @@ public class Money : ValueObject
 
     private Money() { }
 
-    public Money(decimal amount, string currency = "EUR")
+    public Money(decimal amount, string? currency = null)
     {
         if (amount < 0)
             throw new ArgumentException("Amount cannot be negative");
 
         Amount = amount;
-        Currency = currency ?? "EUR";
+        Currency = "EUR"; 
     }
 
     public static Money Zero => new Money(0);
