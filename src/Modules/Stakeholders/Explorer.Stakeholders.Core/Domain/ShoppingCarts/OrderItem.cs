@@ -11,15 +11,20 @@ public class OrderItem : Entity
 
     private OrderItem() { }
 
-    internal OrderItem(long shoppingCartId, long tourId, string tourName, Money price)
+    public OrderItem(long shoppingCartId, long tourId, string tourName, Money price)
     {
-        if (tourId <= 0) throw new ArgumentException("Invalid TourId");
+        if (tourId == 0)
+            throw new ArgumentException("Invalid TourId");
+
         if (string.IsNullOrWhiteSpace(tourName))
-            throw new ArgumentException("Tour name is required");
+            throw new ArgumentException("Tour name cannot be empty");
+
+        if (price == null || price.Amount <= 0)
+            throw new ArgumentException("Invalid price");
 
         ShoppingCartId = shoppingCartId;
         TourId = tourId;
         TourName = tourName;
-        Price = price ?? throw new ArgumentNullException(nameof(price));
+        Price = price;
     }
 }
