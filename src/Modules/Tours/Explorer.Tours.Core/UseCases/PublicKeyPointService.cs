@@ -33,20 +33,16 @@ public class PublicKeyPointService : IPublicKeyPointService
     {
         try
         {
-            // 1. Pronađi Tour sa KeyPoint-ovima
             var tour = await _tourRepository.GetTourWithKeyPointsAsync(tourId);
             if (tour == null)
                 throw new KeyNotFoundException("Tour not found.");
 
-            // 2. Pronađi KeyPoint po ordinalnom broju
             var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
             if (keyPoint == null)
                 throw new KeyNotFoundException("KeyPoint not found.");
 
-            // ✅ DODAJ DEBUG INFO
             Console.WriteLine($"KeyPoint found: Name={keyPoint.Name}, Lat={keyPoint.Latitude}, Lon={keyPoint.Longitude}");
 
-            // 3. Proveri da li već postoji PublicKeyPoint
             var existingPublicKeyPoint = await _requestRepository
                 .GetPublicKeyPointBySourceAsync(tourId, ordinalNo);
 
@@ -58,24 +54,19 @@ public class PublicKeyPointService : IPublicKeyPointService
             }
             else
             {
-                // 4. Kreiraj novi PublicKeyPoint
                 publicKeyPoint = PublicKeyPoint.CreateFromKeyPoint(keyPoint, authorId, tourId);
 
-                // ✅ DODAJ DEBUG INFO
                 Console.WriteLine($"Creating PublicKeyPoint: Lat={publicKeyPoint.Latitude}, Lon={publicKeyPoint.Longitude}");
 
                 await _requestRepository.AddPublicKeyPointAsync(publicKeyPoint);
             }
 
-            // 5. Proveri pending request
             if (await _requestRepository.ExistsPendingRequestAsync(publicKeyPoint.Id))
                 throw new InvalidOperationException("A request for this item has already been sent.");
 
-            // 6. Kreiraj request
             var request = new PublicKeyPointRequest(publicKeyPoint.Id, authorId);
             await _requestRepository.AddAsync(request);
 
-            // ✅ Učitaj ponovo sa svim podacima i navigation properties
             var savedRequest = await _requestRepository.GetByIdAsync(request.Id);
 
             return _mapper.Map<PublicKeyPointRequestDto>(savedRequest);
@@ -109,20 +100,17 @@ public class PublicKeyPointService : IPublicKeyPointService
         var request = await _requestRepository.GetByIdAsync(requestId)
             ?? throw new KeyNotFoundException("Request not found.");
 
-        // 1. Odobri zahtev
         request.Approve(adminId);
         await _requestRepository.UpdateAsync(request);
 
-        // 2. ✅ AŽURIRAJ STATUS KEYPONTA NA APPROVED
         var publicKeyPoint = await _requestRepository.GetPublicKeyPointByIdAsync(request.PublicKeyPointId);
 
         if (publicKeyPoint != null)
         {
-            publicKeyPoint.Approve(); // ⬅️ Pozovi postojeću metodu
+            publicKeyPoint.Approve(); 
             await _requestRepository.UpdatePublicKeyPointAsync(publicKeyPoint);
         }
 
-        // 3. Notifikuj autora
         await _notificationService.NotifyAuthorApprovedAsync(request.AuthorId, "Keypoint");
 
         return _mapper.Map<PublicKeyPointRequestDto>(request);
