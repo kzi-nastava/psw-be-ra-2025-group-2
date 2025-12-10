@@ -42,7 +42,6 @@ namespace Explorer.API.Controllers.Author
             return Ok(created);
         }
 
-        // GET: api/author/tours?authorId=-11
         [HttpGet]
         public ActionResult<IEnumerable<TourDto>> GetByAuthor([FromQuery] long authorId)
         {
@@ -50,7 +49,6 @@ namespace Explorer.API.Controllers.Author
             return Ok(tours);
         }
 
-        // GET: api/author/tours/{id}
         [HttpGet("{id}")]
         public ActionResult<TourDto> GetById(long id)
         {

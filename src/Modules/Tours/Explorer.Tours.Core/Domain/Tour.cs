@@ -19,7 +19,7 @@ public class Tour : Entity
     public string Name { get; private set; }
     public string Description { get; private set; }
     public int Difficulty { get; private set; }
-    public List<string> Tags { get; private set; } = new();
+    public List<string>? Tags { get; private set; } = new();
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }

@@ -17,6 +17,9 @@
   <ItemGroup>
     <ProjectReference Include="..\BuildingBlocks\Explorer.BuildingBlocks.Core\Explorer.BuildingBlocks.Core.csproj" />
     <ProjectReference Include="..\BuildingBlocks\Explorer.BuildingBlocks.Infrastructure\Explorer.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\Explorer.ShoppingCart.API\Explorer.ShoppingCart.API.csproj" />
+    <ProjectReference Include="..\Explorer.ShoppingCart.Core\Explorer.ShoppingCart.Core.csproj" />
+    <ProjectReference Include="..\Explorer.ShoppingCart.Infrastructure\Explorer.ShoppingCart.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Blog\Explorer.Blog.Core\Explorer.Blog.Core.csproj" />
     <ProjectReference Include="..\Modules\Blog\Explorer.Blog.Infrastructure\Explorer.Blog.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Stakeholders\Explorer.Stakeholders.API\Explorer.Stakeholders.API.csproj" />

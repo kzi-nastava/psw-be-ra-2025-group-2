@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="14.0.0" />
+		<PackageReference Include="FluentResults" Version="3.15.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BuildingBlocks\Explorer.BuildingBlocks.Core\Explorer.BuildingBlocks.Core.csproj" />
+		<ProjectReference Include="..\Modules\Tours\Explorer.Tours.Core\Explorer.Tours.Core.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,30 +1,30 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Explorer.ShoppingCart.Core.Interfaces;
+using Explorer.Stakeholders.Infrastructure.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Explorer.Tours.Core.UseCases;
-using System.Security.Claims;
-using Explorer.Tours.Core.UseCases.Administration;
+
 namespace Explorer.API.Controllers.Tourist
 {
     [Authorize(Policy = "touristPolicy")]
-    [Route("api/tourist/purchases")]
-    [ApiController]
+    [Route("api/tourist/purchase")]
     public class PurchaseController : ControllerBase
     {
-        private readonly PurchaseService _purchaseService;
+        private readonly IPurchaseService _purchaseService;
 
-        public PurchaseController(PurchaseService purchaseService)
+        public PurchaseController(IPurchaseService purchaseService)
         {
             _purchaseService = purchaseService;
         }
 
-        [HttpPost("checkout")]
-        public async Task<IActionResult> Checkout()
+        [HttpPost]
+        public IActionResult Purchase()
         {
-            var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = _purchaseService.CompletePurchase(User.PersonId());
 
-            await _purchaseService.Checkout(userId);
+            if (result.IsFailed)
+                return BadRequest(result.Errors);
 
-            return Ok("Checkout successful.");
+            return Ok(result.Value);
         }
     }
 }
