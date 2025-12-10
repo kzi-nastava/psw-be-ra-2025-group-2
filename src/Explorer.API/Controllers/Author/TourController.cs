@@ -256,5 +256,17 @@ namespace Explorer.API.Controllers.Author
             var result = _tourService.GetAllEquipmentForAuthor(authorId);
             return Ok(result);
         }
+
+        // GET: api/author/tours/public?page=1&pageSize=10
+        [HttpGet("public")]
+        [AllowAnonymous]
+        public ActionResult<PagedResult<TourDto>> GetPublishedForTourist(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var result = _tourService.GetPublishedForTourist(page, pageSize);
+            return Ok(result);
+        }
+
     }
 }
