@@ -77,7 +77,6 @@ public class TourDbRepository : ITourRepository
         {
             Console.WriteLine($"=== START GetTourWithKeyPointsAsync for tourId={tourId} ===");
 
-            // Otvori konekciju
             if (DbContext.Database.GetDbConnection().State != ConnectionState.Open)
             {
                 await DbContext.Database.OpenConnectionAsync();
@@ -85,7 +84,6 @@ public class TourDbRepository : ITourRepository
 
             Tour? tour = null;
 
-            // 1. Prvo učitaj Tour podatke
             await using (var command = DbContext.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = @"
@@ -120,7 +118,6 @@ public class TourDbRepository : ITourRepository
                         var price = reader.GetDecimal(4);
                         var authorId = reader.GetInt64(5);
 
-                        // ✅ FIX: Prvo proveri tip kolone
                         var statusValue = reader.GetValue(6);
                         Console.WriteLine($"Status value type: {statusValue.GetType().Name}, value: {statusValue}");
 
@@ -132,20 +129,15 @@ public class TourDbRepository : ITourRepository
 
                         Console.WriteLine($"Tour found: {name}, Status={status}");
 
-                        // Kreiraj Tour
                         tour = new Tour(name, description, difficulty, authorId);
 
-                        // Setuj Id
                         var idProp = typeof(Tour).BaseType?.GetProperty("Id");
                         idProp?.SetValue(tour, id);
 
-                        // Setuj Status preko SetStatus metode
                         tour.SetStatus(status);
 
-                        // Setuj Price
                         tour.SetPrice(price);
 
-                        // Setuj ArchivedAt ako nije null
                         if (archivedAt.HasValue)
                         {
                             var archivedAtField = typeof(Tour).GetProperty("ArchivedAt",
@@ -168,7 +160,6 @@ public class TourDbRepository : ITourRepository
 
             var keyPointsList = new List<KeyPoint>();
 
-            // 2. Sada učitaj KeyPoints
             await using (var command = DbContext.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = @"
@@ -225,7 +216,6 @@ public class TourDbRepository : ITourRepository
 
             Console.WriteLine($"Total KeyPoints: {keyPointsList.Count}");
 
-            // 3. Setuj KeyPoints na Tour
             var field = typeof(Tour).GetField("_keyPoints",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
