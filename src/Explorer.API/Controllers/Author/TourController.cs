@@ -1,8 +1,10 @@
 ﻿using System.Security.Claims;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.BuildingBlocks.Core.Exceptions;
 
 namespace Explorer.API.Controllers.Author
 {
@@ -20,6 +22,7 @@ namespace Explorer.API.Controllers.Author
 
         // POST: api/author/tours
         [HttpPost]
+        
         public ActionResult<TourDto> Create([FromBody] CreateTourDto dto)
         {
             var authorIdClaim = User.FindFirst("id");
@@ -45,6 +48,7 @@ namespace Explorer.API.Controllers.Author
             return Ok(tours);
         }
 
+        
         // GET: api/author/tours/{id}
         [HttpGet("{id}")]
         public ActionResult<TourDto> GetById(long id)
@@ -80,6 +84,177 @@ namespace Explorer.API.Controllers.Author
         {
             _tourService.Delete(id);
             return NoContent();
+        }
+
+        // POST: api/author/tours/{tourId}/keypoints
+        [HttpPost("{tourId}/keypoints")]
+        public ActionResult AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
+        {
+            _tourService.AddKeyPoint(tourId, dto);
+            return Ok();
+        }
+
+        // PUT: api/author/tours/{tourId}/keypoints/{ordinalNo}
+        [HttpPut("{tourId}/keypoints/{ordinalNo}")]
+        public ActionResult UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
+        {
+            _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
+            return Ok();
+        }
+
+        // DELETE: api/author/tours/{tourId}/keypoints/{ordinalNo}
+        [HttpDelete("{tourId}/keypoints/{ordinalNo}")]
+        public ActionResult RemoveKeyPoint(long tourId, int ordinalNo)
+        {
+            _tourService.RemoveKeyPoint(tourId, ordinalNo);
+            return Ok();
+        }
+
+        [HttpPut("{id}/publish")]
+        public IActionResult Publish(long id)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                _tourService.Publish(id, authorId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unexpected error while publishing tour." });
+            }
+        }
+
+        // POST: api/author/tours/{id}/archive
+        [HttpPost("{id}/archive")]
+        public IActionResult Archive(long id)
+        {
+            try
+            {
+                _tourService.Archive(id);
+                return Ok(new { message = "Tura je uspešno arhivirana." });
+            }
+            catch (AggregateException ex) when (ex.InnerException is InvalidOperationException || ex.InnerException is DomainException)
+            {
+                // async .Result je zamotao našu domensku grešku u AggregateException
+                return BadRequest(new { message = ex.InnerException!.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // direktan slučaj, ako se ikad desi
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DomainException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                // ostale neočekivane greške
+                return StatusCode(500, new { message = "Došlo je do greške prilikom arhiviranja ture." });
+            }
+        }
+
+        // POST: api/author/tours/{id}/reactivate
+        [HttpPost("{id}/reactivate")]
+        public IActionResult Reactivate(long id)
+        {
+            try
+            {
+                _tourService.Reactivate(id);
+                return Ok(new { message = "Tura je uspešno ponovo aktivirana." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // npr. tura nije arhivirana
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Došlo je do greške prilikom reaktivacije ture." });
+            }
+        }
+
+        // GetByRange: 
+        [HttpGet("search/{lat:double}/{lon:double}/{range:int}")]
+        [AllowAnonymous]
+        public ActionResult<PagedResult<TourDto>> GetByRange (double lat, double lon, int range, [FromQuery]int page, [FromQuery] int pageSize)
+        {
+            var result = _tourService.GetByRange(lat, lon, range, page, pageSize);
+            return Ok(result);
+        }
+        
+        //GET api/author/{tourId}/equipment
+        [HttpGet("{tourId}/equipment")]
+        public ActionResult<List<TourEquipmentItemDto>> GetEquipmentForTour(long tourId)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                var result = _tourService.GetEquipmentForTour(tourId, authorId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        //PUT api/author/{tourId}/equipment
+        [HttpPut("{tourId}/equipment")]
+        public IActionResult UpdateEquipmentForTour(long tourId, [FromBody] UpdateTourEquipmentDto dto)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                _tourService.UpdateEquipmentForTour(tourId, authorId, dto.EquipmentIds);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        // GET api/author/tours/equipment
+        [HttpGet("equipment")]
+        public ActionResult<List<TourEquipmentItemDto>> GetAllEquipmentForAuthor()
+        {
+            var authorId = long.Parse(User.FindFirst("id")!.Value);
+            var result = _tourService.GetAllEquipmentForAuthor(authorId);
+            return Ok(result);
         }
     }
 }

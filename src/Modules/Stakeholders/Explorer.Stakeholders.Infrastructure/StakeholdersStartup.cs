@@ -24,35 +24,38 @@ public static class StakeholdersStartup
         SetupInfrastructure(services);
         return services;
     }
-    
+
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IAuthorAwardsService, AuthorAwardsService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
-
+        services.AddScoped<IMeetupService, MeetupService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<ITourPreferencesService, TourPreferencesService>();
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
-
+        services.AddScoped<ITouristPositionService, TouristPositionService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped<IPersonRepository, PersonDbRepository>();
         services.AddScoped<IUserRepository, UserDbRepository>();
+        services.AddScoped<IMeetupRepository, MeetupDbRepository>();
         services.AddScoped<ITourPreferencesRepository, TourPreferencesDbRepository>();
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
 
+        services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
+
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
-        
+
         services.AddDbContext<StakeholdersContext>(opt =>
             opt.UseNpgsql(dataSource,
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "stakeholders")));
