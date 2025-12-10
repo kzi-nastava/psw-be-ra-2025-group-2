@@ -43,17 +43,17 @@ public class ToursContext : DbContext
                 duration.Property(d => d.TransportType).IsRequired();
                 duration.Property(d => d.Minutes).IsRequired();
             });
-           
+
             builder.Navigation(t => t.KeyPoints)
                    .HasField("_keyPoints")
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
-            
+
             builder
                 .HasMany(t => t.Equipment)
-                .WithMany() 
+                .WithMany()
                 .UsingEntity(j =>
                 {
-                    j.ToTable("TourEquipment"); 
+                    j.ToTable("TourEquipment");
                 });
         });
     }

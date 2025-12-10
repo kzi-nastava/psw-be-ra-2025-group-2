@@ -23,7 +23,6 @@ public class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
-    public List<KeyPoint> KeyPoints { get; private set; } = new();
     public List<TourDuration> Durations { get; private set; } = new();
     public DateTime? PublishedAt { get; private set; }
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
