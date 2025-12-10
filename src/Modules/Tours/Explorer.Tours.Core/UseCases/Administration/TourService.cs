@@ -261,27 +261,25 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
-        public PagedResult<TourDto> GetPublishedForTourist(int page, int pageSize)
+        public List<TourDto> GetPublishedForTourist()
         {
-            var tours = _tourRepository.GetAllPublished(page, pageSize);
+            var tours = _tourRepository.GetAllPublished(0, 0);
 
-            var totalCount = tours.Count;
+            var result = new List<TourDto>();
 
-            var items = tours
-                .Select(t =>
+            foreach (var tour in tours)
+            {
+                var dto = _mapper.Map<TourDto>(tour);
+
+                if (dto.KeyPoints != null && dto.KeyPoints.Count > 1)
                 {
-                    var dto = _mapper.Map<TourDto>(t);
+                    dto.KeyPoints = new List<KeyPointDto> { dto.KeyPoints.First() };
+                }
 
-                    if (dto.KeyPoints != null && dto.KeyPoints.Count > 1)
-                    {
-                        dto.KeyPoints = new List<KeyPointDto> { dto.KeyPoints.First() };
-                    }
+                result.Add(dto);
+            }
 
-                    return dto;
-                })
-                .ToList();
-
-            return new PagedResult<TourDto>(items, totalCount);
+            return result;
         }
     }
 }
