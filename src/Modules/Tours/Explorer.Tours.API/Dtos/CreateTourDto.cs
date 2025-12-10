@@ -15,6 +15,6 @@ namespace Explorer.Tours.API.Dtos
         public List<string>? Tags { get; set; }
         public List<KeyPointDto> KeyPoints { get; set; } = new();
         public List<TourDurationDto> Durations { get; set; } = new();
-
+        public List<long> RequiredEquipmentIds { get; set; } = new();
     }
 }
