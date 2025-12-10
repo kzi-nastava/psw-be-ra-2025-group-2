@@ -42,8 +42,11 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
     {
         await _context.PublicKeyPointRequests.AddAsync(request);
         await _context.SaveChangesAsync();
-    }
 
+        await _context.Entry(request)
+            .Reference(r => r.PublicKeyPoint)
+            .LoadAsync();
+    }
     public async Task UpdateAsync(PublicKeyPointRequest request)
     {
         _context.PublicKeyPointRequests.Update(request);

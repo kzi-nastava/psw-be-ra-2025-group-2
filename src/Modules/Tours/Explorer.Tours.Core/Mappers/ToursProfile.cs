@@ -55,9 +55,10 @@ public class ToursProfile : Profile
 
         CreateMap<Notification, NotificationDto>()
             .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
-      
+
         CreateMap<PublicKeyPointRequest, PublicKeyPointRequestDto>()
-        .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+      .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+      .ForMember(dest => dest.PublicKeyPoint, opt => opt.MapFrom(src => src.PublicKeyPoint));
 
     }
 }

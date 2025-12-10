@@ -8,6 +8,8 @@ public class PublicKeyPointRequestDto
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
+    public long? ProcessedByAdminId { get; set; } 
     public string? RejectionReason { get; set; }
     public PublicKeyPointDto? PublicKeyPoint { get; set; } 
+
 }

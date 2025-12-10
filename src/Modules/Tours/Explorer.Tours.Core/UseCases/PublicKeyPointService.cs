@@ -75,8 +75,10 @@ public class PublicKeyPointService : IPublicKeyPointService
             var request = new PublicKeyPointRequest(publicKeyPoint.Id, authorId);
             await _requestRepository.AddAsync(request);
 
-            // ✅ RETURN STATEMENT - OVO JE NEDOSTAJALO!
-            return _mapper.Map<PublicKeyPointRequestDto>(request);
+            // ✅ Učitaj ponovo sa svim podacima i navigation properties
+            var savedRequest = await _requestRepository.GetByIdAsync(request.Id);
+
+            return _mapper.Map<PublicKeyPointRequestDto>(savedRequest);
         }
         catch (Exception ex)
         {
