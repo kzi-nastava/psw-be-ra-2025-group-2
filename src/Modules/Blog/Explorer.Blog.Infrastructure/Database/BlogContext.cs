@@ -8,6 +8,7 @@ public class BlogContext : DbContext
     public BlogContext(DbContextOptions<BlogContext> options) : base(options) {}
 
     public DbSet<BlogPost> BlogPosts { get; set; }
+    public DbSet<Comment> Comments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,7 +30,25 @@ public class BlogContext : DbContext
             });
 
 
+            b.OwnsMany(p => p.Votes, vote =>
+            {
+                vote.ToTable("BlogPostVotes", "blog");
+                vote.WithOwner().HasForeignKey("BlogPostId");
 
+                vote.Property<int>("Id");
+                vote.HasKey("Id");
+
+                vote.Property(v => v.UserId).HasColumnName("UserId").IsRequired();
+
+                vote.Property(v => v.CreatedAt).IsRequired();
+
+                vote.OwnsOne(v => v.Value, voteValue =>
+                {
+                    voteValue.Property(vv => vv.Value).HasColumnName("VoteValue").IsRequired();
+                });
+
+                vote.HasIndex("BlogPostId", "UserId").IsUnique();
+            });
 
             b.Property(x => x.Title).IsRequired();
             b.Property(x => x.Description).IsRequired();
