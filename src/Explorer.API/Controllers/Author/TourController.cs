@@ -110,6 +110,33 @@ namespace Explorer.API.Controllers.Author
             return Ok();
         }
 
+        [HttpPut("{id}/publish")]
+        public IActionResult Publish(long id)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                _tourService.Publish(id, authorId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unexpected error while publishing tour." });
+            }
+        }
+
         // POST: api/author/tours/{id}/archive
         [HttpPost("{id}/archive")]
         public IActionResult Archive(long id)
@@ -140,9 +167,6 @@ namespace Explorer.API.Controllers.Author
             }
         }
 
-
-
-
         // POST: api/author/tours/{id}/reactivate
         [HttpPost("{id}/reactivate")]
         public IActionResult Reactivate(long id)
@@ -164,7 +188,6 @@ namespace Explorer.API.Controllers.Author
         }
 
         // GetByRange: 
-
         [HttpGet("search/{lat:double}/{lon:double}/{range:int}")]
         [AllowAnonymous]
         public ActionResult<PagedResult<TourDto>> GetByRange (double lat, double lon, int range, [FromQuery]int page, [FromQuery] int pageSize)
@@ -172,6 +195,66 @@ namespace Explorer.API.Controllers.Author
             var result = _tourService.GetByRange(lat, lon, range, page, pageSize);
             return Ok(result);
         }
+        
+        //GET api/author/{tourId}/equipment
+        [HttpGet("{tourId}/equipment")]
+        public ActionResult<List<TourEquipmentItemDto>> GetEquipmentForTour(long tourId)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
 
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                var result = _tourService.GetEquipmentForTour(tourId, authorId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        //PUT api/author/{tourId}/equipment
+        [HttpPut("{tourId}/equipment")]
+        public IActionResult UpdateEquipmentForTour(long tourId, [FromBody] UpdateTourEquipmentDto dto)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            long authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                _tourService.UpdateEquipmentForTour(tourId, authorId, dto.EquipmentIds);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        // GET api/author/tours/equipment
+        [HttpGet("equipment")]
+        public ActionResult<List<TourEquipmentItemDto>> GetAllEquipmentForAuthor()
+        {
+            var authorId = long.Parse(User.FindFirst("id")!.Value);
+            var result = _tourService.GetAllEquipmentForAuthor(authorId);
+            return Ok(result);
+        }
     }
 }

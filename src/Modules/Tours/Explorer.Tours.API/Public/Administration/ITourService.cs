@@ -18,10 +18,15 @@ namespace Explorer.Tours.API.Public.Administration
         void AddKeyPoint(long tourId, KeyPointDto dto);
         void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto);
         void RemoveKeyPoint(long tourId, int ordinalNo);
+        void Publish(long tourId, long authorId);
         void Archive(long id);
         void Reactivate(long id);
         PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize);
         TourDto? GetPublishedTour(long tourId); // Vraća objavljenu turu bez provere autora
 
+        List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId);
+        public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId);
+        void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
     }
+    
 }
