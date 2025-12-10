@@ -29,10 +29,8 @@ public class PublicKeyPointCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // Proveri da li KeyPoints već postoje - koristi ExecuteSqlRaw sa OUT parametrom
         try
         {
-            // Jednostavniji pristup - pokušaj INSERT, ignoriši ako već postoje
             dbContext.Database.ExecuteSqlRaw(@"
             INSERT INTO tours.""KeyPoint""
             (""TourId"", ""OrdinalNo"", ""Name"", ""Description"", ""SecretText"", ""ImageUrl"", 
@@ -63,7 +61,6 @@ public class PublicKeyPointCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // Obriši test podatke
         dbContext.Database.ExecuteSqlRaw(@"
             DELETE FROM tours.""PublicKeyPointRequests"";
             DELETE FROM tours.""PublicKeyPoints"";
