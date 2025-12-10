@@ -11,15 +11,21 @@ public class KeyPoint : Entity
     public string ImageUrl { get; init; }
     public double Latitude { get; init; }
     public double Longitude { get; init; }
+    public long AuthorId { get; private set; }
+    public PublicPointRequestStatus PublicStatus { get; private set; }
+
+    private KeyPoint() { }
 
     public KeyPoint(
-        int ordinalNo,
-        string name,
-        string description,
-        string secretText,
-        string imageUrl,
-        double latitude,
-        double longitude)
+       int ordinalNo,
+       string name,
+       string description,
+       string secretText,
+       string imageUrl,
+       double latitude,
+       double longitude,
+       long authorId = 0,
+       bool suggestForPublic = false)
     {
         OrdinalNo = ordinalNo;
         Name = name;
@@ -28,6 +34,10 @@ public class KeyPoint : Entity
         ImageUrl = imageUrl;
         Latitude = latitude;
         Longitude = longitude;
+        AuthorId = authorId;
+        PublicStatus = suggestForPublic
+            ? PublicPointRequestStatus.Pending
+            : PublicPointRequestStatus.Private;
 
         Validate();
     }
@@ -59,5 +69,40 @@ public class KeyPoint : Entity
             throw new ArgumentException("OrdinalNo must be positive.");
 
         OrdinalNo = newOrdinal;
+    }
+
+    public void SuggestForPublicUse()
+    {
+        if (PublicStatus == PublicPointRequestStatus.Pending)
+            throw new InvalidOperationException("The request has already been sent.");
+
+        if (PublicStatus == PublicPointRequestStatus.Approved)
+            throw new InvalidOperationException("The key point is already public.");
+
+        PublicStatus = PublicPointRequestStatus.Pending;
+    }
+
+    public void ApprovePublicRequest()
+    {
+        if (PublicStatus != PublicPointRequestStatus.Pending)
+            throw new InvalidOperationException("Only pending requests can be approved.");
+
+        PublicStatus = PublicPointRequestStatus.Approved;
+    }
+
+    public void RejectPublicRequest()
+    {
+        if (PublicStatus != PublicPointRequestStatus.Pending)
+            throw new InvalidOperationException("Only pending requests can be denied.");
+
+        PublicStatus = PublicPointRequestStatus.Rejected;
+    }
+
+    public void MakePrivate()
+    {
+        if (PublicStatus == PublicPointRequestStatus.Approved)
+            throw new InvalidOperationException("Cannot remove public status. Contact the administrator.");
+
+        PublicStatus = PublicPointRequestStatus.Private;
     }
 }

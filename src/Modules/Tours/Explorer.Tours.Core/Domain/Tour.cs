@@ -26,9 +26,9 @@ public class Tour : AggregateRoot
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
 
     public DateTime? ArchivedAt { get; private set; }
-   
 
-   
+
+
     private readonly List<KeyPoint> _keyPoints = new();
 
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();

@@ -49,6 +49,16 @@ public class ToursProfile : Profile
 
         CreateMap<MonumentDto, Monument>().ReverseMap();
         CreateMap<KeyPoint, KeyPointDto>().ReverseMap();
+       
+        CreateMap<PublicKeyPoint, PublicKeyPointDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
+        CreateMap<Notification, NotificationDto>()
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+      
+        CreateMap<PublicKeyPointRequest, PublicKeyPointRequestDto>()
+        .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
     }
 }
 
