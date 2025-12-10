@@ -10,10 +10,11 @@ namespace Explorer.Tours.Core.Domain.Execution;
 
 public class TourReview : Entity
 {
-    public int TourId { get; private set; }
+    public long TourId { get; private set; }
     public int Rating { get; private set; }
     public string Comment { get; private set; }
-    public int TouristId { get; private set; }
+    public long TouristId { get; private set; }
+    public long ExecutionId { get; private set; }
 
     public DateTime ReviewDate { get; private set; }
     public float CompletedPercentage { get; private set; }
@@ -23,12 +24,13 @@ public class TourReview : Entity
     {
 
     }
-    public TourReview(int tourId, int rating, string comment, int touristId, DateTime reviewDate, float completedPercentage, List<string> images)
+    public TourReview(long tourId, int rating, string comment, long touristId, long executionId, DateTime reviewDate, float completedPercentage, List<string> images)
     {
         TourId = tourId;
         Rating = rating;
         Comment = comment;
         TouristId = touristId;
+        ExecutionId = executionId;
         ReviewDate = reviewDate;
         CompletedPercentage = completedPercentage;
         Images = images ?? new List<string>();
@@ -42,5 +44,6 @@ public class TourReview : Entity
         if (string.IsNullOrWhiteSpace(Comment)) throw new ArgumentException("Comment can't be empty.");
         if (TouristId == 0) throw new ArgumentException("Invalid tourist ID.");
         if (TourId == 0) throw new ArgumentException("Invalid tour ID.");
+        if (ExecutionId == 0) throw new ArgumentException("Invalid Execution ID.");
     }
 }

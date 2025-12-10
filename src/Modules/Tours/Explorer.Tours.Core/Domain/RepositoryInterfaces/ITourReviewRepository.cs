@@ -11,7 +11,7 @@ public interface ITourReviewRepository
     TourReview Update(TourReview review);
     void Delete(long id); // Ako ti treba brisanje
 
-    TourReview? GetByTouristAndTour(int touristId, int tourId);
-    List<TourReview> GetAllByTourId(int tourId);
-    PagedResult<TourReview> GetByTourIdPaged(int page, int pageSize, int tourId);
+    TourReview? GetByTouristAndTour(long touristId, long tourId);
+    List<TourReview> GetAllByTourId(long tourId);
+    PagedResult<TourReview> GetByTourIdPaged(int page, int pageSize, long tourId);
 }

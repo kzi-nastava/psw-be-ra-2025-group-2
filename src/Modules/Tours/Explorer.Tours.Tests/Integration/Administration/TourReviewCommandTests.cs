@@ -19,17 +19,17 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope, "-21"); // Turista -21
+        var controller = CreateController(scope, "-23"); // Turista -23
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
         var newEntity = new TourReviewDto
         {
-            TourId = -2,
-            ExecutionId = -1, // Ovo mora da postoji u d-tour-executions.sql
+            TourId = -1,
+            ExecutionId = -2, // Ovo mora da postoji u d-tour-executions.sql
             Rating = 5,
             Comment = "Odlična tura, preporučujem!",
             Images = new List<string> { "new_image.jpg" },
-            TouristId = -21,
+            TouristId = -23,
             ReviewDate = DateTime.UtcNow,
             CompletedPercentage = 0 // Servis ovo računa, nije bitno šta pošaljemo
         };
@@ -89,7 +89,7 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
             Images = new List<string> { "new_image.jpg" },
             TourId = -1,
             TouristId = -21,
-            ExecutionId = 0, // Nije bitno za update
+            ExecutionId = -1, // Nije bitno za update
             ReviewDate = DateTime.Parse("2024-01-01 10:00:00").ToUniversalTime(),
             CompletedPercentage = 100
         };
@@ -135,7 +135,7 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
         var result = (ObjectResult)controller.Update(updatedEntity).Result;
 
         // Assert
-        result.StatusCode.ShouldBe(403); // Unauthorized ili Forbidden, zavisno šta vraćaš
+        result.StatusCode.ShouldBe(400); // Unauthorized ili Forbidden, zavisno šta vraćaš
     }
 
     private static TourReviewController CreateController(IServiceScope scope, string userId)

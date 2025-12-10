@@ -53,6 +53,14 @@ public class TourReviewController : ControllerBase
             var result = _reviewService.Update(review, identityId);
             return Ok(result);
         }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
         catch (UnauthorizedAccessException e)
         {
             return StatusCode(403, e.Message);
@@ -61,10 +69,6 @@ public class TourReviewController : ControllerBase
         {
             return NotFound(e.Message);
         }
-        /*catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }*/
     }
     [HttpDelete("{id:long}")] // Pazi: ovde stavljamo long jer ti servis prima long
     public ActionResult Delete(long id)

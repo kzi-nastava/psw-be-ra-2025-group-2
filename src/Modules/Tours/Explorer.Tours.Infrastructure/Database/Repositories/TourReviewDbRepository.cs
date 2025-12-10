@@ -60,17 +60,17 @@ public class TourReviewDbRepository : ITourReviewRepository
         DbContext.SaveChanges();
     }
 
-    public TourReview? GetByTouristAndTour(int touristId, int tourId)
+    public TourReview? GetByTouristAndTour(long touristId, long tourId)
     {
         return _dbSet.FirstOrDefault(r => r.TouristId == touristId && r.TourId == tourId);
     }
 
-    public List<TourReview> GetAllByTourId(int tourId)
+    public List<TourReview> GetAllByTourId(long tourId)
     {
         return _dbSet.Where(r => r.TourId == tourId).ToList();
     }
 
-    public PagedResult<TourReview> GetByTourIdPaged(int page, int pageSize, int tourId)
+    public PagedResult<TourReview> GetByTourIdPaged(int page, int pageSize, long tourId)
     {
         var task = _dbSet
             .Where(r => r.TourId == tourId)
