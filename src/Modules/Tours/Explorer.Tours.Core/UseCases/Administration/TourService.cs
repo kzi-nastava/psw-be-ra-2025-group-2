@@ -247,7 +247,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             }).ToList();
         }
 
-        
+
 
         // upravljanje statusom ture
 
@@ -255,6 +255,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result
                        ?? throw new Exception("Tour not found.");
+        }
         public TourDto Get(long id)
         {
             var tour = _tourRepository.GetByIdAsync(id).Result;
@@ -282,9 +283,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 }
             }
 
-            foreach(var dto in dtos)
+            foreach (var dto in dtos)
             {
-                if(activeTourId == null)
+                if (activeTourId == null)
                 {
                     dto.IsActive = false;
                     dto.CanBeStarted = true;
@@ -305,12 +306,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.KeyPoints = new List<KeyPointDto>();
             }
 
-            if (tour.AuthorId != authorId)
-                throw new UnauthorizedAccessException("You are not authorized to publish this tour.");
-
-            tour.Publish();
-            _tourRepository.UpdateAsync(tour).Wait();
-        }
             return dtos;
         }
     }
