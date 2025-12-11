@@ -8,8 +8,8 @@ namespace Explorer.Tours.API.Dtos
 {
     public class UpdateTourDto
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public required string Name { get; set; }
+        public required string Description { get; set; }
         public int Difficulty { get; set; }
         public List<string>? Tags { get; set; }
         public List<KeyPointDto> KeyPoints { get; set; } = new();

@@ -8,6 +8,6 @@ namespace Explorer.Blog.API.Dtos
 {
     public class BlogImageDto
     {
-        public string Url { get; set; }
+        public required string Url { get; set; }
     }
 }

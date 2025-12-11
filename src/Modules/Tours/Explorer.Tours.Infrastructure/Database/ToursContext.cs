@@ -21,9 +21,9 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
-        modelBuilder.Entity<Tour>(builder =>
+        modelBuilder.Entity<Tour>(entity =>
         {
-            builder.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
+            entity.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
             {
                 kp.WithOwner().HasForeignKey("TourId");
                 kp.Property(k => k.OrdinalNo).IsRequired();
@@ -34,29 +34,25 @@ public class ToursContext : DbContext
 
                 kp.Property(k => k.Latitude)
                     .HasColumnType("double precision")
-                    .HasConversion(
-                        v => v,  
-                        v => v)  
+                    .HasConversion(v => v, v => v)
                     .IsRequired();
 
                 kp.Property(k => k.Longitude)
                     .HasColumnType("double precision")
-                    .HasConversion(
-                        v => v,  
-                        v => v)  
+                    .HasConversion(v => v, v => v)
                     .IsRequired();
 
                 kp.Property(k => k.AuthorId).IsRequired();
                 kp.Property(k => k.PublicStatus).IsRequired().HasConversion<string>();
             });
 
-            builder.Navigation(t => t.KeyPoints)
-                   .HasField("_keyPoints")
-                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(t => t.KeyPoints)
+                  .HasField("_keyPoints")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-            builder.HasMany(t => t.Equipment)
-                .WithMany()
-                .UsingEntity(j => { j.ToTable("TourEquipment"); });
+            entity.HasMany(t => t.Equipment)
+                  .WithMany()
+                  .UsingEntity(j => { j.ToTable("TourEquipment"); });
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>
@@ -70,21 +66,18 @@ public class ToursContext : DbContext
 
             entity.Property(e => e.Latitude)
                 .HasColumnType("double precision")
-                .HasConversion(
-                    v => v,  
-                    v => v)  
+                .HasConversion(v => v, v => v)
                 .IsRequired();
 
             entity.Property(e => e.Longitude)
                 .HasColumnType("double precision")
-                .HasConversion(
-                    v => v,  
-                    v => v)  
+                .HasConversion(v => v, v => v)
                 .IsRequired();
 
             entity.Property(e => e.AuthorId).IsRequired();
             entity.Property(e => e.Status).IsRequired().HasConversion<string>();
             entity.Property(e => e.CreatedAt).IsRequired();
+
             entity.HasIndex(e => e.AuthorId);
             entity.HasIndex(e => e.Status);
         });
@@ -98,10 +91,12 @@ public class ToursContext : DbContext
             entity.Property(e => e.Status).IsRequired().HasConversion<string>();
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.RejectionReason).HasMaxLength(500);
+
             entity.HasOne(e => e.PublicKeyPoint)
                   .WithMany()
                   .HasForeignKey(e => e.PublicKeyPointId)
                   .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasIndex(e => e.AuthorId);
             entity.HasIndex(e => e.Status);
         });
@@ -116,6 +111,7 @@ public class ToursContext : DbContext
             entity.Property(e => e.Type).IsRequired().HasConversion<string>();
             entity.Property(e => e.IsRead).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
+
             entity.HasIndex(e => e.UserId);
         });
     }
