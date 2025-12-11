@@ -8,5 +8,6 @@
         string? ImageUrl,
         double Latitude,
         double Longitude
+
     );
 }

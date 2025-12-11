@@ -29,6 +29,7 @@ public class TourDbRepository : ITourRepository
     public async Task<Tour?> GetByIdAsync(long id)
     {
         return await _dbSet
+            .Include(t => t.Equipment)
             .Include(t => t.KeyPoints)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
@@ -65,5 +66,11 @@ public class TourDbRepository : ITourRepository
     {
         _dbSet.Remove(tour);
         await DbContext.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Tour?>> GetAllAsync()
+    {
+        // TODO promeniti kasnije, ovo je radi demonstracije
+        return await _dbSet.Include(t => t.KeyPoints).ToListAsync();
     }
 }
