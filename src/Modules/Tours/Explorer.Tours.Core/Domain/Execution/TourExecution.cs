@@ -164,6 +164,12 @@ namespace Explorer.Tours.Core.Domain.Execution
             else
                 return DateTime.SpecifyKind(value, DateTimeKind.Utc);
         }
+
+        public double GetPercentageCompleted()
+        {
+            if (KeyPointsCount == 0) return 0;
+            return ((double)_keyPointVisits.Count / KeyPointsCount) * 100;
+        }
     }
 
 

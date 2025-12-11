@@ -247,6 +247,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
             }).ToList();
         }
 
+        public TourDto Get(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found: " + id);
+
+            return _mapper.Map<TourDto>(tour);
+        }
+
         public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
         {
             // TODO refaktorisati kasnije

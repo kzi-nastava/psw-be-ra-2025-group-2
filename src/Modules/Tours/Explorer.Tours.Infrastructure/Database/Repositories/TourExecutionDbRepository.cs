@@ -52,6 +52,15 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
                 .FirstOrDefault(e => e.TouristId == touristId && e.State == TourExecutionState.InProgress);
         }
 
+        public TourExecution? GetExactExecution(long touristId, long tourId)
+        {
+            return _dbContext.TourExecutions
+                .Include(e => e.KeyPointVisits)
+                .Where(e => e.TouristId == touristId && e.TourId == tourId)
+                .OrderByDescending(e => e.LastActivityTimestamp)
+                .FirstOrDefault();
+        }
+
         public TourExecution Update(TourExecution execution)
         {
             try

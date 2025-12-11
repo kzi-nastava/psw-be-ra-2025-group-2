@@ -15,6 +15,7 @@ public class ToursContext : DbContext
     public DbSet<Monument> Monument { get; set; }
 
     public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<TourReview> TourReviews { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 

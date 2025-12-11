@@ -27,6 +27,19 @@ namespace Explorer.Tours.Core.UseCases.Execution
             _tourRepository = tourRepository;
         }
 
+        public bool IsFinishedEnough(long touristId, long tourId)
+        {
+            var execution = _executionRepository.GetExactExecution(touristId, tourId);
+
+            if (execution == null) return false; 
+
+            if ((DateTime.UtcNow - execution.LastActivityTimestamp).TotalDays > 7)
+            {
+                return false;
+            }
+            return execution.GetPercentageCompleted() >= 35.0;
+        }
+
         public TourExecutionDto Proceed(long touristId, long tourId)
         {
             var activeTourId = _userService.GetActiveTourIdByUserId(touristId);
@@ -111,7 +124,10 @@ namespace Explorer.Tours.Core.UseCases.Execution
 
             var keyPointData = new List<KeyPointDto>();
 
-            foreach(var keyPoint in tour.KeyPoints)
+            // --- IZMENA OVDE ---
+            // Dodajemo .OrderBy(kp => kp.OrdinalNo) da bismo bili sigurni 
+            // da tačke idu redom: 1, 2, 3...
+            foreach (var keyPoint in tour.KeyPoints.OrderBy(kp => kp.OrdinalNo))
             {
                 var dto = new KeyPointDto();
                 dto.Id = keyPoint.Id;

@@ -23,7 +23,7 @@ public class TourQueryTests : BaseToursIntegrationTest
 
         result.ShouldNotBeNull();
         var tourList = result.ToList();
-        tourList.Count.ShouldBe(2); 
+        tourList.Count.ShouldBe(3); 
         tourList.ShouldAllBe(t => t.AuthorId == -11);
 
         tourList.ShouldContain(t => t.Name == "Fruska Gora Adventure");
