@@ -1,6 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Explorer.Tours.Core.UseCases.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,11 @@ namespace Explorer.API.Controllers.Tourist;
 public class TourReviewController : ControllerBase
 {
     private readonly ITourReviewService _reviewService;
-
-    public TourReviewController(ITourReviewService reviewService)
+    private readonly ITourExecutionService _executionService;
+    public TourReviewController(ITourReviewService reviewService, ITourExecutionService executionService)
     {
         _reviewService = reviewService;
+        _executionService = executionService;
     }
 
     [HttpGet("{tourId:int}")]
@@ -29,6 +31,13 @@ public class TourReviewController : ControllerBase
     public ActionResult<TourReviewDto> Create([FromBody] TourReviewDto review)
     {
         var identityId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+
+        bool canReview = _executionService.IsFinishedEnough(identityId, review.TourId);
+        if (!canReview)
+        {
+            return BadRequest("Ne možete oceniti turu. Uslovi: min. 35% pređenog puta i aktivnost u poslednjih 7 dana.");
+        }
+
         try
         {
             var result = _reviewService.Create(review, identityId);
@@ -70,7 +79,7 @@ public class TourReviewController : ControllerBase
             return NotFound(e.Message);
         }
     }
-    [HttpDelete("{id:long}")] // Pazi: ovde stavljamo long jer ti servis prima long
+    [HttpDelete("{id:long}")] 
     public ActionResult Delete(long id)
     {
         try

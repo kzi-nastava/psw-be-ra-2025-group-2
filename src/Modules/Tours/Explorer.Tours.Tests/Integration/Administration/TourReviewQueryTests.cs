@@ -2,6 +2,7 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -21,7 +22,7 @@ public class TourReviewQueryTests : BaseToursIntegrationTest
         var controller = CreateController(scope);
 
         // Act
-        // Tražimo recenzije za turu sa ID -1 (gde smo ubacili 2 recenzije u seed-u)
+        // Tražimo recenzije za turu sa ID -1 (gde smo ubacili 2 recenzije)
         var result = ((ObjectResult)controller.GetByTourId(-1, 1, 10).Result)?.Value as PagedResult<TourReviewDto>;
 
         // Assert
@@ -32,9 +33,12 @@ public class TourReviewQueryTests : BaseToursIntegrationTest
 
     private static TourReviewController CreateController(IServiceScope scope)
     {
-        return new TourReviewController(scope.ServiceProvider.GetRequiredService<ITourReviewService>())
+        return new TourReviewController(
+            scope.ServiceProvider.GetRequiredService<ITourReviewService>(),
+            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
+        )
         {
-            ControllerContext = BuildContext("-21") // ID nije bitan za čitanje, ali mora biti setovan
+            ControllerContext = BuildContext("-21")
         };
     }
 }

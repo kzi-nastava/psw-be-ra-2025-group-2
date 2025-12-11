@@ -28,24 +28,27 @@ public class TourReviewService : ITourReviewService
 
     public TourReviewDto Create(TourReviewDto dto, long touristId)
     {
-        // 1. Provera da li je korisnik već ocenio ovu turu
         var existing = _reviewRepository.GetByTouristAndTour(touristId, dto.TourId);
         if (existing != null)
             throw new InvalidOperationException("You have already reviewed this tour.");
 
-        // 2. Validacija pravila (35% pređeno i < 7 dana od aktivnosti)
-        // Ova metoda nam vraća tačan procenat završenosti u ovom trenutku
-        float completedPercentage = ValidateReviewEligibility(touristId, dto.TourId, dto.ExecutionId);
+        var execution = GetEligibleExecution(touristId, dto.TourId);
 
-        // 3. Kreiranje domenskog objekta
+        var tour = _tourRepository.GetByIdAsync(dto.TourId).Result;
+        double percentage = 0;
+        if (tour.KeyPoints != null && tour.KeyPoints.Count > 0)
+            percentage = (double)execution.KeyPointVisits.Count / tour.KeyPoints.Count * 100;
+        else
+            percentage = 100.0;
+
         var review = new TourReview(
             dto.TourId,
             dto.Rating,
             dto.Comment,
             touristId,
-            dto.ExecutionId,
+            execution.Id,            
             DateTime.UtcNow,
-            completedPercentage,
+            (float)percentage,       
             dto.Images
         );
 
@@ -55,24 +58,30 @@ public class TourReviewService : ITourReviewService
 
     public TourReviewDto Update(TourReviewDto dto, long touristId)
     {
-        // 1. Validacija pravila i osvežavanje procenta
-        // Čak i kod izmene, moramo proveriti da li je prošlo više od 7 dana
-        // i ažurirati procenat ako je turista napredovao u međuvremenu.
-        float currentPercentage = ValidateReviewEligibility(touristId, dto.TourId, dto.ExecutionId);
+        var existingReview = _reviewRepository.Get(dto.Id);
 
-        // 2. Priprema DTO-a pre mapiranja
-        // Pošto ne menjamo domenski model metodama, ažuriramo podatke ovde
-        dto.CompletedPercentage = currentPercentage;
+        if (existingReview == null)
+            throw new KeyNotFoundException("Review not found.");
+
+        if (existingReview.TouristId != touristId)
+        {
+            throw new InvalidOperationException("You can only edit your own reviews.");
+        }
+
+        var execution = GetEligibleExecution(touristId, existingReview.TourId);
+
+        var tour = _tourRepository.GetByIdAsync(existingReview.TourId).Result;
+        float percentage = 0;
+        if (tour.KeyPoints != null && tour.KeyPoints.Count > 0)
+            percentage = (float)execution.KeyPointVisits.Count / tour.KeyPoints.Count * 100;
+        else
+            percentage = 0.0f;
+
+        dto.TouristId = touristId;
+        dto.CompletedPercentage = percentage;
         dto.ReviewDate = DateTime.UtcNow;
-        dto.TouristId = touristId; // Sigurnosna mera: ne dozvoljavamo promenu vlasnika kroz DTO
 
-        // 3. Mapiranje
-        var review = _mapper.Map<TourReview>(dto);
-
-        // 4. Provera vlasništva
-        // (Ovo bi idealno išlo pre mapiranja čitanjem iz baze, ali ovako radi sa tvojom arhitekturom)
-        if (review.TouristId != touristId)
-            throw new UnauthorizedAccessException("You can only edit your own reviews.");
+        var review = _mapper.Map(dto, existingReview);
 
         var result = _reviewRepository.Update(review);
         return _mapper.Map<TourReviewDto>(result);
@@ -83,7 +92,7 @@ public class TourReviewService : ITourReviewService
         var tourReview = _reviewRepository.Get(id);
 
         if (tourReview == null)
-            throw new Exception("Tour Review not found."); // Ili KeyNotFoundException
+            throw new Exception("Tour Review not found.");
 
         if (tourReview.TouristId != touristId)
             throw new UnauthorizedAccessException("You can only delete your own reviews.");
@@ -91,50 +100,38 @@ public class TourReviewService : ITourReviewService
         _reviewRepository.Delete(id);
     }
 
-    // --- POMOĆNA METODA (Centralizovana logika) ---
-    private float ValidateReviewEligibility(long touristId, long tourId, long executionId)
+    private TourExecution GetEligibleExecution(long touristId, long tourId)
     {
-        // A. Dobavi sesiju (Execution)
-        // Pazi na cast u (long) jer je executionId int u DTO-u
-        var execution = _executionRepository.Get((long)executionId);
+        var execution = _executionRepository.GetExactExecution(touristId, tourId);
 
         if (execution == null)
-            throw new InvalidOperationException("Execution not found.");
+            throw new InvalidOperationException("Niste započeli ovu turu, pa je ne možete ni oceniti.");
 
-        if (execution.TouristId != touristId || execution.TourId != tourId)
-            throw new InvalidOperationException("Invalid execution provided (id mismatch).");
-
-        // B. Provera vremena (7 dana od LastActivity)
-        // LastActivityTimestamp se ažurira u TourExecution.cs kad god se pozove RecordActivity()
         var daysSinceActive = (DateTime.UtcNow - execution.LastActivityTimestamp).TotalDays;
 
         if (daysSinceActive > 7)
-            throw new InvalidOperationException("You cannot leave or edit a review because more than a week has passed since your last activity.");
+            throw new InvalidOperationException("Ne možete ostaviti recenziju jer je prošlo više od nedelju dana od vaše poslednje aktivnosti.");
 
-        // C. Provera procenta (35%)
-        var tour = _tourRepository.GetByIdAsync(tourId).Result; // Napomena: .Result blokira thread, bolje je koristiti await ako možeš promeniti potpise metoda u async
-        if (tour == null) throw new InvalidOperationException("Tour not found.");
+        var tour = _tourRepository.GetByIdAsync(tourId).Result;
+
+        if (tour == null) throw new InvalidOperationException("Tura ne postoji.");
 
         double percentage = 0;
 
-        // Računamo procenat na osnovu broja poseta ključnim tačkama
         if (tour.KeyPoints != null && tour.KeyPoints.Count > 0)
         {
             percentage = (double)execution.KeyPointVisits.Count / tour.KeyPoints.Count * 100;
         }
         else
         {
-            // Ako tura nema tačke, smatramo da je kompletirana
             percentage = 100.0;
         }
 
         if (percentage <= 35.0)
-            throw new InvalidOperationException($"You have completed only {percentage:F1}% of the tour. You must complete more than 35% to leave a review.");
+            throw new InvalidOperationException($"Prešli ste samo {percentage:F1}% ture. Morate preći više od 35% da biste ostavili recenziju.");
 
-        return (float)percentage;
+        return execution;
     }
-
-    // --- METODE ZA ČITANJE (Ostale su iste) ---
 
     public double GetAverageRating(long tourId)
     {

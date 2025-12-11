@@ -27,6 +27,19 @@ namespace Explorer.Tours.Core.UseCases.Execution
             _tourRepository = tourRepository;
         }
 
+        public bool IsFinishedEnough(long touristId, long tourId)
+        {
+            var execution = _executionRepository.GetExactExecution(touristId, tourId);
+
+            if (execution == null) return false; 
+
+            if ((DateTime.UtcNow - execution.LastActivityTimestamp).TotalDays > 7)
+            {
+                return false;
+            }
+            return execution.GetPercentageCompleted() >= 35.0;
+        }
+
         public TourExecutionDto Proceed(long touristId, long tourId)
         {
             var activeTourId = _userService.GetActiveTourIdByUserId(touristId);

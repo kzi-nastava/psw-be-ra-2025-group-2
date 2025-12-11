@@ -9,6 +9,7 @@ namespace Explorer.Tours.API.Public.Execution
 {
     public interface ITourExecutionService
     {
+        public bool IsFinishedEnough(long touristId, long tourId);
         public TourExecutionDto Proceed (long touristId, long tourId);
         public void Abandon(long touristId, long executionId);
         public void Complete(long touristId, long executionId);

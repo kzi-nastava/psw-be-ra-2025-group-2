@@ -24,5 +24,13 @@ namespace Explorer.API.Controllers.Tourist
         {
             return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
+
+        [HttpGet("{id}")]
+        public ActionResult<TourDto> GetById(long id)
+        {
+
+            var result = _tourService.Get(id);
+            return Ok(result);
+        }
     }
 }

@@ -2,6 +2,7 @@
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,13 +32,12 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
             Images = new List<string> { "new_image.jpg" },
             TouristId = -23,
             ReviewDate = DateTime.UtcNow,
-            CompletedPercentage = 0 // Servis ovo računa, nije bitno šta pošaljemo
+            CompletedPercentage = 66
         };
 
         // Act
         var response = controller.Create(newEntity).Result;
 
-        // DEBUGGING: Ako nije 200 OK, baci grešku da vidimo šta backend kaže
         if (response is ObjectResult errorResult && errorResult.StatusCode != 200)
         {
             throw new Exception($"CREATE NIJE USPEO! Status: {errorResult.StatusCode}, Poruka: {errorResult.Value}");
@@ -61,7 +61,7 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
         {
             TourId = -3,
             ExecutionId = -1,
-            Rating = 10, // Invalid rating (> 5)
+            Rating = 10,
             Comment = "Test"
         };
 
@@ -89,7 +89,7 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
             Images = new List<string> { "new_image.jpg" },
             TourId = -1,
             TouristId = -21,
-            ExecutionId = -1, // Nije bitno za update
+            ExecutionId = -1, 
             ReviewDate = DateTime.Parse("2024-01-01 10:00:00").ToUniversalTime(),
             CompletedPercentage = 100
         };
@@ -110,7 +110,7 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
     }
 
     [Fact]
-    public void Update_fails_invalid_author()
+    public void Update_fails_invalid_tourist()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
@@ -120,12 +120,12 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
 
         var updatedEntity = new TourReviewDto
         {
-            Id = -1, // Recenzija koja već postoji u bazi i pripada turisti -21
+            Id = -1, 
             TourId = -1,
             Rating = 5,
             Comment = "Hakerski pokusaj",
-            TouristId = -21, // <--- BITNO: Moramo poslati validan ID autora recenzije
-            ExecutionId = -1, // <--- BITNO: I validan ID ture/izvođenja
+            TouristId = -21,
+            ExecutionId = -1, 
             ReviewDate = DateTime.UtcNow,
             CompletedPercentage = 100,
             Images = new List<string>()
@@ -135,14 +135,17 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
         var result = (ObjectResult)controller.Update(updatedEntity).Result;
 
         // Assert
-        result.StatusCode.ShouldBe(400); // Unauthorized ili Forbidden, zavisno šta vraćaš
+        result.StatusCode.ShouldBe(400);
     }
 
     private static TourReviewController CreateController(IServiceScope scope, string userId)
     {
-        return new TourReviewController(scope.ServiceProvider.GetRequiredService<ITourReviewService>())
+        return new TourReviewController(
+            scope.ServiceProvider.GetRequiredService<ITourReviewService>(),
+            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
+        )
         {
-            ControllerContext = BuildContext(userId) // Simuliramo ulogovanog korisnika
+            ControllerContext = BuildContext(userId)
         };
     }
 }
