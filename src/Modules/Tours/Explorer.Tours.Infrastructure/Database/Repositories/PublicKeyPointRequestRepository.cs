@@ -87,4 +87,21 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
         _context.PublicKeyPoints.Update(publicKeyPoint);
         await _context.SaveChangesAsync();
     }
+    public IEnumerable<PublicKeyPointRequest> GetPending()
+    {
+        return _context.PublicKeyPointRequests
+            .Where(r => r.Status == PublicKeyPointRequestStatus.Pending)
+            .ToList();
+    }
+
+    public PublicKeyPointRequest? Get(long id)
+    {
+        return _context.PublicKeyPointRequests.FirstOrDefault(r => r.Id == id);
+    }
+
+    public void Update(PublicKeyPointRequest request)
+    {
+        _context.PublicKeyPointRequests.Update(request);
+        _context.SaveChanges();
+    }
 }

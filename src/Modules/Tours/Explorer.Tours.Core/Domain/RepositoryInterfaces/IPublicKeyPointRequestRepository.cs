@@ -13,4 +13,7 @@ public interface IPublicKeyPointRequestRepository
     Task AddPublicKeyPointAsync(PublicKeyPoint publicKeyPoint);
     Task<PublicKeyPoint?> GetPublicKeyPointByIdAsync(long id);
     Task UpdatePublicKeyPointAsync(PublicKeyPoint publicKeyPoint);
+    IEnumerable<PublicKeyPointRequest> GetPending();
+    PublicKeyPointRequest? Get(long id);
+    void Update(PublicKeyPointRequest request);
 }
