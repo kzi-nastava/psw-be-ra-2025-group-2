@@ -37,7 +37,9 @@ public class ToursProfile : Profile
             );
         CreateMap<Tour, TourDto>()
              .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-             .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+             .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints))
+             .ForMember(dest => dest.Durations, opt => opt.MapFrom(src => src.Durations))
+             .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt));
 
         CreateMap<CreateTourDto, Tour>()
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
@@ -60,6 +62,11 @@ public class ToursProfile : Profile
       .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
       .ForMember(dest => dest.PublicKeyPoint, opt => opt.MapFrom(src => src.PublicKeyPoint));
 
+
+        CreateMap<TourDurationDto, TourDuration>().ConstructUsing(src => new TourDuration((TransportType)src.TransportType,src.Minutes));
+        CreateMap<TourDuration, TourDurationDto>().ForMember(dest => dest.TransportType,opt => opt.MapFrom(src => (TransportTypeDto)src.TransportType));
+        CreateMap<CreateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+        CreateMap<UpdateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
     }
 }
 

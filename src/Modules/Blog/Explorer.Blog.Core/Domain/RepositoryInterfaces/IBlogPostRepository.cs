@@ -13,5 +13,7 @@ namespace Explorer.Blog.Core.Domain.RepositoryInterfaces
         Task<BlogPost?> GetByIdAsync(long id);
         Task<IEnumerable<BlogPost>> GetByAuthorAsync(long authorId);
         Task UpdateAsync(BlogPost blogPost);
+        Task<IEnumerable<BlogPost>> GetAllAsync();
+
     }
 }
