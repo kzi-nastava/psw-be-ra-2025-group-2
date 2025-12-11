@@ -17,5 +17,8 @@ namespace Explorer.Tours.API.Dtos
         public string Status { get; set; }
         public decimal Price { get; set; }
         public List<KeyPointDto> KeyPoints { get; set; } = new();
+        public List<TourDurationDto> Durations { get; set; } = new();
+        public DateTime? PublishedAt { get; set; }
+
     }
 }

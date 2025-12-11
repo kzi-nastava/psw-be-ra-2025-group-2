@@ -50,6 +50,15 @@ public class ToursContext : DbContext
                 kp.Property(k => k.PublicStatus).IsRequired().HasConversion<string>();
             });
 
+            builder.OwnsMany(t => t.Durations, duration =>
+            {
+                duration.WithOwner().HasForeignKey("TourId");
+                duration.Property<int>("Id");
+                duration.HasKey("Id");
+                duration.Property(d => d.TransportType).IsRequired();
+                duration.Property(d => d.Minutes).IsRequired();
+            });
+
             builder.Navigation(t => t.KeyPoints)
                    .HasField("_keyPoints")
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
@@ -117,6 +126,13 @@ public class ToursContext : DbContext
             entity.Property(e => e.IsRead).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.HasIndex(e => e.UserId);
+            builder
+                .HasMany(t => t.Equipment)
+                .WithMany()
+                .UsingEntity(j =>
+                {
+                    j.ToTable("TourEquipment");
+                });
         });
     }
 }
