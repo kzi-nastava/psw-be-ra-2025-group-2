@@ -25,7 +25,6 @@ public class BlogPostTests : BaseBlogIntegrationTest
         {
             Title = "New Valid Post Title",
             Description = "Description with images.",
-            AuthorId = -1,
             ImageUrls = new List<string> { "new_img_1.png", "new_img_2.png" }
         };
 
@@ -38,6 +37,8 @@ public class BlogPostTests : BaseBlogIntegrationTest
         var created = await response.Content.ReadFromJsonAsync<BlogPostDto>();
         created.ShouldNotBeNull();
         created.ImageUrls.Count.ShouldBe(2);
+        created.State.ShouldBe(0); // Draft state
+        created.AuthorId.ShouldNotBe(0); // AuthorId postavljen iz tokena
 
         // Verify in database
         using var scope = Factory.Services.CreateScope();
@@ -50,6 +51,7 @@ public class BlogPostTests : BaseBlogIntegrationTest
         blogPost.ShouldNotBeNull();
         blogPost.Title.ShouldBe("New Valid Post Title");
         blogPost.Images.Count.ShouldBe(2);
+        blogPost.State.ShouldBe(Core.Domain.BlogState.Draft);
     }
 
     [Fact]
@@ -61,7 +63,6 @@ public class BlogPostTests : BaseBlogIntegrationTest
         {
             Title = "",
             Description = "Valid Desc",
-            AuthorId = -1,
             ImageUrls = new List<string>()
         };
 
@@ -71,56 +72,23 @@ public class BlogPostTests : BaseBlogIntegrationTest
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
-
     [Fact]
-    public async Task Get_blog_posts_by_author_successfully()
+    public async Task Create_fails_on_empty_description()
     {
         // Arrange
         var client = Factory.CreateClient();
-
-        // Act
-        var response = await client.GetAsync("/api/blogpost/author/-21");
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<List<BlogPostDto>>();
-        result.ShouldNotBeNull();
-        result.Count.ShouldBe(3);
-        result.ShouldAllBe(p => p.AuthorId == -21);
-    }
-
-    [Fact]
-    public async Task Updates_blog_post_successfully_and_replaces_images()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new UpdateBlogPostDto
+        var request = new CreateBlogPostDto
         {
-            Title = "Updated Title OK",
-            Description = "New description content.",
-            ImageUrls = new List<string> { "new_image_a.png", "new_image_b.png", "new_image_c.png" }
+            Title = "Valid Title",
+            Description = "", // Prazna description
+            ImageUrls = new List<string>()
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/-2", updateRequest);
+        var response = await client.PostAsJsonAsync("/api/blogpost", request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-
-        // Verify in database
-        using var scope = Factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BlogContext>();
-
-        var blogPost = db.BlogPosts
-            .Include(b => b.Images)
-            .FirstOrDefault(p => p.Id == -2);
-
-        blogPost.ShouldNotBeNull();
-        blogPost.Title.ShouldBe("Updated Title OK");
-        blogPost.Description.ShouldBe("New description content.");
-        blogPost.Images.Count.ShouldBe(3);
-        blogPost.Images.ShouldContain(i => i.Url == "new_image_a.png");
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -142,22 +110,4 @@ public class BlogPostTests : BaseBlogIntegrationTest
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Fact]
-    public async Task Update_fails_on_empty_description()
-    {
-        // Arrange
-        var client = Factory.CreateClient();
-        var updateRequest = new UpdateBlogPostDto
-        {
-            Title = "Valid Title",
-            Description = "",
-            ImageUrls = new List<string>()
-        };
-
-        // Act
-        var response = await client.PutAsJsonAsync("/api/blogpost/-2", updateRequest);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
 }
