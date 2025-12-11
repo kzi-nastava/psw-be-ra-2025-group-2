@@ -124,7 +124,10 @@ namespace Explorer.Tours.Core.UseCases.Execution
 
             var keyPointData = new List<KeyPointDto>();
 
-            foreach(var keyPoint in tour.KeyPoints)
+            // --- IZMENA OVDE ---
+            // Dodajemo .OrderBy(kp => kp.OrdinalNo) da bismo bili sigurni 
+            // da tačke idu redom: 1, 2, 3...
+            foreach (var keyPoint in tour.KeyPoints.OrderBy(kp => kp.OrdinalNo))
             {
                 var dto = new KeyPointDto();
                 dto.Id = keyPoint.Id;
