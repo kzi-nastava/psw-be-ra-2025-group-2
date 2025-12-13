@@ -325,5 +325,26 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.Publish();
             _tourRepository.UpdateAsync(tour).Wait();
         }
+
+        public List<TourDto> GetPublishedForTourist()
+        {
+            var tours = _tourRepository.GetAllPublished(0, 0);
+
+            var result = new List<TourDto>();
+
+            foreach (var tour in tours)
+            {
+                var dto = _mapper.Map<TourDto>(tour);
+
+                if (dto.KeyPoints != null && dto.KeyPoints.Count > 1)
+                {
+                    dto.KeyPoints = new List<KeyPointDto> { dto.KeyPoints.First() };
+                }
+
+                result.Add(dto);
+            }
+
+            return result;
+        }
     }
 }
