@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
@@ -17,13 +18,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
     public class TourService : ITourService
     {
         private readonly ITourRepository _tourRepository;
+        private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
         private readonly IEquipmentRepository? _equipmentRepository;
-
      
-        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository)
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService)
         {
             _tourRepository = tourRepository;
+            _userService = userService;
             _mapper = mapper;
             _equipmentRepository = equipmentRepository;
         }
@@ -141,6 +143,19 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
+        public TourDto? GetPublishedTour(long tourId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+
+            // Vraća turu samo ako postoji i ako je objavljena
+            if (tour == null || tour.Status != TourStatus.Published)
+            {
+                return null;
+            }
+
+            return _mapper.Map<TourDto>(tour);
+        }
+
         public void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto)
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result
@@ -245,8 +260,58 @@ namespace Explorer.Tours.Core.UseCases.Administration
             }).ToList();
         }
 
-        
+        public TourDto Get(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found: " + id);
 
+            return _mapper.Map<TourDto>(tour);
+        }
+
+        public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
+        {
+            // TODO refaktorisati kasnije
+            var tours = _tourRepository.GetAllAsync().Result;
+
+            var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
+
+            var activeTourId = _userService.GetActiveTourIdByUserId(touristId);
+
+            if (activeTourId.HasValue)
+            {
+                var tour = tours.Where(t => t.Id == activeTourId).FirstOrDefault();
+                if (tour == null)
+                {
+                    _userService.ResetActiveTourIdByUserId(touristId);
+                    activeTourId = null;
+                }
+            }
+
+            foreach (var dto in dtos)
+            {
+                if (activeTourId == null)
+                {
+                    dto.IsActive = false;
+                    dto.CanBeStarted = true;
+                }
+                else
+                {
+                    if (dto.Id == activeTourId)
+                    {
+                        dto.IsActive = true;
+                        dto.CanBeStarted = true;
+                    }
+                    else
+                    {
+                        dto.IsActive = false;
+                        dto.CanBeStarted = false;
+                    }
+                }
+                dto.KeyPoints = new List<KeyPointDto>();
+            }
+
+            return dtos;
+        }
         // upravljanje statusom ture
 
         public void Publish(long tourId, long authorId)

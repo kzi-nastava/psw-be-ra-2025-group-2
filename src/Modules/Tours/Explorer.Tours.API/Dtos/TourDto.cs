@@ -20,5 +20,8 @@ namespace Explorer.Tours.API.Dtos
         public List<TourDurationDto> Durations { get; set; } = new();
         public DateTime? PublishedAt { get; set; }
 
+
+        public bool IsActive { get; set; }
+        public bool CanBeStarted { get; set; }
     }
 }

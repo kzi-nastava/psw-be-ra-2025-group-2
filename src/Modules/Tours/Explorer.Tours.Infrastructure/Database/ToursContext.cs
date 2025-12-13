@@ -1,4 +1,5 @@
 ﻿using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.Execution;
 using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Tours.Infrastructure.Database;
@@ -12,7 +13,9 @@ public class ToursContext : DbContext
 
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
-   
+
+    public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<TourReview> TourReviews { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 
@@ -20,6 +23,11 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
+        modelBuilder.Entity<TourExecution>()
+            .HasMany(te => te.KeyPointVisits)
+            .WithOne()
+            .HasForeignKey("TourExecutionId")
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Tour>(builder =>
         {

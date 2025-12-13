@@ -67,4 +67,10 @@ public class TourDbRepository : ITourRepository
         _dbSet.Remove(tour);
         await DbContext.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Tour?>> GetAllAsync()
+    {
+        // TODO promeniti kasnije, ovo je radi demonstracije
+        return await _dbSet.Include(t => t.KeyPoints).ToListAsync();
+    }
 }

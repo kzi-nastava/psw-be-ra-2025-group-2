@@ -18,6 +18,12 @@ namespace Explorer.Blog.Core.Domain
         private readonly List<BlogImage> _images = new();
         public IReadOnlyCollection<BlogImage> Images => _images.AsReadOnly();
 
+        private readonly List<Vote> _votes = new();
+        public IReadOnlyCollection<Vote> Votes => _votes.AsReadOnly();
+
+        public BlogState State { get; private set; }
+        public DateTime? LastModifiedAt { get; private set; }
+
         private BlogPost() { }
         public BlogPost(string title, string description, long authorId, List<BlogImage>? images = null, bool skipAuthorValidation = false)
         {
@@ -25,6 +31,7 @@ namespace Explorer.Blog.Core.Domain
             Description = description;
             AuthorId = authorId;
             CreatedAt = DateTime.UtcNow;
+            State = BlogState.Draft;
 
             if (images != null)
             {
@@ -46,29 +53,134 @@ namespace Explorer.Blog.Core.Domain
             if (!skipAuthorValidation && AuthorId == 0)
                 throw new ArgumentException("Invalid author.");
         }
-
-        // ---------------------------
-        //   UPDATE METHODS
-        // ---------------------------
-
-        public void UpdateTitle(string newTitle)
+        public void Edit(string title, string description, List<BlogImage> images)
         {
-            if (string.IsNullOrWhiteSpace(newTitle))
+            if (State != BlogState.Draft && State != BlogState.Active && State != BlogState.Famous)
+                throw new InvalidOperationException("Blog can be edited only while in Draft state.");
+            if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title cannot be empty.");
-            Title = newTitle;
-        }
 
-        public void UpdateDescription(string newDescription)
-        {
-            if (string.IsNullOrWhiteSpace(newDescription))
+            if (string.IsNullOrWhiteSpace(description))
                 throw new ArgumentException("Description cannot be empty.");
-            Description = newDescription;
+
+            Title = title;
+            Description = description;
+
+
+            _images.Clear();
+            _images.AddRange(images);
         }
 
-        public void ReplaceImages(List<BlogImage> newImages)
+        public void EditDescription(string description)
         {
-            _images.Clear();
-            _images.AddRange(newImages);
+            if (State != BlogState.Published)
+                throw new InvalidOperationException("Only published blogs can update description.");
+
+            if (string.IsNullOrWhiteSpace(description))
+                throw new ArgumentException("Description cannot be empty.");
+
+            Description = description;
+            LastModifiedAt = DateTime.UtcNow;
         }
+
+        public void Publish()
+        {
+            if (State != BlogState.Draft)
+                throw new InvalidOperationException("Only draft blogs can be published.");
+
+            State = BlogState.Published;
+        }
+
+        public void Archive()
+        {
+            if (State != BlogState.Published)
+                throw new InvalidOperationException("Only published blogs can be archived.");
+
+            State = BlogState.Archived;
+        }
+
+        public void AddVote(long userId, VoteValue voteValue)
+        {
+            if (State != BlogState.Published && State != BlogState.Active && State != BlogState.Famous) 
+                throw new InvalidOperationException("Can only vote on published blog posts.");
+
+            var existingVote = _votes.FirstOrDefault(v => v.UserId == userId);
+
+            if(existingVote != null)
+            {
+                if (existingVote.Value.Equals(voteValue))
+                    return;
+
+                _votes.Remove(existingVote);
+            }
+
+            _votes.Add(new Vote(userId, voteValue));
+        }
+
+        public void RemoveVote(long userId)
+        {
+            var vote = _votes.FirstOrDefault(v => v.UserId == userId);
+
+            if(vote != null)
+            {
+                _votes.Remove(vote);
+            }
+        }
+
+        public int GetScore()
+        {
+            return _votes.Sum(v => v.Value.Value);
+        }
+
+        public VoteValue? GetUserVote(long userId)
+        {
+            return _votes.FirstOrDefault(v => v.UserId == userId)?.Value;
+        }
+
+        public int GetUpvoteCount()
+        {
+            return _votes.Count(v => v.Value.Value == 1);
+        }
+
+        public int GetDownvoteCount()
+        {
+            return _votes.Count(v => v.Value.Value == -1);
+        }
+        public void UpdateStatus(int commentCount)
+        {
+            if (State == BlogState.Draft || State == BlogState.Archived)
+                return;
+
+            int score = GetScore();
+
+            // 1) CLOSED
+            if (score < -10)
+            {
+                State = BlogState.Closed;
+                return;
+            }
+
+            if (State == BlogState.Closed)
+                return;
+
+            // 2) FAMOUS
+            if (score > 500 || commentCount > 30)
+            {
+                State = BlogState.Famous;
+                return;
+            }
+
+            // 3) ACTIVE
+            if (score > 100 || commentCount > 10)
+            {
+                State = BlogState.Active;
+                return;
+            }
+            if (State == BlogState.Active || State == BlogState.Famous)
+            {
+                State = BlogState.Published;
+            }
+        }
+
     }
 }
