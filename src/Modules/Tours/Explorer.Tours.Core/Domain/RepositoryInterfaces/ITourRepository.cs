@@ -14,8 +14,13 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId);
         Task UpdateAsync(Tour tour);
         Task DeleteAsync(Tour tour);
-        public List<Tour> GetAllPublished(int page, int pageSize);
+
+        List<Tour> GetAllPublished(int page, int pageSize);
         Task<Tour?> GetTourWithKeyPointsAsync(long tourId);
         Task<Tour?> GetTourByKeyPointIdAsync(long keyPointId);
+
+        List<Tour> GetAllPublished();
+
+        Task<IEnumerable<Tour?>> GetAllAsync();
     }
 }

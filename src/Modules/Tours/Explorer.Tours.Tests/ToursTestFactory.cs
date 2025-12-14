@@ -1,4 +1,5 @@
 ﻿using Explorer.BuildingBlocks.Tests;
+using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,10 @@ public class ToursTestFactory : BaseTestFactory<ToursContext>
         }
 
         services.AddDbContext<ToursContext>(SetupTestContext());
+
+        descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<StakeholdersContext>));
+        services.Remove(descriptor!);
+        services.AddDbContext<StakeholdersContext>(SetupTestContext());
 
         return services;
     }

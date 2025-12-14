@@ -2,7 +2,7 @@
 
 namespace Explorer.Tours.Core.Domain;
 
-public class KeyPoint : Entity
+public class KeyPoint : Entity, IKeyPointInfo
 {
     public int OrdinalNo { get; private set; }
     public string Name { get; init; }

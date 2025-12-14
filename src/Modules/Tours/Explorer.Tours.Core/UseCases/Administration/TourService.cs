@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
@@ -17,18 +18,29 @@ namespace Explorer.Tours.Core.UseCases.Administration
     public class TourService : ITourService
     {
         private readonly ITourRepository _tourRepository;
+        private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
         private readonly IEquipmentRepository? _equipmentRepository;
+        private readonly ITourReviewRepository? _reviewRepository;
 
-     
-        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository)
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService, ITourReviewRepository reviewRepository)
         {
             _tourRepository = tourRepository;
+            _userService = userService;
             _mapper = mapper;
             _equipmentRepository = equipmentRepository;
+            _reviewRepository = reviewRepository;
         }
-       
-       
+
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService)
+        {
+            _tourRepository = tourRepository;
+            _userService = userService;
+            _mapper = mapper;
+            _equipmentRepository = equipmentRepository;
+            _reviewRepository = null;
+        }
+
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
@@ -65,25 +77,24 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize)
         {
-            var tours = _tourRepository.GetAllPublished(page, pageSize);
+            var tours = _tourRepository.GetAllPublished();
             var filteredTours = tours
                 .Where(Tour =>Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
                 .ToList();
             var totalCount = filteredTours.Count;
 
-          /*  foreach (var tour in filteredTours)
+            if(page>0)
             {
-                if (tour.KeyPoints.Count > 1)
-                {
-                    var firstKeyPoint = tour.KeyPoints.First();
-                    tour.KeyPoints.Clear();
-                    tour.KeyPoints.Add(firstKeyPoint);
-                }
-            }*/
+                var pagedResult = filteredTours.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+                var items = pagedResult.Select(_mapper.Map<TourDto>).ToList();
+                return new PagedResult<TourDto>(items, pagedResult.Count);
+            }
+            else
+            {
+                var items = filteredTours.Select(_mapper.Map<TourDto>).ToList();
+                return new PagedResult<TourDto>(items, items.Count);
 
-            var pagedResult = new PagedResult<Tour>(filteredTours, totalCount);
-            var items = pagedResult.Results.Select(_mapper.Map<TourDto>).ToList();
-            return new PagedResult<TourDto>(items, pagedResult.TotalCount);
+            }
 
         }
 
@@ -139,6 +150,19 @@ namespace Explorer.Tours.Core.UseCases.Administration
                        ?? throw new Exception("Tour not found.");
             tour.AddKeyPoint(_mapper.Map<KeyPoint>(dto));
             _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public TourDto? GetPublishedTour(long tourId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+
+            // Vraća turu samo ako postoji i ako je objavljena
+            if (tour == null || tour.Status != TourStatus.Published)
+            {
+                return null;
+            }
+
+            return _mapper.Map<TourDto>(tour);
         }
 
         public void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto)
@@ -245,8 +269,58 @@ namespace Explorer.Tours.Core.UseCases.Administration
             }).ToList();
         }
 
-        
+        public TourDto Get(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found: " + id);
 
+            return _mapper.Map<TourDto>(tour);
+        }
+
+        public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
+        {
+            // TODO refaktorisati kasnije
+            var tours = _tourRepository.GetAllAsync().Result;
+
+            var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
+
+            var activeTourId = _userService.GetActiveTourIdByUserId(touristId);
+
+            if (activeTourId.HasValue)
+            {
+                var tour = tours.Where(t => t.Id == activeTourId).FirstOrDefault();
+                if (tour == null)
+                {
+                    _userService.ResetActiveTourIdByUserId(touristId);
+                    activeTourId = null;
+                }
+            }
+
+            foreach (var dto in dtos)
+            {
+                if (activeTourId == null)
+                {
+                    dto.IsActive = false;
+                    dto.CanBeStarted = true;
+                }
+                else
+                {
+                    if (dto.Id == activeTourId)
+                    {
+                        dto.IsActive = true;
+                        dto.CanBeStarted = true;
+                    }
+                    else
+                    {
+                        dto.IsActive = false;
+                        dto.CanBeStarted = false;
+                    }
+                }
+                dto.KeyPoints = new List<KeyPointDto>();
+            }
+
+            return dtos;
+        }
         // upravljanje statusom ture
 
         public void Publish(long tourId, long authorId)
@@ -259,6 +333,51 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             tour.Publish();
             _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public List<PublishedTourPreviewDto> GetPublishedForTourist()
+        {
+            if (_reviewRepository == null)
+                throw new InvalidOperationException(
+                    "ITourReviewRepository is not configured. This method requires reviews.");
+
+            var tours = _tourRepository.GetAllPublished();
+
+            var result = new List<PublishedTourPreviewDto>();
+
+            foreach (var tour in tours)
+            {
+                var dto = new PublishedTourPreviewDto
+                {
+                    Id = tour.Id,
+                    Name = tour.Name,
+                    Description = tour.Description,
+                    Difficulty = tour.Difficulty,
+                    Price = tour.Price,
+                    Tags = tour.Tags?.ToList() ?? new List<string>(),
+                    FirstKeyPoint = tour.KeyPoints?
+                        .OrderBy(k => k.OrdinalNo)
+                        .Select(k => _mapper.Map<KeyPointDto>(k))
+                        .FirstOrDefault()
+                };
+
+                // AC5 + AC7
+                var reviews = _reviewRepository.GetAllByTourId(tour.Id).ToList();
+                dto.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+
+                // AC6: autor recenzije (ime)
+                dto.Reviews = reviews.Select(r =>
+                {
+                    var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
+                    var u = _userService.GetById(r.TouristId);
+                    reviewDto.TouristName = u?.Username ?? "Unknown";
+                    return reviewDto;
+                }).ToList();
+
+                result.Add(dto);
+            }
+
+            return result;
         }
     }
 }

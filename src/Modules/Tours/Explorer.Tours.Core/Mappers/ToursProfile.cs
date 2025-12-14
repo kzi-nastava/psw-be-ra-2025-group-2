@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.Execution;
 
 namespace Explorer.Tours.Core.Mappers;
 
@@ -67,10 +68,7 @@ public class ToursProfile : Profile
         CreateMap<TourDuration, TourDurationDto>().ForMember(dest => dest.TransportType,opt => opt.MapFrom(src => (TransportTypeDto)src.TransportType));
         CreateMap<CreateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
         CreateMap<UpdateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+        CreateMap<TourReviewDto, TourReview>().ReverseMap();
+        CreateMap<TourReview, TourReviewPublicDto>().ForMember(d => d.TouristName, o => o.Ignore());
     }
 }
-
-            
-        
-
-       
