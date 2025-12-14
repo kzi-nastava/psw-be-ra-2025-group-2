@@ -42,7 +42,7 @@ public class TourDbRepository : ITourRepository
             .ToListAsync();
     }
 
-    public List<Tour> GetAllPublished(int page, int pageSize)
+    public List<Tour> GetAllPublished()
     {
         var tours = _dbSet.Include(t => t.KeyPoints).Where(t => t.Status == TourStatus.Published).ToList();
         return tours;
