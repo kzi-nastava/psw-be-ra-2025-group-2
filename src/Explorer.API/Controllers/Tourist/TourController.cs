@@ -32,5 +32,11 @@ namespace Explorer.API.Controllers.Tourist
             var result = _tourService.Get(id);
             return Ok(result);
         }
+
+        [HttpGet("published")]
+        public ActionResult<List<PublishedTourPreviewDto>> GetPublished()
+        {
+            return Ok(_tourService.GetPublishedForTourist());
+        }
     }
 }

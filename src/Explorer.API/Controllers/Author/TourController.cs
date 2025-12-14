@@ -256,13 +256,5 @@ namespace Explorer.API.Controllers.Author
             var result = _tourService.GetAllEquipmentForAuthor(authorId);
             return Ok(result);
         }
-
-        [HttpGet("public")]
-        [AllowAnonymous]
-        public ActionResult<List<TourDto>> GetPublishedForTourist()
-        {
-            var result = _tourService.GetPublishedForTourist();
-            return Ok(result);
-        }
     }
 }
