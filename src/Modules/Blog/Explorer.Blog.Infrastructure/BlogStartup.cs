@@ -26,6 +26,7 @@ public static class BlogStartup
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IBlogPostService, BlogPostService>();
+        services.AddScoped<ICommentService, CommentService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -53,5 +54,6 @@ public static class BlogStartup
         });
 
         services.AddScoped<IBlogPostRepository, BlogPostRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
     }
 }
