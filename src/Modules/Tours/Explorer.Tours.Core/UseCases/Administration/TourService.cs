@@ -341,7 +341,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 throw new InvalidOperationException(
                     "ITourReviewRepository is not configured. This method requires reviews.");
 
-            var tours = _tourRepository.GetAllPublished(0, 0);
+            var tours = _tourRepository.GetAllPublished();
 
             var result = new List<PublishedTourPreviewDto>();
 
@@ -369,7 +369,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Reviews = reviews.Select(r =>
                 {
                     var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
-                    // ovde moraš da imaš metodu koja vraća display name za userId
                     var u = _userService.GetById(r.TouristId);
                     reviewDto.TouristName = u?.Username ?? "Unknown";
                     return reviewDto;
