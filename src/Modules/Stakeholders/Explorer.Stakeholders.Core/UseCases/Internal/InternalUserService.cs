@@ -1,5 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Internal;
+using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using System;
 using System.Collections.Generic;
@@ -53,5 +54,17 @@ namespace Explorer.Stakeholders.Core.UseCases.Internal
 
             _repository.Update(user);
         }
+        public InternalUserDto? GetById(long userId)
+        {
+            var user = _repository.Get(userId);
+            if (user == null) return null;
+
+            return new InternalUserDto
+            {
+                Id = user.Id,
+                Username = user.Username
+            };
+        }
+
     }
 }

@@ -21,16 +21,26 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
         private readonly IEquipmentRepository? _equipmentRepository;
-     
+        private readonly ITourReviewRepository? _reviewRepository;
+
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService, ITourReviewRepository reviewRepository)
+        {
+            _tourRepository = tourRepository;
+            _userService = userService;
+            _mapper = mapper;
+            _equipmentRepository = equipmentRepository;
+            _reviewRepository = reviewRepository;
+        }
+
         public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService)
         {
             _tourRepository = tourRepository;
             _userService = userService;
             _mapper = mapper;
             _equipmentRepository = equipmentRepository;
+            _reviewRepository = null;
         }
-       
-       
+
         public TourDto Create(CreateTourDto dto) 
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
@@ -326,20 +336,45 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
-        public List<TourDto> GetPublishedForTourist()
+        public List<PublishedTourPreviewDto> GetPublishedForTourist()
         {
+            if (_reviewRepository == null)
+                throw new InvalidOperationException(
+                    "ITourReviewRepository is not configured. This method requires reviews.");
+
             var tours = _tourRepository.GetAllPublished(0, 0);
 
-            var result = new List<TourDto>();
+            var result = new List<PublishedTourPreviewDto>();
 
             foreach (var tour in tours)
             {
-                var dto = _mapper.Map<TourDto>(tour);
-
-                if (dto.KeyPoints != null && dto.KeyPoints.Count > 1)
+                var dto = new PublishedTourPreviewDto
                 {
-                    dto.KeyPoints = new List<KeyPointDto> { dto.KeyPoints.First() };
-                }
+                    Id = tour.Id,
+                    Name = tour.Name,
+                    Description = tour.Description,
+                    Difficulty = tour.Difficulty,
+                    Price = tour.Price,
+                    Tags = tour.Tags?.ToList() ?? new List<string>(),
+                    FirstKeyPoint = tour.KeyPoints?
+                        .OrderBy(k => k.OrdinalNo)
+                        .Select(k => _mapper.Map<KeyPointDto>(k))
+                        .FirstOrDefault()
+                };
+
+                // AC5 + AC7
+                var reviews = _reviewRepository.GetAllByTourId(tour.Id).ToList();
+                dto.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+
+                // AC6: autor recenzije (ime)
+                dto.Reviews = reviews.Select(r =>
+                {
+                    var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
+                    // ovde moraš da imaš metodu koja vraća display name za userId
+                    var u = _userService.GetById(r.TouristId);
+                    reviewDto.TouristName = u?.Username ?? "Unknown";
+                    return reviewDto;
+                }).ToList();
 
                 result.Add(dto);
             }
