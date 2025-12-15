@@ -41,6 +41,10 @@ public class AdminUserController : ControllerBase
             _service.BlockUser(username);
             return Ok("User blocked.");
         }
+        catch (ArgumentException e)
+        {
+            return StatusCode(403, e.Message);
+        }
         catch (Exception e)
         {
             return BadRequest(e.Message);

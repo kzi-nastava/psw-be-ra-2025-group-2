@@ -7,6 +7,7 @@ using Explorer.Stakeholders.Core.Mappers;
 using Explorer.Stakeholders.Core.Services;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
+using Explorer.Stakeholders.Core.UseCases.Internal;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Stakeholders.Infrastructure.Database.Repositories;
@@ -25,13 +26,13 @@ public static class StakeholdersStartup
         SetupInfrastructure(services);
         return services;
     }
-    
+
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IAuthorAwardsService, AuthorAwardsService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
-
+        services.AddScoped<IMeetupService, MeetupService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<ITourPreferencesService, TourPreferencesService>();
         services.AddScoped<IClubService, ClubService>();
@@ -39,25 +40,38 @@ public static class StakeholdersStartup
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IDiaryService, DiaryService>();
         services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
+        services.AddScoped<IShoppingCartService, ShoppingCartService>();
 
+
+        services.AddScoped<IUsernameProvider, UsernameProviderService>();
+        services.AddScoped<ITouristPositionService, TouristPositionService>();
+
+        /* Internal */
+        services.AddScoped<IInternalUserService, InternalUserService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped<IPersonRepository, PersonDbRepository>();
         services.AddScoped<IUserRepository, UserDbRepository>();
+        services.AddScoped<IMeetupRepository, MeetupDbRepository>();
         services.AddScoped<ITourPreferencesRepository, TourPreferencesDbRepository>();
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
-        services.AddScoped<IDiaryRepository, DiaryDbRepository>();
-      
+
+        services.AddScoped<IDiaryRepository, DiaryDbRepository>();      
+
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+
+
+        services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
-        
+
         services.AddDbContext<StakeholdersContext>(opt =>
             opt.UseNpgsql(dataSource,
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "stakeholders")));

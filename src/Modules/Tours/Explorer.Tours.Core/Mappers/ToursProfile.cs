@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.Execution;
 
 namespace Explorer.Tours.Core.Mappers;
 
@@ -17,12 +18,12 @@ public class ToursProfile : Profile
 
         CreateMap<TourProblem, TourProblemDto>().ReverseMap();
         CreateMap<CreateTourProblemDto, TourProblem>();
-        CreateMap<TouristEquipment, TouristEquipmentDto>()
+       /* CreateMap<TouristEquipment, TouristEquipmentDto>()
             .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment))
             .ForMember(dest => dest.Equipments, opt => opt.Ignore());
 
         CreateMap<TouristEquipmentDto, TouristEquipment>()
-            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment));
+            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment));*/
 
         CreateMap<TouristObject, TouristObjectDto>()
             .ForMember(
@@ -36,20 +37,26 @@ public class ToursProfile : Profile
                 opt => opt.MapFrom(src => Enum.Parse<TouristObjectCategory>(src.Category))
             );
         CreateMap<Tour, TourDto>()
-           .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+             .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints))
+             .ForMember(dest => dest.Durations, opt => opt.MapFrom(src => src.Durations))
+             .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt));
 
         CreateMap<CreateTourDto, Tour>()
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()));
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
+            .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
 
         CreateMap<UpdateTourDto, Tour>()
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()));
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
+            .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+
         CreateMap<MonumentDto, Monument>().ReverseMap();
+        CreateMap<KeyPoint, KeyPointDto>().ReverseMap();
 
-
+        CreateMap<TourDurationDto, TourDuration>().ConstructUsing(src => new TourDuration((TransportType)src.TransportType,src.Minutes));
+        CreateMap<TourDuration, TourDurationDto>().ForMember(dest => dest.TransportType,opt => opt.MapFrom(src => (TransportTypeDto)src.TransportType));
+        CreateMap<CreateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+        CreateMap<UpdateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
+        CreateMap<TourReviewDto, TourReview>().ReverseMap();
     }
 }
-
-            
-        
-
-       
