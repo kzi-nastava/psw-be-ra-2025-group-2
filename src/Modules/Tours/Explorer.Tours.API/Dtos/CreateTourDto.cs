@@ -13,5 +13,8 @@ namespace Explorer.Tours.API.Dtos
         public int Difficulty { get; set; }
         public long AuthorId { get; set; }
         public List<string>? Tags { get; set; }
+        public List<KeyPointDto> KeyPoints { get; set; } = new();
+        public List<TourDurationDto> Durations { get; set; } = new();
+        public List<long> RequiredEquipmentIds { get; set; } = new();
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.Execution;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Explorer.Tours.Infrastructure.Database;
 
@@ -13,11 +13,56 @@ public class ToursContext : DbContext
 
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
-    public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
+    public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<TourReview> TourReviews { get; set; }
+
+    public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("tours");
+
+        modelBuilder.Entity<TourExecution>()
+            .HasMany(te => te.KeyPointVisits)
+            .WithOne()
+            .HasForeignKey("TourExecutionId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Tour>(builder =>
+        {
+            builder.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
+            {
+                kp.WithOwner().HasForeignKey("TourId");
+                kp.Property(k => k.OrdinalNo).IsRequired();
+                kp.Property(k => k.Name).IsRequired();
+                kp.Property(k => k.Description).IsRequired();
+                kp.Property(k => k.SecretText).IsRequired();
+                kp.Property(k => k.ImageUrl);
+                kp.Property(k => k.Latitude);
+                kp.Property(k => k.Longitude);
+            });
+
+            builder.OwnsMany(t => t.Durations, duration =>
+            {
+                duration.WithOwner().HasForeignKey("TourId");
+                duration.Property<int>("Id");
+                duration.HasKey("Id");
+                duration.Property(d => d.TransportType).IsRequired();
+                duration.Property(d => d.Minutes).IsRequired();
+            });
+
+            builder.Navigation(t => t.KeyPoints)
+                   .HasField("_keyPoints")
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder
+                .HasMany(t => t.Equipment)
+                .WithMany()
+                .UsingEntity(j =>
+                {
+                    j.ToTable("TourEquipment");
+                });
+        });
     }
 }

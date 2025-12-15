@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Explorer.Tours.Core.Domain;
 
 namespace Explorer.Tours.Tests.Integration.Administration;
 
@@ -199,5 +200,94 @@ public class TourCommandTests : BaseToursIntegrationTest
         };
         return controller;
     }
+    [Fact]
+    public void Archives_published_tour_and_sets_archived_at()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-11");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+       
+        var result = controller.Archive(-2) as OkObjectResult;
+
+        result.ShouldNotBeNull();
+
+        var storedEntity = dbContext.Tours.FirstOrDefault(t => t.Id == -2);
+        storedEntity.ShouldNotBeNull();
+        storedEntity.Status.ShouldBe(TourStatus.Archived);
+        storedEntity.ArchivedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Archive_fails_for_non_published_tour()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-11");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        // Arrange – uzmi bilo koju turu koja NIJE Published (npr. Draft)
+        var tour = dbContext.Tours.First(t => t.Status != TourStatus.Published);
+        var tourId = tour.Id;
+
+        // Act
+        var actionResult = controller.Archive(tourId);
+
+       
+        var result = actionResult.ShouldBeOfType<BadRequestObjectResult>();
+        result.StatusCode.ShouldBe(400);  
+
+        
+        var storedEntity = dbContext.Tours.FirstOrDefault(t => t.Id == tourId);
+        storedEntity.ShouldNotBeNull();
+        storedEntity.Status.ShouldNotBe(TourStatus.Archived);
+        storedEntity.ArchivedAt.ShouldBeNull();
+    }
+
+    
+
+    [Fact]
+    public void Reactivates_archived_tour_and_clears_archived_at()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-11");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        
+        controller.Archive(-2);
+
+        var archived = dbContext.Tours.FirstOrDefault(t => t.Id == -2);
+        archived.ShouldNotBeNull();
+        archived.Status.ShouldBe(TourStatus.Archived);
+        archived.ArchivedAt.ShouldNotBeNull();
+
+        
+        var result = controller.Reactivate(-2) as OkObjectResult;
+
+        result.ShouldNotBeNull();
+
+        var reactivated = dbContext.Tours.FirstOrDefault(t => t.Id == -2);
+        reactivated.ShouldNotBeNull();
+        reactivated.Status.ShouldBe(TourStatus.Published);
+        reactivated.ArchivedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Reactivate_fails_if_tour_is_not_archived()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-11");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        
+        var result = controller.Reactivate(-13) as BadRequestObjectResult;
+
+        result.ShouldNotBeNull();
+
+        var storedEntity = dbContext.Tours.FirstOrDefault(t => t.Id == -13);
+        storedEntity.ShouldNotBeNull();
+        storedEntity.Status.ShouldNotBe(TourStatus.Published); // ili samo da nije Archived
+        storedEntity.ArchivedAt.ShouldBeNull();
+    }
 
 }
+
