@@ -29,10 +29,17 @@ public class ClubDbRepository : IClubRepository
     public Club Get(long id)
     {
         var entity = _dbSet
-            .AsNoTracking()
-            .FirstOrDefault(c => c.Id == id);
+            // Uèitaj èlanove kluba
+            .Include(c => c.Members)
+            // Uèitaj zahteve za uèlanjenje
+            .Include(c => c.JoinRequests)
+            // Uèitaj pozivnice
+            .Include(c => c.Invitations)
+            .SingleOrDefault(c => c.Id == id);
 
-        if (entity == null) throw new NotFoundException("Club not found: " + id);
+        if (entity == null)
+            throw new NotFoundException("Club not found: " + id);
+
         return entity;
     }
 
