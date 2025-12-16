@@ -34,6 +34,7 @@ public class ToursContext : DbContext
 
         modelBuilder.Entity<Tour>(builder =>
         {
+
             builder.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
             {
                 kp.WithOwner().HasForeignKey("TourId");

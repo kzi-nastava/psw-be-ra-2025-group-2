@@ -44,11 +44,28 @@ namespace Explorer.API.Controllers.Author
         [HttpGet]
         public ActionResult<IEnumerable<TourDto>> GetByAuthor([FromQuery] long authorId)
         {
-            var tours = _tourService.GetByAuthor(authorId);
-            return Ok(tours);
+            try
+            {
+                var tours = _tourService.GetByAuthor(authorId);
+                return Ok(tours);
+            }
+            catch (Exception ex)
+            {
+                // Ovo će ti pokazati tačnu grešku
+                var innerMsg = ex.InnerException?.Message ?? "No inner exception";
+                var stackTrace = ex.StackTrace ?? "No stack trace";
+
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    innerError = innerMsg,
+                    type = ex.GetType().Name,
+                    stack = stackTrace
+                });
+            }
         }
 
-        
+
         // GET: api/author/tours/{id}
         [HttpGet("{id}")]
         public ActionResult<TourDto> GetById(long id)

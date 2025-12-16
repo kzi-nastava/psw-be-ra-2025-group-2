@@ -26,17 +26,24 @@ public class PublicKeyPointService : IPublicKeyPointService
     }
 
     public async Task<PublicKeyPointRequestDto> SubmitRequestAsync(
-        long tourId,
-        int ordinalNo,
-        long authorId)
+     long tourId,
+     int ordinalNo,
+     long authorId)
     {
         var tour = await GetTourWithKeyPointsOrThrow(tourId);
         var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
-        var publicKeyPoint = await GetOrCreatePublicKeyPoint(tourId, ordinalNo, keyPoint, authorId);
 
+        if (keyPoint.PublicStatus == PublicPointRequestStatus.Approved)
+            throw new InvalidOperationException("This keypoint is already public.");
+
+        var publicKeyPoint = await GetOrCreatePublicKeyPoint(tourId, ordinalNo, keyPoint, authorId);
         await ValidateNoPendingRequest(publicKeyPoint.Id);
 
         var request = await CreateAndSaveRequest(publicKeyPoint.Id, authorId);
+
+        keyPoint.SuggestForPublicUse();
+        await _tourRepository.UpdateAsync(tour);
+
         return _mapper.Map<PublicKeyPointRequestDto>(request);
     }
 
@@ -187,5 +194,15 @@ public class PublicKeyPointService : IPublicKeyPointService
     private async Task SendRejectionNotification(long authorId, string? reason)
     {
         await _notificationService.NotifyAuthorRejectedAsync(authorId, "KeyPoint", reason);
+    }
+
+    public async Task DeleteRequestsBySourceAsync(long tourId, int ordinalNo)
+    {
+        var requests = await _requestRepository.GetBySourceAsync(tourId, ordinalNo);
+
+        foreach (var request in requests)
+        {
+            await _requestRepository.DeleteAsync(request);
+        }
     }
 }

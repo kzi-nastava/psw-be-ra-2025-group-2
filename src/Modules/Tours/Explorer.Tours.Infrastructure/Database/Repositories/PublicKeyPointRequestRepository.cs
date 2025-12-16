@@ -127,4 +127,19 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
         if (publicKeyPoint == null)
             throw new ArgumentNullException(nameof(publicKeyPoint));
     }
+
+    public async Task<IEnumerable<PublicKeyPointRequest>> GetBySourceAsync(long tourId, int ordinalNo)
+    {
+        return await _context.PublicKeyPointRequests 
+            .Include(r => r.PublicKeyPoint)
+            .Where(r => r.PublicKeyPoint.SourceTourId == tourId &&
+                        r.PublicKeyPoint.SourceOrdinalNo == ordinalNo)
+            .ToListAsync();
+    }
+
+    public async Task DeleteAsync(PublicKeyPointRequest request)
+    {
+        _context.PublicKeyPointRequests.Remove(request);  
+        await _context.SaveChangesAsync();
+    }
 }

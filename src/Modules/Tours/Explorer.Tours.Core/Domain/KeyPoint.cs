@@ -36,9 +36,8 @@ public class KeyPoint : Entity, IKeyPointInfo
         Longitude = longitude;
         AuthorId = authorId;
 
-        PublicStatus = suggestForPublic
-            ? PublicPointRequestStatus.Pending
-            : PublicPointRequestStatus.Private;
+        PublicStatus = PublicPointRequestStatus.Private;
+
 
         Validate();
     }
@@ -81,6 +80,7 @@ public class KeyPoint : Entity, IKeyPointInfo
         typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, imageUrl ?? string.Empty);
         typeof(KeyPoint).GetProperty(nameof(Latitude))!.SetValue(this, latitude);
         typeof(KeyPoint).GetProperty(nameof(Longitude))!.SetValue(this, longitude);
+
 
         Validate();
     }

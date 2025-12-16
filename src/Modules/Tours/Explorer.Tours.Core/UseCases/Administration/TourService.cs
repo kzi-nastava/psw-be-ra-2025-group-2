@@ -168,6 +168,20 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             if (tour.Status != TourStatus.Draft) throw new Exception("Only draft tours can be deleted.");
 
+            if (_publicKeyPointService != null && tour.KeyPoints != null)
+            {
+                foreach (var keyPoint in tour.KeyPoints)
+                {
+                    try
+                    {
+                        _publicKeyPointService.DeleteRequestsBySourceAsync(id, keyPoint.OrdinalNo).Wait();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+
             _tourRepository.DeleteAsync(tour).Wait();
         }
 
@@ -193,7 +207,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Latitude,
                 dto.Longitude,
                 dto.AuthorId,
-                dto.SuggestForPublicUse
+                dto.SuggestForPublicUse  
             );
 
             tour.AddKeyPoint(keyPoint);
@@ -201,7 +215,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             SubmitPublicKeyPointRequestIfNeeded(tourId, dto);
         }
-
         public TourDto? GetPublishedTour(long tourId)
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result;
@@ -229,10 +242,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
             );
 
             tour.UpdateKeyPoint(ordinalNo, update);
+            _tourRepository.UpdateAsync(tour).Wait();
 
             SubmitPublicKeyPointRequestIfNeeded(tourId, dto);
-
-            _tourRepository.UpdateAsync(tour).Wait();
         }
 
         public void RemoveKeyPoint(long tourId, int ordinalNo)
@@ -434,14 +446,27 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             try
             {
+                var tour = _tourRepository.GetTourWithKeyPointsAsync(tourId).Result;
+                var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == dto.OrdinalNo);
+
+                if (keyPoint != null &&
+                    (keyPoint.PublicStatus == PublicPointRequestStatus.Pending ||
+                     keyPoint.PublicStatus == PublicPointRequestStatus.Approved))
+                {
+                    Console.WriteLine($"⚠️ KeyPoint već ima status {keyPoint.PublicStatus}, preskačem submit");
+                    return;
+                }
+
                 _publicKeyPointService.SubmitRequestAsync(tourId, dto.OrdinalNo, dto.AuthorId).Wait();
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                throw;
+                Console.WriteLine($"⚠️ InvalidOperationException: {ex.Message}");
+                return;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"❌ Unexpected error: {ex.Message}");
             }
         }
     }
