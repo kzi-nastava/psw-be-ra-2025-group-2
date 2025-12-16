@@ -285,7 +285,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
         {
             // TODO refaktorisati kasnije
-            var tours = _tourRepository.GetAllAsync().Result;
+            var tours = _tourRepository.GetAllNonDrafts();
 
             var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
 

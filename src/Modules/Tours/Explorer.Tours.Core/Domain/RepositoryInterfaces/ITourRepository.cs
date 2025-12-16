@@ -15,8 +15,6 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         Task UpdateAsync(Tour tour);
         Task DeleteAsync(Tour tour);
         public List<Tour> GetAllPublished();
-
-        // TODO Promeniti kasnije
-        Task<IEnumerable<Tour?>> GetAllAsync(); 
+        public List<Tour> GetAllNonDrafts();
     }
 }
