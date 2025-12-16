@@ -44,8 +44,12 @@ public class AuthenticationService : IAuthenticationService
         if(_userRepository.Exists(account.Username))
             throw new EntityValidationException("Provided username already exists.");
 
-        var user = _userRepository.Create(new User(account.Username, account.Password, UserRole.Tourist, true));
-        var person = _personRepository.Create(new Person(user.Id, account.Name, account.Surname, account.Email));
+        // Prvo vidi da li domenski objekti mogu da se naprave sa ovim podacima, umesto da se kreira user, a da person pukne zbog nevazeceg Email
+        var user = new User(account.Username, account.Password, UserRole.Tourist, true);
+        var person = new Person(-1, account.Name, account.Surname, account.Email);
+
+        user = _userRepository.Create(new User(user.Username, user.Password, UserRole.Tourist, true));
+        person = _personRepository.Create(new Person(user.Id, person.Name, person.Surname, person.Email));
 
         return _tokenGenerator.GenerateAccessToken(user, person.Id);
     }
