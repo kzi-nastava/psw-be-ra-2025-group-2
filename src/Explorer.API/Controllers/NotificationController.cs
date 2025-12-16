@@ -26,7 +26,7 @@ public class NotificationController : ControllerBase
     }
 
     [HttpGet("unread/count")]
-    public async Task<ActionResult<int>> GetUnreadCount()
+    public async Task<ActionResult<object>> GetUnreadCount()
     {
         var userId = long.Parse(User.FindFirst("id")?.Value ?? "0");
         var count = await _service.GetUnreadCountAsync(userId);
@@ -36,9 +36,20 @@ public class NotificationController : ControllerBase
     [HttpPut("{id}/read")]
     public async Task<ActionResult> MarkAsRead(long id)
     {
-        var userId = long.Parse(User.FindFirst("id")?.Value ?? "0");
-        await _service.MarkAsReadAsync(id, userId);
-        return NoContent();
+        try
+        {
+            var userId = long.Parse(User.FindFirst("id")?.Value ?? "0");
+            await _service.MarkAsReadAsync(id, userId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
     [HttpPut("read-all")]

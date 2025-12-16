@@ -18,9 +18,6 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         List<Tour> GetAllPublished(int page, int pageSize);
         Task<Tour?> GetTourWithKeyPointsAsync(long tourId);
         Task<Tour?> GetTourByKeyPointIdAsync(long keyPointId);
-
-        List<Tour> GetAllPublished();
-
         Task<IEnumerable<Tour?>> GetAllAsync();
     }
 }

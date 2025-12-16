@@ -18,13 +18,15 @@ public class PublicKeyPointRequest : Entity
     public DateTime? ProcessedAt { get; private set; }
     public long? ProcessedByAdminId { get; private set; }
     public string? RejectionReason { get; private set; }
-
     public PublicKeyPoint? PublicKeyPoint { get; private set; }
 
     private PublicKeyPointRequest() { }
 
     public PublicKeyPointRequest(long publicKeyPointId, long authorId)
     {
+        ValidatePublicKeyPointId(publicKeyPointId);
+        ValidateAuthorId(authorId);
+
         PublicKeyPointId = publicKeyPointId;
         AuthorId = authorId;
         Status = PublicKeyPointRequestStatus.Pending;
@@ -33,8 +35,8 @@ public class PublicKeyPointRequest : Entity
 
     public void Approve(long adminId)
     {
-        if (Status != PublicKeyPointRequestStatus.Pending)
-            throw new InvalidOperationException("Only pending requests can be approved.");
+        ValidateCanBeProcessed();
+        ValidateAdminId(adminId);
 
         Status = PublicKeyPointRequestStatus.Approved;
         ProcessedAt = DateTime.UtcNow;
@@ -43,12 +45,40 @@ public class PublicKeyPointRequest : Entity
 
     public void Reject(long adminId, string? reason = null)
     {
-        if (Status != PublicKeyPointRequestStatus.Pending)
-            throw new InvalidOperationException("Only pending requests can be denied.");
+        ValidateCanBeProcessed();
+        ValidateAdminId(adminId);
 
         Status = PublicKeyPointRequestStatus.Rejected;
         ProcessedAt = DateTime.UtcNow;
         ProcessedByAdminId = adminId;
-        RejectionReason = reason;
+        RejectionReason = reason?.Trim();
+    }
+
+    public bool IsPending() => Status == PublicKeyPointRequestStatus.Pending;
+    public bool IsApproved() => Status == PublicKeyPointRequestStatus.Approved;
+    public bool IsRejected() => Status == PublicKeyPointRequestStatus.Rejected;
+
+    private static void ValidatePublicKeyPointId(long publicKeyPointId)
+    {
+        if (publicKeyPointId <= 0)
+            throw new ArgumentException("Invalid PublicKeyPointId.", nameof(publicKeyPointId));
+    }
+
+    private static void ValidateAuthorId(long authorId)
+    {
+        if (authorId == 0)
+            throw new ArgumentException("Invalid AuthorId.", nameof(authorId));
+    }
+
+    private static void ValidateAdminId(long adminId)
+    {
+        if (adminId == 0)
+            throw new ArgumentException("Invalid AdminId.", nameof(adminId));
+    }
+
+    private void ValidateCanBeProcessed()
+    {
+        if (Status != PublicKeyPointRequestStatus.Pending)
+            throw new InvalidOperationException("Only pending requests can be processed.");
     }
 }

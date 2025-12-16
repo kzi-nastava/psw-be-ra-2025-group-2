@@ -37,11 +37,16 @@ public class PublicKeyPointRequestController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
- 
     [HttpPut("{requestId}/reject")]
-    public async Task<ActionResult<PublicKeyPointRequestDto>> Reject(long requestId, [FromBody] RejectDto dto)
+    public async Task<ActionResult<PublicKeyPointRequestDto>> Reject(
+        long requestId,
+        [FromBody] RejectRequestDto dto)
     {
         try
         {
@@ -53,10 +58,9 @@ public class PublicKeyPointRequestController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
-}
-
-public class RejectDto
-{
-    public string? Reason { get; set; }
 }

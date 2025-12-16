@@ -30,11 +30,8 @@ public class NotificationService : INotificationService
 
     public async Task MarkAsReadAsync(long notificationId, long userId)
     {
-        var notification = await _repository.GetByIdAsync(notificationId)
-            ?? throw new KeyNotFoundException("Notification not found.");
-
-        if (notification.UserId != userId)
-            throw new UnauthorizedAccessException();
+        var notification = await GetNotificationAsync(notificationId);
+        ValidateUserOwnership(notification, userId);
 
         notification.MarkAsRead();
         await _repository.UpdateAsync(notification);
@@ -47,27 +44,57 @@ public class NotificationService : INotificationService
 
     public async Task NotifyAuthorApprovedAsync(long authorId, string keyPointName)
     {
-        var notification = new Notification(
-            authorId,
-            "Key point approved!",
-            $"Your keypoint \"{keyPointName}\" has been approved for public use.",
-            NotificationType.PublicKeyPointApproved
-        );
+        var notification = CreateApprovedNotification(authorId, keyPointName);
         await _repository.AddAsync(notification);
     }
 
     public async Task NotifyAuthorRejectedAsync(long authorId, string keyPointName, string? reason)
     {
-        var message = $"Your keypoint \"{keyPointName}\" is not approved.";
-        if (!string.IsNullOrWhiteSpace(reason))
-            message += $" Reason: {reason}";
+        var notification = CreateRejectedNotification(authorId, keyPointName, reason);
+        await _repository.AddAsync(notification);
+    }
 
-        var notification = new Notification(
+    private async Task<Notification> GetNotificationAsync(long notificationId)
+    {
+        return await _repository.GetByIdAsync(notificationId)
+            ?? throw new KeyNotFoundException($"Notification with ID {notificationId} not found.");
+    }
+
+    private static void ValidateUserOwnership(Notification notification, long userId)
+    {
+        if (notification.UserId != userId)
+            throw new UnauthorizedAccessException("You do not have permission to access this notification.");
+    }
+
+    private static Notification CreateApprovedNotification(long authorId, string keyPointName)
+    {
+        return new Notification(
             authorId,
-            "Request denied",
+            "KeyPoint Approved",
+            $"Your keypoint \"{keyPointName}\" has been approved for public use.",
+            NotificationType.PublicKeyPointApproved
+        );
+    }
+
+    private static Notification CreateRejectedNotification(long authorId, string keyPointName, string? reason)
+    {
+        var message = BuildRejectionMessage(keyPointName, reason);
+
+        return new Notification(
+            authorId,
+            "KeyPoint Request Rejected",
             message,
             NotificationType.PublicKeyPointRejected
         );
-        await _repository.AddAsync(notification);
+    }
+
+    private static string BuildRejectionMessage(string keyPointName, string? reason)
+    {
+        var message = $"Your keypoint \"{keyPointName}\" was not approved.";
+
+        if (!string.IsNullOrWhiteSpace(reason))
+            message += $" Reason: {reason}";
+
+        return message;
     }
 }

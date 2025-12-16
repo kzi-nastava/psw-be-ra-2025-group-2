@@ -23,32 +23,29 @@ public class PublicKeyPointController : ControllerBase
     {
         try
         {
-            Console.WriteLine($"=== SUBMIT REQUEST STARTED ===");
-            Console.WriteLine($"TourId: {request.TourId}, OrdinalNo: {request.OrdinalNo}");
-
             var authorId = long.Parse(User.FindFirst("id")?.Value ?? "0");
-            Console.WriteLine($"AuthorId: {authorId}");
-
-            var result = await _service.SubmitRequestAsync(
-                request.TourId,
-                request.OrdinalNo,
-                authorId);
-
-            Console.WriteLine($"=== SUBMIT REQUEST SUCCESS ===");
+            var result = await _service.SubmitRequestAsync(request.TourId, request.OrdinalNo, authorId);
             return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
-            Console.WriteLine($"=== InvalidOperationException: {ex.Message} ===");
             return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"=== EXCEPTION: {ex.Message} ===");
+            // DODAJ ex.Message i ex.StackTrace
+            Console.WriteLine($"❌ ERROR: {ex.Message}");
+            Console.WriteLine($"❌ INNER: {ex.InnerException?.Message}");
+            Console.WriteLine($"❌ STACK: {ex.StackTrace}");
             return StatusCode(500, new
             {
-                error = "An error occurred. Try again.",
-                details = ex.Message
+                error = ex.Message,
+                innerError = ex.InnerException?.Message,
+                stackTrace = ex.StackTrace
             });
         }
     }
@@ -62,22 +59,9 @@ public class PublicKeyPointController : ControllerBase
             var requests = await _service.GetAuthorRequestsAsync(authorId);
             return Ok(requests);
         }
-        catch (Npgsql.PostgresException ex) 
+        catch (Exception)
         {
-            Console.WriteLine("--- Npgsql.PostgresException CAUGHT ---");
-            Console.WriteLine($"SQLSTATE Code: {ex.SqlState}"); 
-            Console.WriteLine($"Message: {ex.Message}");
-            Console.WriteLine($"Detail: {ex.Detail}"); 
-            Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
-            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-            Console.WriteLine("--------------------------------------");
-
-            return StatusCode(500, new { title = "A database error occurred.", detail = ex.Message });
-        }
-        catch (Exception ex) 
-        {
-            Console.WriteLine($"--- GENERAL Exception CAUGHT ---: {ex.Message}");
-            return StatusCode(500, new { title = "An unexpected error occurred.", detail = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while fetching your requests." });
         }
     }
 }

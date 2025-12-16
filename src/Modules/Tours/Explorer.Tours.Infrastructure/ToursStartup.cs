@@ -34,8 +34,8 @@ public static class ToursStartup
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
 
-        services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
         services.AddScoped<ITourReviewService, TourReviewService>();
@@ -50,6 +50,9 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<ITourRepository, TourDbRepository>();
 
+        services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+
         services.AddScoped<ITourExecutionRepository, TourExecutionDbRepository>();
         services.AddScoped<ITourReviewRepository, TourReviewDbRepository>();
 
@@ -58,13 +61,7 @@ public static class ToursStartup
         var dataSource = dataSourceBuilder.Build();
 
         services.AddDbContext<ToursContext>(opt =>
-            opt.UseNpgsql(
-                dataSource,
-                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "tours")
-            )
-        );
-
-        services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
-        services.AddScoped<INotificationService, NotificationService>();
+            opt.UseNpgsql(dataSource,
+                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "tours")));
     }
 }

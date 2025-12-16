@@ -54,7 +54,7 @@ public class ToursContext : DbContext
                     .IsRequired();
 
                 kp.Property(k => k.AuthorId).IsRequired();
-                kp.Property(k => k.PublicStatus).IsRequired().HasConversion<string>();
+                kp.Property(k => k.PublicStatus).IsRequired();
             });
 
             builder.OwnsMany(t => t.Durations, duration =>

@@ -88,26 +88,107 @@ namespace Explorer.API.Controllers.Author
 
         // POST: api/author/tours/{tourId}/keypoints
         [HttpPost("{tourId}/keypoints")]
-        public ActionResult AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
+        public ActionResult<KeyPointDto> AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
         {
-            _tourService.AddKeyPoint(tourId, dto);
-            return Ok();
+            try
+            {
+                var authorIdClaim = User.FindFirst("id");
+                if (authorIdClaim == null) return Unauthorized();
+
+                dto.AuthorId = long.Parse(authorIdClaim.Value);
+
+                _tourService.AddKeyPoint(tourId, dto);
+
+                var tour = _tourService.GetById(tourId, dto.AuthorId);
+                if (tour == null) return NotFound();
+
+                var createdKeyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == dto.OrdinalNo);
+                if (createdKeyPoint == null)
+                    return StatusCode(500, new { error = "KeyPoint created but not found." });
+
+                if (dto.SuggestForPublicUse)
+                {
+                    createdKeyPoint.PublicStatus = "Pending";
+                }
+
+                return Ok(createdKeyPoint);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // PUT: api/author/tours/{tourId}/keypoints/{ordinalNo}
         [HttpPut("{tourId}/keypoints/{ordinalNo}")]
-        public ActionResult UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
+        public ActionResult<KeyPointDto> UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
         {
-            _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
-            return Ok();
+            try
+            {
+                var authorIdClaim = User.FindFirst("id");
+                if (authorIdClaim == null) return Unauthorized();
+
+                dto.AuthorId = long.Parse(authorIdClaim.Value);
+
+                _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
+
+                var tour = _tourService.GetById(tourId, dto.AuthorId);
+                if (tour == null) return NotFound();
+
+                var updatedKeyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
+                if (updatedKeyPoint == null)
+                    return NotFound(new { error = "KeyPoint not found." });
+
+                if (dto.SuggestForPublicUse)
+                {
+                    updatedKeyPoint.PublicStatus = "Pending";
+                }
+
+                return Ok(updatedKeyPoint);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An unexpected error occurred. Please try again." });
+            }
         }
 
         // DELETE: api/author/tours/{tourId}/keypoints/{ordinalNo}
         [HttpDelete("{tourId}/keypoints/{ordinalNo}")]
         public ActionResult RemoveKeyPoint(long tourId, int ordinalNo)
         {
-            _tourService.RemoveKeyPoint(tourId, ordinalNo);
-            return Ok();
+            try
+            {
+                _tourService.RemoveKeyPoint(tourId, ordinalNo);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = "An error occurred while deleting the keypoint." });
+            }
         }
 
         [HttpPut("{id}/publish")]
