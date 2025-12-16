@@ -54,7 +54,10 @@ namespace Explorer.Tours.Core.Domain.Execution
             Validate();
         }
 
-
+        public void RegisterActivity()
+        {
+            LastActivityTimestamp = DateTime.UtcNow;
+        }
         public void Start()
         {
             if (State != TourExecutionState.NotStarted)

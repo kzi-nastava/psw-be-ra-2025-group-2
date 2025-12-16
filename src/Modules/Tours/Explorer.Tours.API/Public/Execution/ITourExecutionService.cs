@@ -15,5 +15,7 @@ namespace Explorer.Tours.API.Public.Execution
         public void Complete(long touristId, long executionId);
         public KeyPointVisitResponseDto QueryKeyPointVisit(long touristId, long executionId, PositionDto position);
         public TourExecutionDto GetExecutionData(long touristId, long executionId);
+
+        public TourExecutionDto GetExecution(long userId, long tourId);
     }
 }

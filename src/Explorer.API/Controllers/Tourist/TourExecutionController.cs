@@ -19,6 +19,23 @@ namespace Explorer.API.Controllers.Tourist
             _executionService = executionService;
         }
 
+        [HttpGet("user/{tourId:long}")]
+        public ActionResult<TourExecutionDto> GetExecution(long tourId)
+        {
+            try
+            {
+                var result = _executionService.GetExecution(User.UserId(), tourId);
+
+                if (result == null) return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpPost("start/{id:long}")]
         public ActionResult<TourExecutionDto> Proceed(long id)
         {
