@@ -68,6 +68,11 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
 
         public void ClearOptions()
         {
+            if (IsPublished)
+            {
+                throw new InvalidOperationException("Cannot clear the options of a published quiz.");
+            }
+
             _availableOptions.Clear();
         }
 

@@ -36,8 +36,6 @@ public class StakeholdersContext : DbContext
             builder.OwnsMany(q => q.AvailableOptions, b => b.ToJson());
 
             builder.Navigation(q => q.AvailableOptions).HasField("_availableOptions").UsePropertyAccessMode(PropertyAccessMode.Field);
-
-            builder.Property(q => q.AvailableOptions).HasColumnType("jsonb");
         });
 
         ConfigureStakeholder(modelBuilder);

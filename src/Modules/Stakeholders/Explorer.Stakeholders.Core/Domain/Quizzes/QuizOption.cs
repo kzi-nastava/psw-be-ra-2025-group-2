@@ -19,7 +19,7 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
         [JsonConstructor]
         public QuizOption(int ordinal, string optionText, string explanation, bool isCorrect)
         {
-            if(ordinal <= 0)
+            if(ordinal < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(ordinal));
             }
