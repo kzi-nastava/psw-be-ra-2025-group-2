@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Explorer.Stakeholders.Core.UseCases
 {
-    internal class QuizService : IQuizService
+    public class QuizService : IQuizService
     {
         private readonly IQuizRepository _quizRepository;
         private readonly IUserRepository _userRepository;
@@ -88,7 +88,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             if(existing.AuthorId != authorId)
             {
-                throw new ForbiddenException("Unauthorized operation.");
+                throw new ForbiddenException("Requester Id does not match quiz author Id.");
             }
 
             _quizRepository.Delete(quizId);
@@ -105,7 +105,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             if (existing.AuthorId != authorId)
             {
-                throw new ForbiddenException("Unauthorized operation.");
+                throw new ForbiddenException("Requester Id does not match quiz author Id.");
             }
 
             existing.Publish();

@@ -40,6 +40,7 @@ public static class StakeholdersStartup
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
+        services.AddScoped<IQuizService, QuizService>();
 
 
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
@@ -59,7 +60,7 @@ public static class StakeholdersStartup
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
         services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
-
+        services.AddScoped<IQuizRepository, QuizDbRepository>();
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 

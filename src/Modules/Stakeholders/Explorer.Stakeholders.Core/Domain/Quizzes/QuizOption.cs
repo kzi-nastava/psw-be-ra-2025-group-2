@@ -34,6 +34,7 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
                 throw new ArgumentException("Explanation text cannot be null.");
             }
 
+            Ordinal = ordinal;
             OptionText = optionText;
             Explanation = explanation;
             IsCorrect = isCorrect;

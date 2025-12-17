@@ -21,7 +21,7 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
 
         public Quiz(long authorId, string questionText)
         {
-            authorId = AuthorId;
+            AuthorId = authorId;
             ChangeQuestionText(questionText);
         }
 
@@ -66,72 +66,16 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
             _availableOptions.Add(newOption);
         }
 
-        public void UpdateOption(QuizOption option)
-        {
-            if (IsPublished)
-            {
-                throw new InvalidOperationException("Cannot update an answer of a published quiz.");
-            }
-
-            var existing = _availableOptions.FirstOrDefault(o => o.Ordinal == option.Ordinal);
-
-            if (existing == null)
-            {
-                throw new InvalidOperationException($"Answer with ordinal {option.Ordinal} does not exist in this quiz.");
-            }
-
-            existing = new QuizOption(option.Ordinal, option.OptionText, option.Explanation, option.IsCorrect);
-        }
-
-        public void RemoveOption(int ordinal)
-        {
-            var existing = _availableOptions.Where(o => o.Ordinal == ordinal).FirstOrDefault();
-
-            if(existing == null)
-            {
-                throw new ArgumentException($"Answer with ordinal {ordinal} does not exist in this quiz.");
-            }
-
-            _availableOptions.Remove(existing);
-            RecalculateOrdinals();
-        }
-
         public void ClearOptions()
         {
             _availableOptions.Clear();
         }
-
-        public bool IsAnswerCorrect(int ordinal, bool isMarkedTrue)
-        {
-            if(ordinal <= 0 || ordinal > GetLastAnswerOrdinal())
-            {
-                throw new ArgumentOutOfRangeException(nameof(ordinal));
-            }
-
-            var option = _availableOptions.Where(o => o.Ordinal == ordinal).FirstOrDefault();
-
-            if(option == null)
-            {
-                throw new InvalidDataException($"Option with ordinal {ordinal} not found.");
-            }
-
-            return isMarkedTrue == option.IsCorrect;
-        }
-
 
         private int GetLastAnswerOrdinal()
         {
             var last = _availableOptions.LastOrDefault();
 
             return last == null ? 0 : last.Ordinal;
-        }
-
-        private void RecalculateOrdinals()
-        {
-            for(int i = 0; i < _availableOptions.Count; i++)
-            {
-                _availableOptions[i] = new QuizOption(i + 1, _availableOptions[i].OptionText, _availableOptions[i].Explanation, _availableOptions[i].IsCorrect);
-            }
         }
     }
 }
