@@ -9,6 +9,7 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
 {
     public class Quiz : AggregateRoot
     {
+        public long AuthorId { get; private set; }
         public string QuestionText { get; private set; }
 
         private readonly List<QuizOption> _availableOptions = new();
@@ -18,8 +19,9 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
 
         private Quiz() { }
 
-        public Quiz(string questionText)
+        public Quiz(long authorId, string questionText)
         {
+            authorId = AuthorId;
             ChangeQuestionText(questionText);
         }
 
@@ -52,12 +54,6 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
 
             IsPublished = true;
         }
-
-        public void Unpublish()
-        {
-            IsPublished = false;
-        }
-
         public void AddOption(QuizOption optionData)
         {
             if (IsPublished)
@@ -100,6 +96,10 @@ namespace Explorer.Stakeholders.Core.Domain.Quizzes
             RecalculateOrdinals();
         }
 
+        public void ClearOptions()
+        {
+            _availableOptions.Clear();
+        }
 
         public bool IsAnswerCorrect(int ordinal, bool isMarkedTrue)
         {
