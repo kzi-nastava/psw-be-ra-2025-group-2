@@ -88,7 +88,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             {
                 var pagedResult = filteredTours.Skip((page - 1) * pageSize).Take(pageSize).ToList();
                 var items = pagedResult.Select(_mapper.Map<TourDto>).ToList();
-                return new PagedResult<TourDto>(items, pagedResult.Count);
+                return new PagedResult<TourDto>(items, totalCount);
             }
             else
             {
