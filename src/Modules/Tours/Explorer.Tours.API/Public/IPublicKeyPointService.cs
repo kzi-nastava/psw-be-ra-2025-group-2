@@ -10,5 +10,5 @@ public interface IPublicKeyPointService
     Task<PublicKeyPointRequestDto> ApproveRequestAsync(long requestId, long adminId);
     Task<PublicKeyPointRequestDto> SubmitRequestAsync(long tourId, int ordinalNo, long authorId);
     Task<PublicKeyPointRequestDto> RejectRequestAsync(long requestId, long adminId, string? reason);
-
+    Task DeleteRequestsBySourceAsync(long tourId, int ordinalNo);
 }

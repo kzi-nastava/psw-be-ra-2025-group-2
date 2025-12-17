@@ -57,6 +57,14 @@
     <None Update="TestData\c-tours.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  
+    <None Update="TestData\d-tour-executions.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  
+    <None Update="TestData\f-tour-reviews.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

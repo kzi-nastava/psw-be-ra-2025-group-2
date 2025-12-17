@@ -16,4 +16,6 @@ public interface IPublicKeyPointRequestRepository
     IEnumerable<PublicKeyPointRequest> GetPending();
     PublicKeyPointRequest? Get(long id);
     void Update(PublicKeyPointRequest request);
+    Task<IEnumerable<PublicKeyPointRequest>> GetBySourceAsync(long tourId, int ordinalNo);
+    Task DeleteAsync(PublicKeyPointRequest request);
 }

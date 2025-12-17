@@ -25,63 +25,26 @@ public class PublicKeyPointService : IPublicKeyPointService
         _mapper = mapper;
     }
 
-
     public async Task<PublicKeyPointRequestDto> SubmitRequestAsync(
-      long tourId,
-      int ordinalNo,
-      long authorId)
+     long tourId,
+     int ordinalNo,
+     long authorId)
     {
-        try
-        {
-            var tour = await _tourRepository.GetTourWithKeyPointsAsync(tourId);
-            if (tour == null)
-                throw new KeyNotFoundException("Tour not found.");
+        var tour = await GetTourWithKeyPointsOrThrow(tourId);
+        var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
 
-            var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
-            if (keyPoint == null)
-                throw new KeyNotFoundException("KeyPoint not found.");
+        if (keyPoint.PublicStatus == PublicPointRequestStatus.Approved)
+            throw new InvalidOperationException("This keypoint is already public.");
 
-            Console.WriteLine($"KeyPoint found: Name={keyPoint.Name}, Lat={keyPoint.Latitude}, Lon={keyPoint.Longitude}");
+        var publicKeyPoint = await GetOrCreatePublicKeyPoint(tourId, ordinalNo, keyPoint, authorId);
+        await ValidateNoPendingRequest(publicKeyPoint.Id);
 
-            var existingPublicKeyPoint = await _requestRepository
-                .GetPublicKeyPointBySourceAsync(tourId, ordinalNo);
+        var request = await CreateAndSaveRequest(publicKeyPoint.Id, authorId);
 
-            PublicKeyPoint publicKeyPoint;
+        keyPoint.SuggestForPublicUse();
+        await _tourRepository.UpdateAsync(tour);
 
-            if (existingPublicKeyPoint != null)
-            {
-                publicKeyPoint = existingPublicKeyPoint;
-            }
-            else
-            {
-                publicKeyPoint = PublicKeyPoint.CreateFromKeyPoint(keyPoint, authorId, tourId);
-
-                Console.WriteLine($"Creating PublicKeyPoint: Lat={publicKeyPoint.Latitude}, Lon={publicKeyPoint.Longitude}");
-
-                await _requestRepository.AddPublicKeyPointAsync(publicKeyPoint);
-            }
-
-            if (await _requestRepository.ExistsPendingRequestAsync(publicKeyPoint.Id))
-                throw new InvalidOperationException("A request for this item has already been sent.");
-
-            var request = new PublicKeyPointRequest(publicKeyPoint.Id, authorId);
-            await _requestRepository.AddAsync(request);
-
-            var savedRequest = await _requestRepository.GetByIdAsync(request.Id);
-
-            return _mapper.Map<PublicKeyPointRequestDto>(savedRequest);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"ERROR: {ex.GetType().Name}");
-            Console.WriteLine($"Message: {ex.Message}");
-            Console.WriteLine($"StackTrace: {ex.StackTrace}");
-            if (ex.InnerException != null)
-            {
-                Console.WriteLine($"Inner: {ex.InnerException.Message}");
-            }
-            throw;
-        }
+        return _mapper.Map<PublicKeyPointRequestDto>(request);
     }
 
     public async Task<IEnumerable<PublicKeyPointRequestDto>> GetAuthorRequestsAsync(long authorId)
@@ -95,42 +58,151 @@ public class PublicKeyPointService : IPublicKeyPointService
         var requests = await _requestRepository.GetPendingRequestsAsync();
         return _mapper.Map<IEnumerable<PublicKeyPointRequestDto>>(requests);
     }
+
     public async Task<PublicKeyPointRequestDto> ApproveRequestAsync(long requestId, long adminId)
     {
-        var request = await _requestRepository.GetByIdAsync(requestId)
-            ?? throw new KeyNotFoundException("Request not found.");
+        var request = await GetRequestOrThrow(requestId);
+        ValidateRequestIsPending(request, "approved");
 
-        request.Approve(adminId);
-        await _requestRepository.UpdateAsync(request);
+        var publicKeyPoint = await GetPublicKeyPointOrThrow(request.PublicKeyPointId);
 
-        var publicKeyPoint = await _requestRepository.GetPublicKeyPointByIdAsync(request.PublicKeyPointId);
+        await ApprovePublicKeyPoint(publicKeyPoint);
+        await ApproveRequest(request, adminId);
+        await SendApprovalNotification(request.AuthorId, publicKeyPoint.Name);
 
-        if (publicKeyPoint != null)
-        {
-            publicKeyPoint.Approve(); 
-            await _requestRepository.UpdatePublicKeyPointAsync(publicKeyPoint);
-        }
-
-        await _notificationService.NotifyAuthorApprovedAsync(request.AuthorId, "Keypoint");
-
-        return _mapper.Map<PublicKeyPointRequestDto>(request);
+        var updatedRequest = await _requestRepository.GetByIdAsync(requestId);
+        return _mapper.Map<PublicKeyPointRequestDto>(updatedRequest);
     }
 
     public async Task<PublicKeyPointRequestDto> RejectRequestAsync(long requestId, long adminId, string? reason)
     {
-        var request = await _requestRepository.GetByIdAsync(requestId)
-            ?? throw new KeyNotFoundException("Request not found.");
+        var request = await GetRequestOrThrow(requestId);
+        ValidateRequestIsPending(request, "rejected");
 
-        request.Reject(adminId, reason);
-        await _requestRepository.UpdateAsync(request);
+        await RejectRequest(request, adminId, reason);
+        await SendRejectionNotification(request.AuthorId, reason);
 
-        await _notificationService.NotifyAuthorRejectedAsync(request.AuthorId, "Keypoint", reason);
-
-        return _mapper.Map<PublicKeyPointRequestDto>(request);
+        var updatedRequest = await _requestRepository.GetByIdAsync(requestId);
+        return _mapper.Map<PublicKeyPointRequestDto>(updatedRequest);
     }
 
-    public async Task WithdrawRequestAsync(long keyPointId, long authorId)
+    public Task WithdrawRequestAsync(long keyPointId, long authorId)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Withdraw functionality is not yet implemented.");
+    }
+
+    // Private helper methods
+
+    private async Task<Tour> GetTourWithKeyPointsOrThrow(long tourId)
+    {
+        var tour = await _tourRepository.GetTourWithKeyPointsAsync(tourId);
+        if (tour == null)
+            throw new KeyNotFoundException($"Tour with ID {tourId} not found.");
+
+        return tour;
+    }
+
+    private static KeyPoint GetKeyPointFromTourOrThrow(Tour tour, int ordinalNo)
+    {
+        var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
+        if (keyPoint == null)
+            throw new KeyNotFoundException($"KeyPoint with OrdinalNo {ordinalNo} not found in tour.");
+
+        return keyPoint;
+    }
+
+    private async Task<PublicKeyPoint> GetOrCreatePublicKeyPoint(
+        long tourId,
+        int ordinalNo,
+        KeyPoint keyPoint,
+        long authorId)
+    {
+        var existingPublicKeyPoint = await _requestRepository
+            .GetPublicKeyPointBySourceAsync(tourId, ordinalNo);
+
+        if (existingPublicKeyPoint != null)
+            return existingPublicKeyPoint;
+
+        var newPublicKeyPoint = PublicKeyPoint.CreateFromKeyPoint(keyPoint, authorId, tourId);
+        await _requestRepository.AddPublicKeyPointAsync(newPublicKeyPoint);
+
+        return newPublicKeyPoint;
+    }
+
+    private async Task ValidateNoPendingRequest(long publicKeyPointId)
+    {
+        var hasPendingRequest = await _requestRepository.ExistsPendingRequestAsync(publicKeyPointId);
+        if (hasPendingRequest)
+            throw new InvalidOperationException("A pending request already exists for this keypoint.");
+    }
+
+    private async Task<PublicKeyPointRequest> CreateAndSaveRequest(long publicKeyPointId, long authorId)
+    {
+        var request = new PublicKeyPointRequest(publicKeyPointId, authorId);
+        await _requestRepository.AddAsync(request);
+
+        return await _requestRepository.GetByIdAsync(request.Id);
+    }
+
+    private async Task<PublicKeyPointRequest> GetRequestOrThrow(long requestId)
+    {
+        var request = await _requestRepository.GetByIdAsync(requestId);
+        if (request == null)
+            throw new KeyNotFoundException($"Request with ID {requestId} not found.");
+
+        return request;
+    }
+
+    private static void ValidateRequestIsPending(PublicKeyPointRequest request, string action)
+    {
+        if (request.Status != PublicKeyPointRequestStatus.Pending)
+            throw new InvalidOperationException($"Only pending requests can be {action}.");
+    }
+
+    private async Task<PublicKeyPoint> GetPublicKeyPointOrThrow(long publicKeyPointId)
+    {
+        var publicKeyPoint = await _requestRepository.GetPublicKeyPointByIdAsync(publicKeyPointId);
+        if (publicKeyPoint == null)
+            throw new KeyNotFoundException($"PublicKeyPoint with ID {publicKeyPointId} not found.");
+
+        return publicKeyPoint;
+    }
+
+    private async Task ApprovePublicKeyPoint(PublicKeyPoint publicKeyPoint)
+    {
+        publicKeyPoint.Approve();
+        await _requestRepository.UpdatePublicKeyPointAsync(publicKeyPoint);
+    }
+
+    private async Task ApproveRequest(PublicKeyPointRequest request, long adminId)
+    {
+        request.Approve(adminId);
+        await _requestRepository.UpdateAsync(request);
+    }
+
+    private async Task SendApprovalNotification(long authorId, string keyPointName)
+    {
+        await _notificationService.NotifyAuthorApprovedAsync(authorId, keyPointName);
+    }
+
+    private async Task RejectRequest(PublicKeyPointRequest request, long adminId, string? reason)
+    {
+        request.Reject(adminId, reason);
+        await _requestRepository.UpdateAsync(request);
+    }
+
+    private async Task SendRejectionNotification(long authorId, string? reason)
+    {
+        await _notificationService.NotifyAuthorRejectedAsync(authorId, "KeyPoint", reason);
+    }
+
+    public async Task DeleteRequestsBySourceAsync(long tourId, int ordinalNo)
+    {
+        var requests = await _requestRepository.GetBySourceAsync(tourId, ordinalNo);
+
+        foreach (var request in requests)
+        {
+            await _requestRepository.DeleteAsync(request);
+        }
     }
 }

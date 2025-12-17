@@ -6,12 +6,14 @@ using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
+using Explorer.Stakeholders.Core.UseCases.Internal;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Stakeholders.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Stakeholders.Infrastructure;
 
@@ -36,8 +38,15 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IShoppingCartService, ShoppingCartService>();
+
+
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
         services.AddScoped<ITouristPositionService, TouristPositionService>();
+
+        /* Internal */
+        services.AddScoped<IInternalUserService, InternalUserService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -49,6 +58,8 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 

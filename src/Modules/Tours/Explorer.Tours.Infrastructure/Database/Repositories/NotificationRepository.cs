@@ -10,7 +10,7 @@ public class NotificationRepository : INotificationRepository
 
     public NotificationRepository(ToursContext context)
     {
-        _context = context;
+        _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
     public async Task<Notification?> GetByIdAsync(long id)
@@ -20,47 +20,72 @@ public class NotificationRepository : INotificationRepository
 
     public async Task<IEnumerable<Notification>> GetByUserIdAsync(long userId)
     {
-        return await _context.Notifications
-            .Where(n => n.UserId == userId)
+        return await GetNotificationsQuery(userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(long userId)
     {
-        return await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsRead)
+        return await GetUnreadNotificationsQuery(userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
     }
 
     public async Task<int> GetUnreadCountAsync(long userId)
     {
-        return await _context.Notifications
-            .CountAsync(n => n.UserId == userId && !n.IsRead);
+        return await GetUnreadNotificationsQuery(userId).CountAsync();
     }
 
     public async Task AddAsync(Notification notification)
     {
+        ValidateNotificationNotNull(notification);
+
         await _context.Notifications.AddAsync(notification);
         await _context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(Notification notification)
     {
+        ValidateNotificationNotNull(notification);
+
         _context.Notifications.Update(notification);
         await _context.SaveChangesAsync();
     }
 
     public async Task MarkAllAsReadAsync(long userId)
     {
-        var unread = await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
+        var unreadNotifications = await GetUnreadNotificationsQuery(userId).ToListAsync();
 
-        foreach (var n in unread)
-            n.MarkAsRead();
+        if (!unreadNotifications.Any())
+            return;
 
+        MarkNotificationsAsRead(unreadNotifications);
         await _context.SaveChangesAsync();
+    }
+
+
+    private IQueryable<Notification> GetNotificationsQuery(long userId)
+    {
+        return _context.Notifications.Where(n => n.UserId == userId);
+    }
+
+    private IQueryable<Notification> GetUnreadNotificationsQuery(long userId)
+    {
+        return GetNotificationsQuery(userId).Where(n => !n.IsRead);
+    }
+
+    private static void ValidateNotificationNotNull(Notification notification)
+    {
+        if (notification == null)
+            throw new ArgumentNullException(nameof(notification));
+    }
+
+    private static void MarkNotificationsAsRead(IEnumerable<Notification> notifications)
+    {
+        foreach (var notification in notifications)
+        {
+            notification.MarkAsRead();
+        }
     }
 }

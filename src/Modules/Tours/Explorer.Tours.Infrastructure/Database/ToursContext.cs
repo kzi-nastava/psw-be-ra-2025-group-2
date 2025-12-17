@@ -1,4 +1,5 @@
 ﻿using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.Execution;
 using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Tours.Infrastructure.Database;
@@ -11,9 +12,13 @@ public class ToursContext : DbContext
     public DbSet<TourProblem> TourProblems { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Monument> Monument { get; set; }
+
     public DbSet<PublicKeyPoint> PublicKeyPoints { get; set; }
     public DbSet<PublicKeyPointRequest> PublicKeyPointRequests { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+
+    public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<TourReview> TourReviews { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 
@@ -21,9 +26,16 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
-        modelBuilder.Entity<Tour>(entity =>
+        modelBuilder.Entity<TourExecution>()
+            .HasMany(te => te.KeyPointVisits)
+            .WithOne()
+            .HasForeignKey("TourExecutionId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Tour>(builder =>
         {
-            entity.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
+
+            builder.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
             {
                 kp.WithOwner().HasForeignKey("TourId");
                 kp.Property(k => k.OrdinalNo).IsRequired();
@@ -43,16 +55,25 @@ public class ToursContext : DbContext
                     .IsRequired();
 
                 kp.Property(k => k.AuthorId).IsRequired();
-                kp.Property(k => k.PublicStatus).IsRequired().HasConversion<string>();
+                kp.Property(k => k.PublicStatus).IsRequired();
             });
 
-            entity.Navigation(t => t.KeyPoints)
-                  .HasField("_keyPoints")
-                  .UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder.OwnsMany(t => t.Durations, duration =>
+            {
+                duration.WithOwner().HasForeignKey("TourId");
+                duration.Property<int>("Id");
+                duration.HasKey("Id");
+                duration.Property(d => d.TransportType).IsRequired();
+                duration.Property(d => d.Minutes).IsRequired();
+            });
 
-            entity.HasMany(t => t.Equipment)
-                  .WithMany()
-                  .UsingEntity(j => { j.ToTable("TourEquipment"); });
+            builder.Navigation(t => t.KeyPoints)
+                   .HasField("_keyPoints")
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(t => t.Equipment)
+                   .WithMany()
+                   .UsingEntity(j => { j.ToTable("TourEquipment"); });
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>
