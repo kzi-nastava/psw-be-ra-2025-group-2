@@ -38,14 +38,25 @@ public class TourDbRepository : ITourRepository
             .ToListAsync();
     }
 
+    // Tvoja metoda sa paginacijom
     public List<Tour> GetAllPublished(int page, int pageSize)
     {
         var query = GetPublishedToursQuery();
-
         if (ShouldReturnAllResults(page, pageSize))
             return query.ToList();
-
         return ApplyPagination(query, page, pageSize).ToList();
+    }
+
+    // DEV metoda bez parametara (overload)
+    public List<Tour> GetAllPublished()
+    {
+        return GetPublishedToursQuery().ToList();
+    }
+
+    // DEV metoda
+    public List<Tour> GetAllNonDrafts()
+    {
+        return _dbSet.Include(t => t.KeyPoints).Where(t => t.Status != TourStatus.Draft).ToList();
     }
 
     public async Task UpdateAsync(Tour tour)
@@ -86,7 +97,6 @@ public class TourDbRepository : ITourRepository
     }
 
     // Private helper methods - Query builders
-
     private IQueryable<Tour> GetToursQueryWithIncludes()
     {
         return _dbSet
@@ -119,11 +129,9 @@ public class TourDbRepository : ITourRepository
     }
 
     // Private helper methods - Update operations
-
     private void UpdateEntityState(Tour tour)
     {
         var entry = DbContext.Entry(tour);
-
         if (entry.State == EntityState.Detached)
         {
             DbContext.Update(tour);
@@ -133,6 +141,4 @@ public class TourDbRepository : ITourRepository
             entry.State = EntityState.Modified;
         }
     }
-
-
 }

@@ -56,7 +56,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public TourDto Create(CreateTourDto dto)
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
-           
+
 
             if (dto.Durations != null)
             {
@@ -110,7 +110,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize)
         {
-            var tours = _tourRepository.GetAllPublished(0, 0);
+            var tours = _tourRepository.GetAllPublished();
             var filteredTours = tours
                 .Where(Tour => Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
                 .ToList();
@@ -120,7 +120,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             {
                 var pagedResult = filteredTours.Skip((page - 1) * pageSize).Take(pageSize).ToList();
                 var items = pagedResult.Select(_mapper.Map<TourDto>).ToList();
-                return new PagedResult<TourDto>(items, pagedResult.Count);
+                return new PagedResult<TourDto>(items, totalCount);
             }
             else
             {
@@ -207,7 +207,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Latitude,
                 dto.Longitude,
                 dto.AuthorId,
-                dto.SuggestForPublicUse  
+                dto.SuggestForPublicUse
             );
 
             tour.AddKeyPoint(keyPoint);
@@ -342,7 +342,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
         {
-            var tours = _tourRepository.GetAllAsync().Result;
+            // TODO refaktorisati kasnije
+            var tours = _tourRepository.GetAllNonDrafts();
 
             var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
 
@@ -402,7 +403,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 throw new InvalidOperationException(
                     "ITourReviewRepository is not configured. This method requires reviews.");
 
-            var tours = _tourRepository.GetAllPublished(0, 0);
+            var tours = _tourRepository.GetAllPublished();
 
             var result = new List<PublishedTourPreviewDto>();
 
