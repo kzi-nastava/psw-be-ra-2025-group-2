@@ -45,17 +45,12 @@ namespace Explorer.API.Controllers.Stakeholders
         [HttpPut("{id:long}")]
         public ActionResult<QuizDto> Update(long id, [FromBody] QuizDto quiz)
         {
-            if(quiz.Id != id)
+            if(id != quiz.Id)
             {
                 return BadRequest();
             }
 
-            if(quiz.AuthorId != User.UserId())
-            {
-                return Forbid();
-            }
-
-            return Ok(_quizService.Update(quiz));
+            return Ok(_quizService.Update(User.UserId(), quiz));
         }
 
         [Authorize(Policy = "authorPolicy")]
@@ -143,7 +138,7 @@ namespace Explorer.API.Controllers.Stakeholders
             {
                 return Ok(_quizService.GetAnswered(id));
             }
-            catch (ArgumentException aex)
+            catch (ArgumentException)
             {
                 return BadRequest();
             }
@@ -157,7 +152,7 @@ namespace Explorer.API.Controllers.Stakeholders
         }
 
         [HttpGet("page-count/published/{authorId:long}")]
-        public ActionResult<int> GetPageCountPublished(long authorId, [FromQuery] int pageSize)
+        public ActionResult<int> GetPageCountPublishedByAuthor(long authorId, [FromQuery] int pageSize)
         {
             return Ok(_quizService.GetPageCountByAuthorPublished(authorId, pageSize));
         }

@@ -5,3 +5,4 @@ DELETE FROM stakeholders."AppRatings";
 DELETE FROM stakeholders."AuthorAwards";
 DELETE FROM stakeholders."TourPreferences";
 DELETE FROM stakeholders."Clubs";
+DELETE FROM stakeholders."Quizzes";

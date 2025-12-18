@@ -55,13 +55,18 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<QuizDto>(result);
         }
 
-        public QuizDto Update(QuizDto quiz)
+        public QuizDto Update(long authorId, QuizDto quiz)
         {
             var existing = _quizRepository.GetById(quiz.Id);
 
             if(existing == null)
             {
                 throw new ArgumentException($"Quiz with id {quiz.Id} not found.");
+            }
+
+            if(authorId != existing.AuthorId)
+            {
+                throw new ForbiddenException("Requester Id does not match quiz author Id.");
             }
 
             existing.ChangeQuestionText(quiz.QuestionText);
@@ -155,6 +160,11 @@ namespace Explorer.Stakeholders.Core.UseCases
             if(result == null)
             {
                 throw new ArgumentException($"Quiz with id {quizId} not found.");
+            }
+
+            if (!result.IsPublished)
+            {
+                throw new InvalidOperationException("Cannot get answers of an unpublished quiz.");
             }
 
             return _mapper.Map<QuizDto>(result);
