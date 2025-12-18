@@ -56,6 +56,14 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
         {
             return _dbContext.Quizzes.Count(q => q.AuthorId == authorId);
         }
+        public long GetCountPublished()
+        {
+            return _dbContext.Quizzes.Count(q => q.IsPublished == true);
+        }
+        public long GetCountByAuthorPublished(long authorId)
+        {
+            return _dbContext.Quizzes.Count(q => q.AuthorId == authorId && q.IsPublished == true);
+        }
 
         public PagedResult<Quiz> GetPaged(int page, int pageSize)
         {
@@ -67,6 +75,20 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
         public PagedResult<Quiz> GetPagedByAuthor(long authorId, int page, int pageSize)
         {
             var task = _dbContext.Quizzes.Where(q => q.AuthorId == authorId).GetPaged(page, pageSize);
+            task.Wait();
+            return task.Result;
+        }
+
+        public PagedResult<Quiz> GetPagedPublished(int page, int pageSize)
+        {
+            var task = _dbContext.Quizzes.Where(q => q.IsPublished == true).GetPaged(page, pageSize);
+            task.Wait();
+            return task.Result;
+        }
+
+        public PagedResult<Quiz> GetPagedByAuthorPublished(long authorId, int page, int pageSize)
+        {
+            var task = _dbContext.Quizzes.Where(q => q.AuthorId == authorId && q.IsPublished == true).GetPaged(page, pageSize);
             task.Wait();
             return task.Result;
         }

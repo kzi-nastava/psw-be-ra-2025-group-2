@@ -27,7 +27,7 @@ namespace Explorer.API.Controllers.Stakeholders
         {
             if(User.UserId() != authorId)
             {
-                return Forbid("Forbidden operation - invalid rights.");
+                return Forbid();
             }
 
             return Ok(_quizService.GetPagedByAuthor(User.UserId(), page, pageSize));
@@ -47,12 +47,12 @@ namespace Explorer.API.Controllers.Stakeholders
         {
             if(quiz.Id != id)
             {
-                return BadRequest("Invalid request parameters.");
+                return BadRequest();
             }
 
             if(quiz.AuthorId != User.UserId())
             {
-                return Forbid("Forbidden operation - invalid rights");
+                return Forbid();
             }
 
             return Ok(_quizService.Update(quiz));
@@ -67,13 +67,13 @@ namespace Explorer.API.Controllers.Stakeholders
                 _quizService.Delete(User.UserId(), id);
                 return NoContent();
             }
-            catch(ForbiddenException fex)
+            catch(ForbiddenException)
             {
-                return Forbid(fex.Message);
+                return Forbid();
             }
-            catch(ArgumentException aex)
+            catch(ArgumentException)
             {
-                return NotFound(aex.Message);
+                return NotFound();
             }
         }
 
@@ -86,34 +86,45 @@ namespace Explorer.API.Controllers.Stakeholders
                 _quizService.Publish(User.UserId(), id);
                 return Ok();
             }
-            catch (InvalidOperationException iex)
+            catch (InvalidOperationException)
             {
-                return BadRequest(iex.Message);
+                return BadRequest();
             }
-            catch (ForbiddenException fex)
+            catch (ForbiddenException)
             {
-                return Forbid(fex.Message);
+                return Forbid();
             }
-            catch (ArgumentException aex)
+            catch (ArgumentException)
             {
-                return BadRequest(aex.Message);
+                return BadRequest();
             }
         }
 
+        [Authorize(Policy = "authorPolicy")]
+        [HttpGet("page-count/{authorId:long}")]
+        public ActionResult<int> GetPageCountByAuthor(long authorId, [FromQuery] int pageSize)
+        {
+            if(User.UserId() != authorId)
+            {
+                return Forbid();
+            }
+
+            return Ok(_quizService.GetPageCountByAuthor(authorId, pageSize));
+        }
 
 
         [Authorize(Policy = "touristPolicy")]
         [HttpGet]
-        public ActionResult<PagedResult<QuizDto>> GetPagedBlanks([FromQuery] int page, [FromQuery] int pageSize)
+        public ActionResult<PagedResult<QuizDto>> GetPagedPublishedBlanks([FromQuery] int page, [FromQuery] int pageSize)
         {
-            return Ok(_quizService.GetPagedBlanks(page, pageSize));
+            return Ok(_quizService.GetPagedPublishedBlanks(page, pageSize));
         }
 
         [Authorize(Policy = "touristPolicy")]
         [HttpGet("{authorId:long}")]
-        public ActionResult<PagedResult<QuizDto>> GetPagedBlanksByAuthor(long authorId, [FromQuery] int page, [FromQuery] int pageSize)
+        public ActionResult<PagedResult<QuizDto>> GetPagedPublishedBlanksByAuthor(long authorId, [FromQuery] int page, [FromQuery] int pageSize)
         {
-            return Ok(_quizService.GetPagedBlanksByAuthor(authorId, page, pageSize));
+            return Ok(_quizService.GetPagedPublishedBlanksByAuthor(authorId, page, pageSize));
         }
 
         [Authorize(Policy = "touristPolicy")]
@@ -122,7 +133,7 @@ namespace Explorer.API.Controllers.Stakeholders
         {
             if(submission.QuizId != id)
             {
-                return BadRequest("Invalid submission Id.");
+                return BadRequest();
             }
 
 
@@ -134,20 +145,21 @@ namespace Explorer.API.Controllers.Stakeholders
             }
             catch (ArgumentException aex)
             {
-                return BadRequest(aex.Message);
+                return BadRequest();
             }
         }
 
-        [HttpGet("count")]
-        public ActionResult<int> GetPageCount([FromQuery] int pageSize)
+        
+        [HttpGet("page-count/published")]
+        public ActionResult<int> GetPageCountPublished([FromQuery] int pageSize)
         {
-            return Ok(_quizService.GetPageCount(pageSize));
+            return Ok(_quizService.GetPageCountPublished(pageSize));
         }
 
-        [HttpGet("count/{authorId:long}")]
-        public ActionResult<int> GetPageCountByAuthor(long authorId, [FromQuery] int pageSize)
+        [HttpGet("page-count/published/{authorId:long}")]
+        public ActionResult<int> GetPageCountPublished(long authorId, [FromQuery] int pageSize)
         {
-            return Ok(_quizService.GetPageCountByAuthor(authorId, pageSize));
+            return Ok(_quizService.GetPageCountByAuthorPublished(authorId, pageSize));
         }
     }
 }

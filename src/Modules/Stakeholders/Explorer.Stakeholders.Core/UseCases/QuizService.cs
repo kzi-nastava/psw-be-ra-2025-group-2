@@ -114,9 +114,9 @@ namespace Explorer.Stakeholders.Core.UseCases
         }
 
         // Tourist
-        public PagedResult<QuizDto> GetPagedBlanks(int page, int pageSize)
+        public PagedResult<QuizDto> GetPagedPublishedBlanks(int page, int pageSize)
         {
-            var result = _quizRepository.GetPaged(page, pageSize);
+            var result = _quizRepository.GetPagedPublished(page, pageSize);
             var items = result.Results.Select(_mapper.Map<QuizDto>).ToList();
 
             foreach(var item in items)
@@ -131,9 +131,9 @@ namespace Explorer.Stakeholders.Core.UseCases
             return new PagedResult<QuizDto>(items, items.Count);
         }
 
-        public PagedResult<QuizDto> GetPagedBlanksByAuthor(long authorId, int page, int pageSize)
+        public PagedResult<QuizDto> GetPagedPublishedBlanksByAuthor(long authorId, int page, int pageSize)
         {
-            var result = _quizRepository.GetPagedByAuthor(authorId, page, pageSize);
+            var result = _quizRepository.GetPagedByAuthorPublished(authorId, page, pageSize);
             var items = result.Results.Select(_mapper.Map<QuizDto>).ToList();
 
             foreach(var item in items)
@@ -164,15 +164,33 @@ namespace Explorer.Stakeholders.Core.UseCases
         public int GetPageCount(int pageSize)
         {
             var total = _quizRepository.GetCount();
+            if (total == 0) return (int)total;
 
-            return (int)Math.Ceiling((double)total / pageSize);
+            return pageSize <= 0 ? 1 : (int)Math.Ceiling((double)total / pageSize);
         }
 
         public int GetPageCountByAuthor(long authorId, int pageSize)
         {
             var totalByAuthor = _quizRepository.GetCountByAuthor(authorId);
+            if (totalByAuthor == 0) return (int)totalByAuthor;
 
-            return (int)Math.Ceiling((double)totalByAuthor / pageSize);
+            return pageSize <= 0 ? 1 : (int)Math.Ceiling((double)totalByAuthor / pageSize);
+        }
+
+        public int GetPageCountPublished(int pageSize)
+        {
+            var total = _quizRepository.GetCountPublished();
+            if (total == 0) return (int)total;
+
+            return pageSize <= 0 ? 1 : (int)Math.Ceiling((double)total / pageSize);
+        }
+
+        public int GetPageCountByAuthorPublished(long authorId, int pageSize)
+        {
+            var totalByAuthor = _quizRepository.GetCountByAuthorPublished(authorId);
+            if (totalByAuthor == 0) return (int)totalByAuthor;
+
+            return pageSize <= 0 ? 1 : (int)Math.Ceiling((double)totalByAuthor / pageSize);
         }
     }
 }

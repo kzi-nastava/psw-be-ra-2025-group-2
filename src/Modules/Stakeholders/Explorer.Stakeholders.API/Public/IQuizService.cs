@@ -18,13 +18,17 @@ namespace Explorer.Stakeholders.API.Public
         public void Publish(long authorId, long quizId);
         public void Delete(long authorId, long quizId);
 
+        public int GetPageCount(int pageSize);
+        public int GetPageCountByAuthor(long authorId, int pageSize);
+
         // Tourist functions
-        public PagedResult<QuizDto> GetPagedBlanksByAuthor(long authorId, int page, int pageSize);
-        public PagedResult<QuizDto> GetPagedBlanks(int page, int pageSize);
+        public PagedResult<QuizDto> GetPagedPublishedBlanksByAuthor(long authorId, int page, int pageSize);
+        public PagedResult<QuizDto> GetPagedPublishedBlanks(int page, int pageSize);
         public QuizDto GetAnswered(long quizId);
 
         // Common
-        public int GetPageCount(int pageSize);
-        public int GetPageCountByAuthor(long authorId, int pageSize);
+        
+        public int GetPageCountPublished(int pageSize);
+        public int GetPageCountByAuthorPublished(long authorId, int pageSize);
     }
 }
