@@ -42,11 +42,16 @@ public class TourDbRepository : ITourRepository
             .ToListAsync();
     }
 
-    public List<Tour> GetAllPublished(int page, int pageSize)
+    public List<Tour> GetAllPublished()
     {
         var tours = _dbSet.Include(t => t.KeyPoints).Where(t => t.Status == TourStatus.Published).ToList();
         return tours;
 
+    }
+
+    public List<Tour> GetAllNonDrafts()
+    {
+        return _dbSet.Include(t => t.KeyPoints).Where(t => t.Status != TourStatus.Draft).ToList();
     }
 
     public async Task UpdateAsync(Tour tour)
@@ -66,11 +71,5 @@ public class TourDbRepository : ITourRepository
     {
         _dbSet.Remove(tour);
         await DbContext.SaveChangesAsync();
-    }
-
-    public async Task<IEnumerable<Tour?>> GetAllAsync()
-    {
-        // TODO promeniti kasnije, ovo je radi demonstracije
-        return await _dbSet.Include(t => t.KeyPoints).ToListAsync();
     }
 }

@@ -6,7 +6,7 @@ using Explorer.Blog.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Blog.API.Controllers.Tourist.Blog
 {
-    [Authorize(Policy = "touristPolicy")]
+    //[Authorize(Policy = "touristPolicy")]
     [Route("api/blogpost/comments")]
     [ApiController]
     public class CommentController : ControllerBase

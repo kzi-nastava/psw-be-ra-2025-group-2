@@ -14,6 +14,7 @@ using Explorer.Stakeholders.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Stakeholders.Infrastructure;
 
@@ -38,8 +39,11 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+
         services.AddScoped<IDiaryService, DiaryService>();
         services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
+        services.AddScoped<INotificationService, NotificationService>();
+
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
 
 
