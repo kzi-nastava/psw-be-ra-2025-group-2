@@ -8,11 +8,16 @@ using Explorer.Stakeholders.Core.Domain;
 using Explorer.API.Controllers.Tourist;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+
 namespace Explorer.Stakeholders.Tests.Integration.Diaries;
+
 [Collection("Sequential")]
 public class DiaryTests : BaseStakeholdersIntegrationTest
 {
     public DiaryTests(StakeholdersTestFactory factory) : base(factory) { }
+
+
+
     [Fact]
     public void Successfully_creates_diary()
     {
@@ -30,6 +35,14 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
             new Claim("id", "-1")
             })
         );
+
+        // Cleanup - obriši ako već postoji
+        var existingDiary = dbContext.Diaries.FirstOrDefault(d => d.Id == -100);
+        if (existingDiary != null)
+        {
+            dbContext.Diaries.Remove(existingDiary);
+            dbContext.SaveChanges();
+        }
 
         var diary = new DiaryDto
         {
@@ -60,7 +73,6 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
         storedDiary.UserId.ShouldBe(-1);
     }
 
-
     [Fact]
     public void Successfully_deletes_diary()
     {
@@ -68,18 +80,33 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
         var controller = CreateController(scope);
+
         controller.ControllerContext = new ControllerContext();
         controller.ControllerContext.HttpContext = new DefaultHttpContext();
         controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
             new ClaimsIdentity(new[]
             {
-            new Claim("id", "-1")
+                new Claim("id", "-1")
             })
         );
 
+        // Prvo kreiraj diary koji ćeš obrisati
+        var diaryToDelete = new DiaryDto
+        {
+            Id = -101,
+            UserId = -1,
+            Name = "Diary to Delete",
+            CreatedAt = DateTime.UtcNow,
+            Status = "1",
+            Country = "Serbia",
+            City = "Novi Sad"
+        };
+
+        controller.Create(diaryToDelete);
 
         // Act
-        var actionResult = controller.Delete(-1);
+        var actionResult = controller.Delete(-101);
+
         if (actionResult is OkResult okResult)
         {
             okResult.ShouldNotBeNull();
@@ -92,23 +119,17 @@ public class DiaryTests : BaseStakeholdersIntegrationTest
         }
         else
         {
-            actionResult.ShouldNotBeNull(); // Will fail if neither type is returned
+            actionResult.ShouldNotBeNull();
         }
-
 
         // Assert - Database
         dbContext.ChangeTracker.Clear();
-        var storedDiary = dbContext.Diaries.FirstOrDefault(d => d.Id == -100);
+        var storedDiary = dbContext.Diaries.FirstOrDefault(d => d.Id == -101);
         storedDiary.ShouldBeNull();
     }
 
-
-
     private static DiaryController CreateController(IServiceScope scope)
     {
-      return new DiaryController(scope.ServiceProvider.GetRequiredService<IDiaryService>());
+        return new DiaryController(scope.ServiceProvider.GetRequiredService<IDiaryService>());
     }
-
-
 }
-
