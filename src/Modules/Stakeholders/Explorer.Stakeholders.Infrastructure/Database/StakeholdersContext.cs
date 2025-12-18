@@ -13,9 +13,13 @@ public class StakeholdersContext : DbContext
     public DbSet<AuthorAwards> AuthorAwards { get; set; }
     public DbSet<AppRating> AppRatings { get; set; }
     public DbSet<Club> Clubs { get; set; }
+
+    public DbSet<Diary> Diaries { get; set; }
+
     public DbSet<TouristPosition> TouristPositions { get; set; }
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
