@@ -29,9 +29,9 @@ public class ShoppingCart : Entity
         {
             throw new InvalidOperationException("Tour is already in the cart");
         }
-        if (price.Amount <= 0)
+        if (price.Amount < 0)
         {
-            throw new ArgumentException("Tour price must be greater than 0");
+            throw new ArgumentException("Tour price cannot be negative");
         }
         var priceInEur = new Money(price.Amount); 
         var item = new OrderItem(this.Id, tourId, tourName, priceInEur); Items.Add(item);
