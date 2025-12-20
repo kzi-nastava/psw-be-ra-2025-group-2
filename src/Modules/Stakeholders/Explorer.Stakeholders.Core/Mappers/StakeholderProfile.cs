@@ -2,7 +2,9 @@ using AutoMapper;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.BuildingBlocks.Core.Domain;
-using Explorer.Stakeholders.Core.Domain.ShoppingCarts; 
+using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+using Explorer.Stakeholders.Core.Domain.Quizzes;
+using Explorer.Stakeholders.API.Dtos.Quizzes;
 
 
 
@@ -37,5 +39,7 @@ public class StakeholderProfile : Profile
         CreateMap<OrderItem, OrderItemDto>().ReverseMap();
         CreateMap<Money, MoneyDto>().ReverseMap();
 
+        CreateMap<QuizOption, QuizOptionDto>();
+        CreateMap<Quiz, QuizDto>();
     }
 }

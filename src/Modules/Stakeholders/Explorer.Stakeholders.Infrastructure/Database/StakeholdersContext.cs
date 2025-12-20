@@ -1,4 +1,5 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ public class StakeholdersContext : DbContext
     public DbSet<TouristPosition> TouristPositions { get; set; }
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Quiz> Quizzes { get; set; }
 
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
@@ -32,6 +34,13 @@ public class StakeholdersContext : DbContext
         modelBuilder.ApplyConfiguration(new ShoppingCartConfiguration());
 
         modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
+
+        modelBuilder.Entity<Quiz>(builder =>
+        {
+            builder.OwnsMany(q => q.AvailableOptions, b => b.ToJson());
+
+            builder.Navigation(q => q.AvailableOptions).HasField("_availableOptions").UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
 
         ConfigureStakeholder(modelBuilder);
     }
