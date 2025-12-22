@@ -1,9 +1,10 @@
-﻿/*using Explorer.API.Controllers.Tourist;
+﻿using Explorer.API.Controllers.Tourist;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.Core.Domain.Execution;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // Dodato za .Include ako zatreba proveru baze
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -19,33 +20,89 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope, "-21"); // Koristim -21 jer on obično ima seed-ovan Execution
+        var controller = CreateController(scope, "-23");
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        // 1. Fetch the Execution
+        var execution = dbContext.TourExecutions
+            .FirstOrDefault(e => e.TouristId == -23 && e.TourId == -1);
+
+        if (execution != null)
+        {
+            // A) Fix "7 days" rule
+            execution.RecordActivity();
+
+            // B) Fix "35% progress" rule via Reflection
+            var visitsField = typeof(TourExecution).GetField("_keyPointVisits",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (visitsField != null)
+            {
+                var visits = (List<KeyPointVisit>)visitsField.GetValue(execution);
+                visits.Clear();
+
+                // Ensure we add at least one visit if count is 0, otherwise fill all
+                int countToFill = execution.KeyPointsCount > 0 ? execution.KeyPointsCount : 5;
+
+                for (int i = 1; i <= countToFill; i++)
+                {
+                    visits.Add(new KeyPointVisit(i, DateTime.UtcNow));
+                }
+            }
+
+            // --- CRITICAL FIX START ---
+            // Force EF Core to detect that the entity is modified.
+            // This is required because we bypassed the public interface using Reflection.
+            dbContext.Entry(execution).State = EntityState.Modified;
+
+            // Also explicitly tell EF that the navigation collection has changed/is modified
+            // (Only necessary if KeyPointVisit is a separate entity/table, but good practice here)
+            // If KeyPointVisit is a value object (Owned Type), setting State=Modified above is usually enough.
+            // If it's a separate table, we might need to add them to the context, but let's try the simple fix first.
+
+            dbContext.SaveChanges();
+
+            // Detach the entity to ensure the Controller fetches a fresh copy from the DB
+            // This guarantees the test proves the data was actually saved.
+            dbContext.Entry(execution).State = EntityState.Detached;
+            // --- CRITICAL FIX END ---
+        }
 
         var newEntity = new TourReviewDto
         {
             TourId = -1,
-            ExecutionId = -1, // Nije presudno jer servis sam traži execution, ali neka stoji
+            ExecutionId = -1,
             Rating = 5,
             Comment = "Odlična tura, preporučujem!",
             Images = new List<string> { "new_image.jpg" },
-            TouristId = -21,
+            TouristId = -23,
             ReviewDate = DateTime.UtcNow,
-            CompletedPercentage = 100 // Servis će ovo preračunati, ali šaljemo ga
+            CompletedPercentage = 100
         };
 
         // Act
-        // OVDE JE PROMENA: Zovemo RateTour umesto Create
-        var response = ((ObjectResult)controller.RateTour(newEntity).Result)?.Value as TourReviewDto;
+        var result = (ObjectResult)controller.RateTour(newEntity).Result;
 
-        // Assert - Response
+        // Assert
+        result.ShouldNotBeNull();
+
+        // If this still fails, I've added a debugging step below to print the error
+        if (result.StatusCode == 400)
+        {
+            // This will show up in the Test Output if it fails
+            throw new Exception($"Controller returned 400. Message: {result.Value}");
+        }
+
+        result.StatusCode.ShouldBe(200);
+
+        var response = result.Value as TourReviewDto;
         response.ShouldNotBeNull();
         response.TourId.ShouldBe(-1);
         response.Comment.ShouldBe(newEntity.Comment);
         response.Rating.ShouldBe(newEntity.Rating);
 
-        // Assert - Database
-        // Proveravamo da li je recenzija upisana u listu recenzija Ture
+        // Assert - Database check
+        // Re-fetch context for assertion to ensure we aren't reading cached data
         var tourInDb = dbContext.Tours
             .Include(t => t.Reviews)
             .FirstOrDefault(t => t.Id == -1);
@@ -66,21 +123,18 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
         {
             TourId = -1,
             ExecutionId = -1,
-            Rating = 10, // Neispravna ocena
+            Rating = 10, // Neispravna ocena (mora biti 1-5)
             Comment = "Test"
         };
 
         // Act
-        // Zovemo RateTour
         var result = (ObjectResult)controller.RateTour(newEntity).Result;
 
         // Assert
         result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe(400); // BadRequest zbog validacije
+        // Sada će ovo proći jer smo u kontroler dodali try-catch koji vraća 400
+        result.StatusCode.ShouldBe(400);
     }
-
-    // NAPOMENA: Update testove smo izbacili jer trenutno nemamo endpoint za Update recenzije
-    // unutar TourController-a (samo RateTour). Ako dodaš Update endpoint, vrati testove.
 
     private static TourController CreateController(IServiceScope scope, string userId)
     {
@@ -91,4 +145,4 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
             ControllerContext = BuildContext(userId)
         };
     }
-}*/
+}

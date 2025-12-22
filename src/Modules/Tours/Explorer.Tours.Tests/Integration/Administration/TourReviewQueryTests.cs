@@ -1,4 +1,4 @@
-﻿/*using Explorer.API.Controllers.Tourist;
+﻿using Explorer.API.Controllers.Tourist;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Mvc;
@@ -46,4 +46,4 @@ public class TourReviewQueryTests : BaseToursIntegrationTest
             ControllerContext = BuildContext("-21")
         };
     }
-}*/
+}

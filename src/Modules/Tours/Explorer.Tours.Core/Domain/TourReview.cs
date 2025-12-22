@@ -5,6 +5,7 @@ public class TourReview : Entity
 {
     public long TourId { get; private set; }
     public long TouristId { get; private set; }
+    public long ExecutionId { get; private set; }
     public int Rating { get; private set; }
     public string Comment { get; private set; }
     public DateTime ReviewDate { get; private set; }
@@ -13,10 +14,11 @@ public class TourReview : Entity
 
     public TourReview() { }
 
-    public TourReview(long tourId, long touristId, int rating, string comment, DateTime reviewDate, float completedPercentage, List<string> images)
+    public TourReview(long tourId, long touristId, long executionId, int rating, string comment, DateTime reviewDate, float completedPercentage, List<string> images)
     {
         TourId = tourId;
         TouristId = touristId;
+        ExecutionId = executionId;
         Rating = rating;
         Comment = comment;
         ReviewDate = reviewDate;

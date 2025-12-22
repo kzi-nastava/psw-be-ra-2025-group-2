@@ -55,13 +55,13 @@ namespace Explorer.API.Controllers.Tourist
                 );
                 return Ok(result);
             }
-            catch (InvalidOperationException e)
-            {
-                return BadRequest(e.Message);
-            }
             catch (KeyNotFoundException e)
             {
                 return NotFound(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
         }
 

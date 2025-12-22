@@ -393,7 +393,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             if (percentage < 35.0)
                 throw new InvalidOperationException($"You have completed only {percentage:F1}% of the tour. You need at least 35% to leave a review.");
 
-            var review = new TourReview(tourId, touristId, rating, comment, DateTime.UtcNow, (float)percentage, images);
+            var review = new TourReview(tourId, touristId, execution.Id , rating, comment, DateTime.UtcNow, (float)percentage, images);
 
             tour.AddReview(review);
 
