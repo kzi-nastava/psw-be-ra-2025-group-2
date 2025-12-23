@@ -26,10 +26,8 @@ namespace Explorer.Payments.Infrastructure
 
         private static void SetupCore(IServiceCollection services)
         {
-
-            // Primer:
-            // services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IShoppingCartService, ShoppingCartService>();
+            services.AddScoped<IPurchaseService, PurchaseService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
@@ -37,6 +35,9 @@ namespace Explorer.Payments.Infrastructure
             // Primer:
             // services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+            services.AddScoped<ITourPurchaseTokenRepository, TourPurchaseTokenRepository>();
+
+
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("payments"));
             dataSourceBuilder.EnableDynamicJson();
             var dataSource = dataSourceBuilder.Build();

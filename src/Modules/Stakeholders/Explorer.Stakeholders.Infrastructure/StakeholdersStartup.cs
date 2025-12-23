@@ -64,11 +64,7 @@ public static class StakeholdersStartup
 
         services.AddScoped<IDiaryRepository, DiaryDbRepository>();      
 
-<<<<<<< HEAD
-=======
-        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
-        services.AddScoped<ITourPurchaseTokenRepository, TourPurchaseTokenRepository>();
->>>>>>> feat/shopping-cart-token-generation-and-checkout
+
         services.AddScoped<IQuizRepository, QuizDbRepository>();
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
