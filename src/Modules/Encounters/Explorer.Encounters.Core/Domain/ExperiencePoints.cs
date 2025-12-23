@@ -49,7 +49,7 @@ namespace Explorer.Encounters.Core.Domain
         public static bool operator >(ExperiencePoints a, ExperiencePoints b) => a.Value > b.Value;
         public static bool operator <=(ExperiencePoints a, ExperiencePoints b) => a.Value <= b.Value;
         public static bool operator >=(ExperiencePoints a, ExperiencePoints b) => a.Value >= b.Value;
-        public static bool operator ==(ExperiencePoints a, ExperiencePoints b) => a.Equals(b);
+        public static bool operator ==(ExperiencePoints a, ExperiencePoints b) => a is null ? b is null : a.Equals(b);
         public static bool operator !=(ExperiencePoints a, ExperiencePoints b) => !(a == b);
 
         public static implicit operator int(ExperiencePoints x) => x.Value;
