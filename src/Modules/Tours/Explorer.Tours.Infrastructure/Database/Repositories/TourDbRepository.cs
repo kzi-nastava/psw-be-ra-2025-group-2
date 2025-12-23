@@ -31,27 +31,35 @@ public class TourDbRepository : ITourRepository
         return await _dbSet
             .Include(t => t.Equipment)
             .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews) 
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
         return await _dbSet
-             .Include(t => t.KeyPoints)
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
     }
 
     public List<Tour> GetAllPublished()
     {
-        var tours = _dbSet.Include(t => t.KeyPoints).Where(t => t.Status == TourStatus.Published).ToList();
-        return tours;
-
+        return _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews)
+            .Where(t => t.Status == TourStatus.Published)
+            .ToList();
     }
 
     public List<Tour> GetAllNonDrafts()
     {
-        return _dbSet.Include(t => t.KeyPoints).Where(t => t.Status != TourStatus.Draft).ToList();
+        return _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews) 
+            .Where(t => t.Status != TourStatus.Draft)
+            .ToList();
     }
 
     public async Task UpdateAsync(Tour tour)

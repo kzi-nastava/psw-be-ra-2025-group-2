@@ -53,7 +53,16 @@ public class ToursContext : DbContext
             });
 
             builder.Navigation(t => t.KeyPoints)
-                   .HasField("_keyPoints")
+                    .HasField("_keyPoints")
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(t => t.Reviews)
+                   .WithOne()
+                   .HasForeignKey(r => r.TourId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(t => t.Reviews)
+                   .HasField("_reviews")
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
 
             builder

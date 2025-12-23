@@ -8,6 +8,7 @@ public class PaymentsContext : DbContext
 {
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<TourPurchaseToken> TourPurchaseTokens { get; set; }
 
     public PaymentsContext(DbContextOptions<PaymentsContext> options)
         : base(options)

@@ -16,7 +16,7 @@ public class StakeholdersContext : DbContext
     public DbSet<Diary> Diaries { get; set; }
 
     public DbSet<TouristPosition> TouristPositions { get; set; }
-  
+
     public DbSet<Quiz> Quizzes { get; set; }
 
 
