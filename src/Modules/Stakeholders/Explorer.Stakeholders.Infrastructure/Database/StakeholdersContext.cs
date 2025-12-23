@@ -20,6 +20,7 @@ public class StakeholdersContext : DbContext
     public DbSet<TouristPosition> TouristPositions { get; set; }
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<TourPurchaseToken> TourPurchaseTokens { get; set; }
     public DbSet<Quiz> Quizzes { get; set; }
 
 
