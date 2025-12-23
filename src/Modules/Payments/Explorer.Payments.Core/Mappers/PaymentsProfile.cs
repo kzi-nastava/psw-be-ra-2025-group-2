@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 
 
 namespace Explorer.Payments.Core.Mappers
@@ -7,7 +9,11 @@ namespace Explorer.Payments.Core.Mappers
     {
         public PaymentsProfile()
         {
-          
+            CreateMap<ShoppingCart, ShoppingCartDto>()
+              .ForMember(dest => dest.ItemCount, opt => opt.MapFrom(src => src.GetItemCount())) // Eksplicitno mapiranje metode u property
+              .ReverseMap();
+            CreateMap<OrderItem, OrderItemDto>().ReverseMap();
+            CreateMap<Money, MoneyDto>().ReverseMap();
         }
     }
 }

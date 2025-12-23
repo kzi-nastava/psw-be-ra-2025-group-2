@@ -10,9 +10,4 @@
     <ProjectReference Include="..\Explorer.Payments.API\Explorer.Payments.API.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Domain\" />
-    <Folder Include="UseCases\" />
-  </ItemGroup>
-
 </Project>
