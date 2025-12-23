@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Explorer.BuildingBlocks.Core.Domain;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Mappers.Converters;
@@ -29,7 +31,7 @@ namespace Explorer.Encounters.Core.Mappers
 
             CreateMap<CreateEncounterDto, Encounter>().ConstructUsing((src, ctx) => new Encounter(src.Name,
                 src.Description,
-                new BuildingBlocks.Core.Domain.GeoLocation(src.Latitude, src.Longitude),
+                new GeoLocation(src.Latitude, src.Longitude),
                 new ExperiencePoints(src.XP),
                 ctx.Mapper.Map<EncounterType>(src.Type)));
         }
