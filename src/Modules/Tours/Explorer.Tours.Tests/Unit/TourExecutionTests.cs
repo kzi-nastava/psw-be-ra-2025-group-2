@@ -32,7 +32,7 @@ namespace Explorer.Tours.Tests.Unit
             execution.Start();
 
             execution.State.ShouldBe(TourExecutionState.InProgress);
-            execution.LastActivityTimestamp.Date.ShouldBe(DateTime.Today);
+            execution.LastActivityTimestamp.Date.ShouldBe(DateTime.UtcNow.Date);
 
             Should.Throw<TourExecutionStateException>(execution.Start);
         }

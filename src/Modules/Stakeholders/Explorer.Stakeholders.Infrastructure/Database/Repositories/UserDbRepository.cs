@@ -69,4 +69,26 @@ public class UserDbRepository : IUserRepository
     {
         return _dbContext.Users.FirstOrDefault(p => p.Id == personId);
     }
+    public User? Get(long id)
+    {
+        return _dbContext.Users.FirstOrDefault(u => u.Id == id);
+    }
+
+    public List<User> GetTourists(string? query)
+    {
+        var usersQuery = _dbContext.Users
+            .Where(u => u.Role == UserRole.Tourist)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var q = query.Trim().ToLowerInvariant();
+            usersQuery = usersQuery.Where(u => u.Username.ToLower().Contains(q));
+        }
+
+        return usersQuery
+            .OrderBy(u => u.Username)
+            .Take(3)
+            .ToList();
+    }
 }

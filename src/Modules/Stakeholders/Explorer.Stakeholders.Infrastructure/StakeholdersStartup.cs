@@ -4,6 +4,7 @@ using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
+using Explorer.Stakeholders.Core.Services;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
 using Explorer.Stakeholders.Core.UseCases.Internal;
@@ -13,6 +14,7 @@ using Explorer.Stakeholders.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Stakeholders.Infrastructure;
 
@@ -37,9 +39,14 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IDiaryService, DiaryService>();
+        services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
+        services.AddScoped<INotificationService, NotificationService>();
+
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
         services.AddScoped<IPurchaseService, PurchaseService>();
-
+        services.AddScoped<IQuizService, QuizService>();
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
         services.AddScoped<ITouristPositionService, TouristPositionService>();
 
@@ -58,8 +65,10 @@ public static class StakeholdersStartup
         services.AddScoped<IClubRepository, ClubDbRepository>();
         services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         services.AddScoped<ITourPurchaseTokenRepository, TourPurchaseTokenRepository>();
-
+        services.AddScoped<IDiaryRepository, DiaryDbRepository>();      
+        services.AddScoped<IQuizRepository, QuizDbRepository>();
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
+
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();

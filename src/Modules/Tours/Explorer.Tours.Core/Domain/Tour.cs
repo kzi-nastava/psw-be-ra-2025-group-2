@@ -23,6 +23,9 @@ public class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
+
+    public decimal? LengthKm { get; private set; }
+
     public List<TourDuration> Durations { get; private set; } = new();
     public DateTime? PublishedAt { get; private set; }
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
@@ -30,6 +33,9 @@ public class Tour : AggregateRoot
    
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
+
+    private readonly List<TourReview> _reviews = new();
+    public IReadOnlyList<TourReview> Reviews => _reviews.AsReadOnly();
 
 
     public Tour() { }
@@ -55,6 +61,8 @@ public class Tour : AggregateRoot
 
         Status = TourStatus.Draft;
         Price = 0m;
+        LengthKm = 0m;
+
         ArchivedAt = null;
     }
 
@@ -124,6 +132,7 @@ public class Tour : AggregateRoot
         var kp = _keyPoints.FirstOrDefault(k => k.OrdinalNo == ordinalNo);
         if (kp != null)
             _keyPoints.Remove(kp);
+        UpdateLengthForKeyPoints();
     }
 
     public void UpdateKeyPoint(int ordinalNo, KeyPointUpdate update)
@@ -148,7 +157,11 @@ public class Tour : AggregateRoot
         _keyPoints[_keyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
     }
 
-    public void ClearKeyPoints() => _keyPoints.Clear();
+    public void ClearKeyPoints()
+    {
+        _keyPoints.Clear();
+        LengthKm = 0m;
+    }
 
     private void RecalculateKeyPointOrdinals()
     {
@@ -202,6 +215,38 @@ public class Tour : AggregateRoot
         PublishedAt = DateTime.UtcNow;
     }
 
+    public void SetLength(decimal? lengthKm)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("It is not possible to change the length of an archived tour.");
+
+        if (!lengthKm.HasValue)
+        {
+            LengthKm = null;
+            return;
+        }
+
+        UpdateLengthForKeyPoints();
+
+        if (lengthKm < 0)
+            throw new ArgumentOutOfRangeException(nameof(lengthKm), "Distance cannot be negative.");
+        if (lengthKm > 2000)
+            throw new ArgumentOutOfRangeException(nameof(lengthKm), "Distance cannot exceed 2000 km.");
+
+        LengthKm = lengthKm;
+    }
+
+    private void UpdateLengthForKeyPoints()
+    {
+        if (_keyPoints.Count < 2)
+        {
+            LengthKm = 0m;
+            return;
+        }
+
+        
+    }
+
 
     public void AddOrUpdateDuration(TransportType transportType, int minutes)
     {
@@ -215,5 +260,40 @@ public class Tour : AggregateRoot
         }
 
         Durations.Add(new TourDuration(transportType, minutes));
+    }
+
+    public void AddReview(TourReview review)
+    {
+        if (review == null) throw new ArgumentNullException(nameof(review));
+
+        var existing = _reviews.FirstOrDefault(r => r.TouristId == review.TouristId);
+        if (existing != null)
+        {
+            throw new InvalidOperationException("Tourist has already reviewed this tour.");
+        }
+
+        _reviews.Add(review);
+    }
+
+    public void UpdateReview(long touristId, int rating, string comment, List<string> images)
+    {
+        var review = _reviews.FirstOrDefault(r => r.TouristId == touristId);
+        if (review == null) throw new InvalidOperationException("Review not found.");
+
+        review.Update(rating, comment, images);
+    }
+
+    public void DeleteReview(long touristId)
+    {
+        var review = _reviews.FirstOrDefault(r => r.TouristId == touristId);
+        if (review == null) throw new InvalidOperationException("Review not found.");
+
+        _reviews.Remove(review);
+    }
+
+    public double GetAverageRating()
+    {
+        if (_reviews.Count == 0) return 0;
+        return _reviews.Average(r => r.Rating);
     }
 }

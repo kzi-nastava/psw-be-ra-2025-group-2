@@ -107,5 +107,68 @@ namespace Explorer.Tours.Tests.Unit.Domain
 
             tour.KeyPoints.Count.ShouldBe(0);
         }
+
+        [Fact]
+        public void Length_isZero_whenLessThanTwoKeyPoints()
+        {
+            var tour = new Tour("Test Tour", "Desc", 3, 1);
+            tour.AddKeyPoint(new KeyPoint(1, "KP1", "Desc", "Secret", "img.png", 45, 19));
+
+            tour.LengthKm.ShouldBe(0m);
+        }
+
+       
+            [Fact]
+            public void SetLength_updatesLength_whenValid()
+            {
+                var tour = new Tour("Test Tour", "Desc", 3, 1);
+
+                tour.SetLength(12.5m);
+
+                tour.LengthKm.ShouldBe(12.5m);
+            }
+
+            [Fact]
+            public void SetLength_throws_whenNegative()
+            {
+                var tour = new Tour("Test Tour", "Desc", 3, 1);
+
+                Should.Throw<ArgumentOutOfRangeException>(() => tour.SetLength(-1m));
+            }
+
+            [Fact]
+            public void SetLength_throws_whenExceedsMax()
+            {
+                var tour = new Tour("Test Tour", "Desc", 3, 1);
+
+                Should.Throw<ArgumentOutOfRangeException>(() => tour.SetLength(2500m));
+            }
+
+            [Fact]
+            public void SetLength_throws_whenTourIsArchived()
+            {
+                var tour = new Tour("Test Tour", "Desc", 3, 1);
+                tour.SetStatus(TourStatus.Published);
+                tour.Archive(DateTime.UtcNow);
+
+                Should.Throw<InvalidOperationException>(() => tour.SetLength(10m));
+            }
+        
+    
+
+
+    [Fact]
+        public void Length_isZero_afterRemovingKeyPoint_whenLessThanTwoRemain()
+        {
+            var tour = new Tour("Test Tour", "Desc", 3, 1);
+            tour.AddKeyPoint(new KeyPoint(1, "KP1", "Desc", "Secret", "img.png", 45, 19));
+            tour.AddKeyPoint(new KeyPoint(2, "KP2", "Desc", "Secret", "img2.png", 46, 20));
+
+            tour.RemoveKeyPoint(2);
+
+            tour.LengthKm.ShouldBe(0m);
+        }
+
+
     }
 }

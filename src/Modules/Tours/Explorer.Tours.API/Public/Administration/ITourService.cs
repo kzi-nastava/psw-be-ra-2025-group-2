@@ -28,11 +28,17 @@ namespace Explorer.Tours.API.Public.Administration
         List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId);
         public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId);
         void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
+        List<PublishedTourPreviewDto> GetPublishedForTourist();
 
         /* Tourist's options */
 
         // TODO Promeniti kasnije
         IEnumerable<TourDto> GetAvailableForTourist(long touristId);
+
+        public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images);
+
+        public TourReviewDto UpdateReview(TourReviewDto reviewDto);
+        void DeleteReview(long touristId, long tourId);
     }
-    
+
 }

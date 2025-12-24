@@ -11,5 +11,6 @@ namespace Explorer.Stakeholders.API.Internal
         public long? GetActiveTourIdByUserId(long userId);
         public long SetActiveTourIdByUserId(long userId, long tourId);
         public void ResetActiveTourIdByUserId(long userId);
+        InternalUserDto? GetById(long userId);
     }
 }
