@@ -37,6 +37,9 @@ public class Tour : AggregateRoot
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
 
+    private readonly List<TourReview> _reviews = new();
+    public IReadOnlyList<TourReview> Reviews => _reviews.AsReadOnly();
+
 
     public Tour() { }
 
@@ -215,10 +218,16 @@ public class Tour : AggregateRoot
         PublishedAt = DateTime.UtcNow;
     }
 
-    public void SetLength(decimal lengthKm)
+    public void SetLength(decimal? lengthKm)
     {
         if (Status == TourStatus.Archived)
             throw new InvalidOperationException("It is not possible to change the length of an archived tour.");
+
+        if (!lengthKm.HasValue)
+        {
+            LengthKm = null;
+            return;
+        }
 
         UpdateLengthForKeyPoints();
 
@@ -254,5 +263,40 @@ public class Tour : AggregateRoot
         }
 
         Durations.Add(new TourDuration(transportType, minutes));
+    }
+
+    public void AddReview(TourReview review)
+    {
+        if (review == null) throw new ArgumentNullException(nameof(review));
+
+        var existing = _reviews.FirstOrDefault(r => r.TouristId == review.TouristId);
+        if (existing != null)
+        {
+            throw new InvalidOperationException("Tourist has already reviewed this tour.");
+        }
+
+        _reviews.Add(review);
+    }
+
+    public void UpdateReview(long touristId, int rating, string comment, List<string> images)
+    {
+        var review = _reviews.FirstOrDefault(r => r.TouristId == touristId);
+        if (review == null) throw new InvalidOperationException("Review not found.");
+
+        review.Update(rating, comment, images);
+    }
+
+    public void DeleteReview(long touristId)
+    {
+        var review = _reviews.FirstOrDefault(r => r.TouristId == touristId);
+        if (review == null) throw new InvalidOperationException("Review not found.");
+
+        _reviews.Remove(review);
+    }
+
+    public double GetAverageRating()
+    {
+        if (_reviews.Count == 0) return 0;
+        return _reviews.Average(r => r.Rating);
     }
 }

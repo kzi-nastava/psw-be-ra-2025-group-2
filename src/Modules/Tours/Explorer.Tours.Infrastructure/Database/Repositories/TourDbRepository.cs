@@ -27,13 +27,20 @@ public class TourDbRepository : ITourRepository
 
     public async Task<Tour?> GetByIdAsync(long id)
     {
-        return await GetToursQueryWithIncludes()
+        //return await GetToursQueryWithIncludes()
+        return await _dbSet
+            .Include(t => t.Equipment)
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews) 
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
-        return await GetToursQueryWithKeyPoints()
+        //return await GetToursQueryWithKeyPoints()
+        return await _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
     }
@@ -45,6 +52,11 @@ public class TourDbRepository : ITourRepository
         if (ShouldReturnAllResults(page, pageSize))
             return query.ToList();
         return ApplyPagination(query, page, pageSize).ToList();
+       /* return _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews)
+            .Where(t => t.Status == TourStatus.Published)
+            .ToList();*/
     }
 
     // DEV metoda bez parametara (overload)
@@ -56,7 +68,11 @@ public class TourDbRepository : ITourRepository
     // DEV metoda
     public List<Tour> GetAllNonDrafts()
     {
-        return _dbSet.Include(t => t.KeyPoints).Where(t => t.Status != TourStatus.Draft).ToList();
+        return _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Reviews) 
+            .Where(t => t.Status != TourStatus.Draft)
+            .ToList();
     }
 
     public async Task UpdateAsync(Tour tour)
@@ -77,7 +93,6 @@ public class TourDbRepository : ITourRepository
         _dbSet.Remove(tour);
         await DbContext.SaveChangesAsync();
     }
-
     public async Task<Tour?> GetTourWithKeyPointsAsync(long tourId)
     {
         return await _dbSet

@@ -4,6 +4,7 @@ using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
+using Explorer.Stakeholders.Core.Services;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
 using Explorer.Stakeholders.Core.UseCases.Internal;
@@ -38,8 +39,13 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IDiaryService, DiaryService>();
+        services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
         services.AddScoped<INotificationService, NotificationService>();
+
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
+        services.AddScoped<IQuizService, QuizService>();
 
 
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
@@ -58,10 +64,14 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
-        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
 
+        services.AddScoped<IDiaryRepository, DiaryDbRepository>();      
+
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+        services.AddScoped<IQuizRepository, QuizDbRepository>();
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
+
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();

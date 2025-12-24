@@ -19,7 +19,7 @@ public class OrderItem : Entity
         if (string.IsNullOrWhiteSpace(tourName))
             throw new ArgumentException("Tour name cannot be empty");
 
-        if (price == null || price.Amount <= 0)
+        if (price == null || price.Amount < 0)
             throw new ArgumentException("Invalid price");
 
         ShoppingCartId = shoppingCartId;

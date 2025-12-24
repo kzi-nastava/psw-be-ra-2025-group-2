@@ -20,16 +20,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
         private readonly IEquipmentRepository? _equipmentRepository;
-        private readonly ITourReviewRepository? _reviewRepository;
+        //private readonly ITourReviewRepository? _reviewRepository;
         private readonly IPublicKeyPointService? _publicKeyPointService;
-
-        public TourService(
+        private readonly ITourExecutionRepository _tourExecutionRepository;
+       /* public TourService(
             ITourRepository tourRepository,
             IMapper mapper,
             IEquipmentRepository equipmentRepository,
             IInternalUserService userService,
             ITourReviewRepository reviewRepository,
             IPublicKeyPointService publicKeyPointService)
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService, ITourExecutionRepository tourExecutionRepository)
         {
             _tourRepository = tourRepository;
             _userService = userService;
@@ -44,13 +45,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
             IMapper mapper,
             IEquipmentRepository equipmentRepository,
             IInternalUserService userService)
+        }*/
+
+        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService, ITourExecutionRepository tourExecutionRepository)
         {
             _tourRepository = tourRepository;
             _userService = userService;
             _mapper = mapper;
             _equipmentRepository = equipmentRepository;
-            _reviewRepository = null;
+            //_reviewRepository = null;
             _publicKeyPointService = null;
+            _tourExecutionRepository = tourExecutionRepository;
         }
 
         public TourDto Create(CreateTourDto dto)
@@ -152,10 +157,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tour = _tourRepository.GetByIdAsync(id).Result ?? throw new Exception("Tour not found.");
 
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
-            if (dto.LengthKm.HasValue)
-            {
-                tour.SetLength(dto.LengthKm.Value);
-            }
+           
+            tour.SetLength(dto.LengthKm);
 
             _tourRepository.UpdateAsync(tour).Wait();
 
@@ -399,9 +402,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public List<PublishedTourPreviewDto> GetPublishedForTourist()
         {
-            if (_reviewRepository == null)
-                throw new InvalidOperationException(
-                    "ITourReviewRepository is not configured. This method requires reviews.");
 
             var tours = _tourRepository.GetAllPublished();
 
@@ -422,11 +422,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
                         .Select(k => _mapper.Map<KeyPointDto>(k))
                         .FirstOrDefault()
                 };
+               // var reviews = _reviewRepository.GetAllByTourId(tour.Id).ToList();
+                //dto.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+                dto.AverageRating = tour.GetAverageRating();
 
-                var reviews = _reviewRepository.GetAllByTourId(tour.Id).ToList();
-                dto.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
-
-                dto.Reviews = reviews.Select(r =>
+                dto.Reviews = tour.Reviews.Select(r =>
                 {
                     var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
                     var u = _userService.GetById(r.TouristId);
@@ -439,7 +439,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return result;
         }
-
         private void SubmitPublicKeyPointRequestIfNeeded(long tourId, KeyPointDto dto)
         {
             if (!dto.SuggestForPublicUse || _publicKeyPointService == null)
@@ -469,6 +468,53 @@ namespace Explorer.Tours.Core.UseCases.Administration
             {
                 Console.WriteLine($"❌ Unexpected error: {ex.Message}");
             }
+        }
+        public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found.");
+
+            var execution = _tourExecutionRepository.GetExactExecution(touristId, tourId);
+
+            if (execution == null)
+                throw new InvalidOperationException("You haven't started this tour yet.");
+
+            if ((DateTime.UtcNow - execution.LastActivityTimestamp).TotalDays > 7)
+                throw new InvalidOperationException("You cannot review this tour because it has been more than 7 days since your last activity.");
+
+            var percentage = execution.GetPercentageCompleted();
+            if (percentage < 35.0)
+                throw new InvalidOperationException($"You have completed only {percentage:F1}% of the tour. You need at least 35% to leave a review.");
+
+            var review = new TourReview(tourId, touristId, execution.Id , rating, comment, DateTime.UtcNow, (float)percentage, images);
+
+            tour.AddReview(review);
+
+            _tourRepository.UpdateAsync(tour).Wait();
+
+            return _mapper.Map<TourReviewDto>(review);
+        }
+        public TourReviewDto UpdateReview(TourReviewDto reviewDto)
+        {
+            var tour = _tourRepository.GetByIdAsync(reviewDto.TourId).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found.");
+
+            tour.UpdateReview(reviewDto.TouristId, reviewDto.Rating, reviewDto.Comment, reviewDto.Images);
+
+            _tourRepository.UpdateAsync(tour).Wait();
+
+            var updatedReview = tour.Reviews.FirstOrDefault(r => r.TouristId == reviewDto.TouristId);
+            return _mapper.Map<TourReviewDto>(updatedReview);
+        }
+
+        public void DeleteReview(long touristId, long tourId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found.");
+
+            tour.DeleteReview(touristId);
+
+            _tourRepository.UpdateAsync(tour).Wait();
         }
     }
 }
