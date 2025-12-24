@@ -14,12 +14,14 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IClubRepository _clubRepository;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
 
-        public ClubService(IClubRepository clubRepository, IMapper mapper, INotificationService notificationService)
+        public ClubService(IClubRepository clubRepository, IMapper mapper, INotificationService notificationService, IUserService userService)
         {
             _clubRepository = clubRepository;
             _mapper = mapper;
             _notificationService = notificationService;
+            _userService = userService;
         }
 
         public ClubDto Get(long id)
@@ -163,5 +165,89 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             _clubRepository.Update(club);
         }
+        public List<InvitableTouristDto> GetInvitableTourists(long clubId, long ownerId, string? query)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can load invitable tourists.");
+
+            var excluded = new HashSet<long>();
+            excluded.Add(ownerId);
+
+            foreach (var m in club.Members) excluded.Add(m.TouristId);
+            foreach (var i in club.Invitations) excluded.Add(i.TouristId);
+            foreach (var r in club.JoinRequests) excluded.Add(r.TouristId);
+
+            var tourists = _userService.GetTourists(query);
+
+            return tourists
+                .Where(t => !excluded.Contains(t.Id))
+                .Select(t => new InvitableTouristDto
+                {
+                    Id = t.Id,
+                    Username = t.Username,
+                })
+                .ToList();
+        }
+        public List<TouristBasicDto> GetJoinRequests(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can load join requests.");
+
+            var ids = club.JoinRequests.Select(r => r.TouristId).ToHashSet();
+
+            var tourists = _userService.GetTourists(null);
+
+            return tourists
+                .Where(t => ids.Contains(t.Id))
+                .Select(t => new TouristBasicDto { Id = t.Id, Username = t.Username })
+                .ToList();
+        }
+
+        public List<TouristBasicDto> GetMembers(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (club == null)
+                throw new KeyNotFoundException($"Club {clubId} not found.");
+
+            if (club.OwnerId != ownerId)
+                throw new System.UnauthorizedAccessException("Only the owner can load members.");
+
+            var ids = club.Members.Select(m => m.TouristId).ToHashSet();
+
+            var tourists = _userService.GetTourists(null);
+
+            return tourists
+                .Where(t => ids.Contains(t.Id))
+                .Select(t => new TouristBasicDto { Id = t.Id, Username = t.Username })
+                .ToList();
+        }
+
+        public List<long> GetMyInvitationClubIds(long touristId)
+        {
+            var clubs = _clubRepository.GetAll();
+
+            return clubs
+                .Where(c => c.Invitations.Any(i => i.TouristId == touristId))
+                .Select(c => c.Id)
+                .ToList();
+        }
+        public List<long> GetMyMembershipClubIds(long touristId)
+        {
+            return _clubRepository.GetMemberClubIds(touristId);
+        }
+
+        public List<long> GetMyJoinRequestClubIds(long touristId)
+        {
+            return _clubRepository.GetMyJoinRequestClubIds(touristId);
+        }
+
     }
 }

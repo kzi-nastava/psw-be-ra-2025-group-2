@@ -20,5 +20,12 @@ namespace Explorer.Stakeholders.API.Public
         void WithdrawMembershipRequest(long clubId, long touristId);
         void AcceptMembershipRequest(long clubId, long ownerId, long touristId);
         void RejectMembershipRequest(long clubId, long ownerId, long touristId);
+
+        List<InvitableTouristDto> GetInvitableTourists(long clubId, long ownerId, string? query);
+        List<TouristBasicDto> GetJoinRequests(long clubId, long ownerId);
+        List<TouristBasicDto> GetMembers(long clubId, long ownerId);
+        List<long> GetMyInvitationClubIds(long touristId);
+        List<long> GetMyMembershipClubIds(long touristId);
+        List<long> GetMyJoinRequestClubIds(long touristId);
     }
 }
