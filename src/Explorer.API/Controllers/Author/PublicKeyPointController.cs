@@ -31,22 +31,17 @@ public class PublicKeyPointController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (ArgumentException ex)  // ✅ DODAJ OVO
+        {
+            return BadRequest(new { error = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
-            // DODAJ ex.Message i ex.StackTrace
-            Console.WriteLine($"❌ ERROR: {ex.Message}");
-            Console.WriteLine($"❌ INNER: {ex.InnerException?.Message}");
-            Console.WriteLine($"❌ STACK: {ex.StackTrace}");
-            return StatusCode(500, new
-            {
-                error = ex.Message,
-                innerError = ex.InnerException?.Message,
-                stackTrace = ex.StackTrace
-            });
+            return StatusCode(500, new { error = "An unexpected error occurred." });
         }
     }
 

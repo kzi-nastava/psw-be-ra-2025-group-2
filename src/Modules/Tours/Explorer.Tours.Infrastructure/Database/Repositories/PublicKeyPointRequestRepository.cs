@@ -53,8 +53,13 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
 
     public async Task<bool> ExistsPendingRequestAsync(long keyPointId)
     {
-        return await GetPendingRequestsQuery()
-            .AnyAsync(r => r.PublicKeyPointId == keyPointId);
+        var returnValue =  GetPendingRequestsQuery();
+
+        var value= returnValue.ToList();
+        var newReturn= await returnValue.
+            AnyAsync(r => r.PublicKeyPointId == keyPointId);
+
+        return newReturn;
     }
 
     public async Task<Tour?> GetTourWithKeyPointAsync(long keyPointId)
@@ -100,8 +105,10 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
 
     private IQueryable<PublicKeyPointRequest> GetPendingRequestsQuery()
     {
-        return GetRequestsQueryWithIncludes()
+        var returnValue= GetRequestsQueryWithIncludes()
             .Where(r => r.Status == PublicKeyPointRequestStatus.Pending);
+
+        return returnValue;
     }
 
     private IQueryable<PublicKeyPoint> GetPublicKeyPointsQuery()
