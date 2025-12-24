@@ -135,7 +135,7 @@ public class TourCommandTests : BaseToursIntegrationTest
 
         // Assert
         var objectResult = Assert.IsType<ObjectResult>(result.Result);
-        Assert.Equal(500, objectResult.StatusCode); // status kod koji se vraća za neočekivanu grešku
+        Assert.Equal(500, objectResult.StatusCode);
         Assert.NotNull(objectResult.Value);
         var message = objectResult.Value.GetType().GetProperty("message")?.GetValue(objectResult.Value)?.ToString();
         Assert.False(string.IsNullOrWhiteSpace(message));
