@@ -82,7 +82,26 @@ public class ClubDbRepository : IClubRepository
     
     public List<Club> GetAll()
     {
-        return _dbSet.ToList();
+        return _dbSet
+        .Include(c => c.Members)
+        .Include(c => c.JoinRequests)
+        .Include(c => c.Invitations)
+        .ToList();
+    }
+    public List<long> GetMemberClubIds(long touristId)
+    {
+        return _dbSet
+            .Where(c => c.Members.Any(m => m.TouristId == touristId))
+            .Select(c => c.Id)
+            .ToList();
+    }
+
+    public List<long> GetMyJoinRequestClubIds(long touristId)
+    {
+        return _dbSet
+            .Where(c => c.JoinRequests.Any(r => r.TouristId == touristId))
+            .Select(c => c.Id)
+            .ToList();
     }
 
 }

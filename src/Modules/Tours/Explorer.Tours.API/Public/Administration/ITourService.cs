@@ -34,6 +34,11 @@ namespace Explorer.Tours.API.Public.Administration
 
         // TODO Promeniti kasnije
         IEnumerable<TourDto> GetAvailableForTourist(long touristId);
+
+        public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images);
+
+        public TourReviewDto UpdateReview(TourReviewDto reviewDto);
+        void DeleteReview(long touristId, long tourId);
     }
 
 }

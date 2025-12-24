@@ -13,4 +13,5 @@ public interface IUserRepository
     PagedResult<User> GetPaged(int page, int pageSize);
     User GetByPersonId(long personId);
     User? Get(long id);
+    List<User> GetTourists(string? query);
 }
