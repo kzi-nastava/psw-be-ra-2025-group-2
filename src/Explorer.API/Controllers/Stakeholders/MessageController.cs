@@ -21,9 +21,6 @@ namespace Explorer.API.Controllers.Stakeholders
         [HttpPost]
         public ActionResult<MessageDto> Send([FromBody] SendMessageDto dto)
         {
-            //var userId = User.PersonId();
-            //var result = _service.Send(userId, dto);
-            //return Ok(result);
             try
             {
                 var userId = User.PersonId();
@@ -41,8 +38,12 @@ namespace Explorer.API.Controllers.Stakeholders
             }
         }
 
-
-
+        [HttpGet("conversations/{userId:long}")]
+        public ActionResult<List<MessageDto>> Conversation(long userId)
+        {
+            var me = User.PersonId();
+            return Ok(_service.GetConversation(me, userId));
+        }
 
         [HttpGet]
         public ActionResult<List<MessageDto>> GetMyMessages()

@@ -48,5 +48,11 @@ namespace Explorer.Stakeholders.Core.UseCases
             message.Delete(userId);
             _repository.Update(message);
         }
+
+        public List<MessageDto> GetConversation(long me, long other)
+        {
+            var messages = _repository.GetConversation(me, other);
+            return _mapper.Map<List<MessageDto>>(messages);
+        }
     }
 }

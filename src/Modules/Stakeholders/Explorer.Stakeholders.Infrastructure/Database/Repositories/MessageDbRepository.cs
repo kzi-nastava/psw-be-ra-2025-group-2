@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 {
@@ -43,5 +44,19 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
             _dbContext.SaveChanges();
             return message;
         }
+
+        public List<Message> GetConversation(long user1, long user2)
+        {
+            return _dbContext.Messages
+                .Where(m =>
+                    !m.IsDeleted &&
+                    (
+                        (m.SenderId == user1 && m.ReceiverId == user2) ||
+                        (m.SenderId == user2 && m.ReceiverId == user1)
+                    ))
+                .OrderBy(m => m.CreatedAt)
+                .ToList();
+        }
+
     }
 }
