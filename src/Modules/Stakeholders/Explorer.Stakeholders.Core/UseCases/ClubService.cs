@@ -20,6 +20,7 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             _clubRepository = clubRepository;
             _mapper = mapper;
+            _mapper = mapper;
             _notificationService = notificationService;
             _userService = userService;
         }

@@ -7,7 +7,8 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using  Explorer.API.Images;
+using Explorer.API.Dtos;
 namespace Explorer.API.Controllers.Tourist
 {
     [Authorize(Policy = "touristPolicy")]
@@ -15,11 +16,12 @@ namespace Explorer.API.Controllers.Tourist
     [ApiController]
     public class ClubsController : ControllerBase
     {
-        private readonly IClubService _clubService;
-
-        public ClubsController(IClubService clubService)
+        private readonly IClubService _clubService; 
+        private readonly IImageStorage _imageStorage;
+        public ClubsController(IClubService clubService, IImageStorage imageStorage)
         {
             _clubService = clubService;
+            _imageStorage = imageStorage;
         }
 
         private long GetCurrentUserId()
@@ -44,19 +46,37 @@ namespace Explorer.API.Controllers.Tourist
             var result = _clubService.GetAll();
             return Ok(result);
         }
+        
 
-        // POST: api/tourist/clubs
         [HttpPost]
-        public ActionResult<ClubDto> Create([FromBody] ClubDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<ClubDto>> Create([FromForm] CreateClubRequest req, CancellationToken ct)
         {
             var currentUserId = GetCurrentUserId();
+            List<string> paths = null;
 
-            // Ignorišemo ownerId iz body-ja, uvek postavljamo na ulogovanog korisnika
-            dto.OwnerId = currentUserId;
+            try
+            {
+                paths = await _imageStorage.SaveClubImagesAsync(currentUserId, req.Images, ct);
 
-            var created = _clubService.Create(dto);
-            return Ok(created);
+                var dto = new ClubDto
+                {
+                    Name = req.Name,
+                    Description = req.Description,
+                    OwnerId = currentUserId,
+                    ImageUrls = paths
+                };
+
+                var created = _clubService.Create(dto);
+                return Ok(created);
+            }
+            catch
+            {
+                if (paths != null) _imageStorage.DeleteMany(paths);
+                throw;
+            }
         }
+
 
         // PUT: api/tourist/clubs/{id}
         [HttpPut("{id:long}")]
@@ -88,7 +108,7 @@ namespace Explorer.API.Controllers.Tourist
 
             if (existing.OwnerId != currentUserId)
                 return Forbid();
-
+_imageStorage.DeleteMany(existing.ImageUrls);
             _clubService.Delete(id);
             return NoContent();
         }

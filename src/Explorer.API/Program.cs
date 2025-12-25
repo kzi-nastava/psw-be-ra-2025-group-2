@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<Explorer.API.Images.IImageStorage, Explorer.API.Images.FileSystemImageStorage>();
 builder.Services.ConfigureSwagger(builder.Configuration);
 const string corsPolicy = "_corsPolicy";
 builder.Services.ConfigureCors(corsPolicy);
@@ -26,7 +27,7 @@ else
 {
     app.UseHsts();
 }
-
+app.UseStaticFiles();
 app.UseRouting();
 app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
