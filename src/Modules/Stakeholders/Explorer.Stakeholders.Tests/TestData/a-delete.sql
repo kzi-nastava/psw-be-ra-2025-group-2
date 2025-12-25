@@ -11,3 +11,4 @@ DELETE FROM stakeholders."Diaries";
 DELETE FROM stakeholders."TourPreferences";
 DELETE FROM stakeholders."Clubs";
 DELETE FROM stakeholders."Quizzes";
+DELETE FROM stakeholders."Messages";
