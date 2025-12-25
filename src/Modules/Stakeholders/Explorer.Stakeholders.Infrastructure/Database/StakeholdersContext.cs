@@ -21,7 +21,7 @@ public class StakeholdersContext : DbContext
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Quiz> Quizzes { get; set; }
-
+    public DbSet<Message> Messages { get; set; }
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
@@ -40,6 +40,18 @@ public class StakeholdersContext : DbContext
             builder.OwnsMany(q => q.AvailableOptions, b => b.ToJson());
 
             builder.Navigation(q => q.AvailableOptions).HasField("_availableOptions").UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<Message>(builder =>
+        {
+            builder.HasKey(m => m.Id);
+            builder.Property(m => m.Id).ValueGeneratedOnAdd();
+            builder.Property(m => m.SenderId).IsRequired();
+            builder.Property(m => m.ReceiverId).IsRequired();
+            builder.Property(m => m.Content).IsRequired().HasMaxLength(2000);
+            builder.Property(m => m.CreatedAt).IsRequired();
+            builder.Property(m => m.UpdatedAt).IsRequired(false);
+            builder.Property(m => m.IsDeleted).IsRequired().HasDefaultValue(false);
         });
 
         ConfigureStakeholder(modelBuilder);
