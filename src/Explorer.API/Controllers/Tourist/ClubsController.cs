@@ -291,5 +291,85 @@ namespace Explorer.API.Controllers.Tourist
                 return Forbid();
             }
         }
+
+        [HttpGet("{clubId:long}/invitable-tourists")]
+        public ActionResult<List<InvitableTouristDto>> GetInvitableTourists(long clubId, [FromQuery] string? q)
+        {
+            var ownerId = GetCurrentUserId();
+
+            try
+            {
+                var result = _clubService.GetInvitableTourists(clubId, ownerId, q);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
+        [HttpGet("{clubId:long}/join-requests/list")]
+        public ActionResult<List<TouristBasicDto>> GetJoinRequestsList(long clubId)
+        {
+            var ownerId = GetCurrentUserId();
+            try
+            {
+                return Ok(_clubService.GetJoinRequests(clubId, ownerId));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
+        [HttpGet("{clubId:long}/members/list")]
+        public ActionResult<List<TouristBasicDto>> GetMembersList(long clubId)
+        {
+            var ownerId = GetCurrentUserId();
+            try
+            {
+                return Ok(_clubService.GetMembers(clubId, ownerId));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+        }
+
+        [HttpGet("my-invitations")]
+        public ActionResult<List<long>> GetMyInvitations()
+        {
+            var touristId = GetCurrentUserId();
+            var clubIds = _clubService.GetMyInvitationClubIds(touristId);
+            return Ok(clubIds);
+        }
+
+        [HttpGet("my-memberships")]
+        public ActionResult<List<long>> GetMyMemberships()
+        {
+            var touristId = GetCurrentUserId();
+            var result = _clubService.GetMyMembershipClubIds(touristId);
+            return Ok(result);
+        }
+
+        [HttpGet("my-join-requests")]
+        public ActionResult<List<long>> GetMyJoinRequests()
+        {
+            var touristId = GetCurrentUserId();
+            var result = _clubService.GetMyJoinRequestClubIds(touristId);
+            return Ok(result);
+        }
     }
 }

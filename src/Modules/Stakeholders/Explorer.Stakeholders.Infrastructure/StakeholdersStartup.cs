@@ -38,12 +38,14 @@ public static class StakeholdersStartup
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
-
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IDiaryService, DiaryService>();
         services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
         services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<IQuizService, QuizService>();
+
+        services.AddScoped<IMessageService, MessageService>();
 
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
         services.AddScoped<ITouristPositionService, TouristPositionService>();
@@ -66,6 +68,8 @@ public static class StakeholdersStartup
 
 
         services.AddScoped<IQuizRepository, QuizDbRepository>();
+
+        services.AddScoped<IMessageRepository, MessageDbRepository>();
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 

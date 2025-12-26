@@ -3,6 +3,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Explorer.Stakeholders.API.Dtos.Quizzes;
+using Explorer.Stakeholders.API.Dtos.Messages;
 
 
 
@@ -35,5 +36,13 @@ public class StakeholderProfile : Profile
 
         CreateMap<QuizOption, QuizOptionDto>();
         CreateMap<Quiz, QuizDto>();
+
+        CreateMap<Message, MessageDto>().ReverseMap();
+        CreateMap<SendMessageDto, Message>()
+            .ForMember(dest => dest.SenderId, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt =>  opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.Id, opt => opt.Ignore());
     }
 }

@@ -130,7 +130,15 @@ public class TourCommandTests : BaseToursIntegrationTest
             Difficulty = 3
         };
 
-        Should.Throw<Exception>(() => controller.Update(-1000, updatedEntity));
+        // Act
+        var result = controller.Update(-1000, updatedEntity);
+
+        // Assert
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(500, objectResult.StatusCode);
+        Assert.NotNull(objectResult.Value);
+        var message = objectResult.Value.GetType().GetProperty("message")?.GetValue(objectResult.Value)?.ToString();
+        Assert.False(string.IsNullOrWhiteSpace(message));
     }
 
     [Fact]
