@@ -28,5 +28,15 @@ namespace Explorer.Stakeholders.Core.UseCases
                 Username = u.Username
             }).ToList();
         }
+
+        public List<BasicUserDto> GetAllActiveUsers()
+        {
+            var users = _userRepository.GetAllActiveUsers();
+            return users.Select(u => new BasicUserDto
+            {
+                Id = u.Id,
+                Username = u.Username
+            }).ToList();
+        }
     }
 }

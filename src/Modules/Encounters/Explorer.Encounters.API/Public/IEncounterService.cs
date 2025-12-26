@@ -1,0 +1,25 @@
+﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Encounters.API.Dtos.Encounter;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Explorer.Encounters.API.Public
+{
+    public interface IEncounterService
+    {
+        public EncounterDto Get(long id);
+        public PagedResult<EncounterDto> GetPaged(int page, int pageSize);
+        public IEnumerable<EncounterDto> GetActive();
+        public EncounterDto Create(CreateEncounterDto createDto);
+        public EncounterDto Update(UpdateEncounterDto updateDto);
+        public void Delete(long id);
+
+        public void MakeActive(long id);
+        public void Archive(long id);
+
+        public int GetCount();
+    }
+}

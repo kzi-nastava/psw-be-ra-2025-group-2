@@ -1,4 +1,4 @@
-﻿using Explorer.Stakeholders.Infrastructure.Authentication; // zbog User.PersonId()
+﻿/*using Explorer.Stakeholders.Infrastructure.Authentication; // zbog User.PersonId()
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
@@ -76,4 +76,4 @@ public class AuthorMeetupController : ControllerBase
         _meetupService.Delete(id);
         return Ok();
     }
-}
+}*/

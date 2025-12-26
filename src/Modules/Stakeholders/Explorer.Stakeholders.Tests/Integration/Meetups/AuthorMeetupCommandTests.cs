@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Explorer.API.Controllers.Author;
+using Explorer.API.Controllers.Tourist;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
@@ -108,9 +109,9 @@ public class AuthorMeetupCommandTests : BaseStakeholdersIntegrationTest
         Should.Throw<NotFoundException>(() => controller.Delete(-999));
     }*/
 
-    private static AuthorMeetupController CreateController(IServiceScope scope)
+    private static TouristMeetupController CreateController(IServiceScope scope)
     {
-        return new AuthorMeetupController(scope.ServiceProvider.GetRequiredService<IMeetupService>())
+        return new TouristMeetupController(scope.ServiceProvider.GetRequiredService<IMeetupService>())
         {
             ControllerContext = BuildContext("-11")
         };
