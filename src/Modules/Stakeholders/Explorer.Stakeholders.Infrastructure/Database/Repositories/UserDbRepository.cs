@@ -91,4 +91,12 @@ public class UserDbRepository : IUserRepository
             .Take(3)
             .ToList();
     }
+
+    public List<User> GetAllActiveUsers()
+    {
+        return _dbContext.Users
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.Username)
+            .ToList();
+    }
 }

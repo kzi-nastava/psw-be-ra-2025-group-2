@@ -10,5 +10,6 @@ namespace Explorer.Stakeholders.API.Public
     public interface IUserService
     {
         List<TouristBasicDto> GetTourists(string? query);
+        List<BasicUserDto> GetAllActiveUsers();
     }
 }
