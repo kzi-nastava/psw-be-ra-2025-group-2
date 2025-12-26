@@ -14,4 +14,5 @@ public interface IUserRepository
     User GetByPersonId(long personId);
     User? Get(long id);
     List<User> GetTourists(string? query);
+    List<User> GetAllActiveUsers();
 }
