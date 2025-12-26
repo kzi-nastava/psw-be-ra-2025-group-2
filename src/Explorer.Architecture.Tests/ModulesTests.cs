@@ -99,7 +99,11 @@ public class ModulesTests : BaseArchitecturalTests
         },
         new object[]
         {
-            "Encounters"
-        }
+            "Payments"
+        },
+        new object[]
+        {
+           "Encounters"
+        }   
     };
 }

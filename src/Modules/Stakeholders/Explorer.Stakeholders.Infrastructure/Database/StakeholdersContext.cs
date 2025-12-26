@@ -1,7 +1,5 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
-using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
-using Explorer.Stakeholders.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
 namespace Explorer.Stakeholders.Infrastructure.Database;
 
@@ -18,8 +16,7 @@ public class StakeholdersContext : DbContext
     public DbSet<Diary> Diaries { get; set; }
 
     public DbSet<TouristPosition> TouristPositions { get; set; }
-    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
+
     public DbSet<Quiz> Quizzes { get; set; }
     public DbSet<Message> Messages { get; set; }
 
@@ -30,10 +27,6 @@ public class StakeholdersContext : DbContext
         modelBuilder.HasDefaultSchema("stakeholders");
 
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
-
-        modelBuilder.ApplyConfiguration(new ShoppingCartConfiguration());
-
-        modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
 
         modelBuilder.Entity<Quiz>(builder =>
         {

@@ -1,4 +1,5 @@
-﻿using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+﻿using Explorer.Payments.Infrastructure.Database;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,9 +7,9 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories;
 
 public class ShoppingCartRepository : IShoppingCartRepository
 {
-    private readonly StakeholdersContext _context;
+    private readonly PaymentsContext _context;
 
-    public ShoppingCartRepository(StakeholdersContext context)
+    public ShoppingCartRepository(PaymentsContext context)
     {
         _context = context;
     }
