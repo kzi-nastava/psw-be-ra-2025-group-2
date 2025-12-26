@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 
@@ -30,10 +29,10 @@ namespace Explorer.Stakeholders.Core.UseCases
             }).ToList();
         }
 
-        public List<InternalUserDto> GetAllActiveUsers()
+        public List<BasicUserDto> GetAllActiveUsers()
         {
             var users = _userRepository.GetAllActiveUsers();
-            return users.Select(u => new InternalUserDto
+            return users.Select(u => new BasicUserDto
             {
                 Id = u.Id,
                 Username = u.Username

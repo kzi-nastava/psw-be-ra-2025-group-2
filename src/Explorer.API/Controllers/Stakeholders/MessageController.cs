@@ -1,5 +1,5 @@
-﻿using Explorer.Stakeholders.API.Dtos.Messages;
-using Explorer.Stakeholders.API.Internal;
+﻿using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.API.Dtos.Messages;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Infrastructure.Authentication;
@@ -72,7 +72,7 @@ namespace Explorer.API.Controllers.Stakeholders
         }
 
         [HttpGet("users")]
-        public ActionResult<List<InternalUserDto>> GetAllUsers()
+        public ActionResult<List<BasicUserDto>> GetAllUsers()
         {
             try
             {

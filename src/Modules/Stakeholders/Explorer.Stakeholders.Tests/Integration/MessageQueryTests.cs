@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System.Security.Claims;
 using Explorer.Stakeholders.API.Dtos.Messages;
+using Explorer.Stakeholders.API.Dtos;
 
 namespace Explorer.Stakeholders.Tests.Integration
 {
@@ -43,10 +44,27 @@ namespace Explorer.Stakeholders.Tests.Integration
             messages.Select(m => m.CreatedAt).ShouldBeInOrder();
         }
 
+        [Fact]
+        public void Gets_all_active_users()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var controller = CreateController(scope, "1");
+
+            var result = controller.GetAllUsers().Result.ShouldBeOfType<OkObjectResult>();
+
+            var users = result.Value.ShouldBeOfType<List<BasicUserDto>>();
+
+            users.ShouldNotBeEmpty();
+
+            //users.All(u => u.Id > 0).ShouldBeTrue();
+            users.All(u => !string.IsNullOrWhiteSpace(u.Username)).ShouldBeTrue();
+        }
+
+
         private static MessageController CreateController(IServiceScope scope, string userId)
         {
             return new MessageController(
-                scope.ServiceProvider.GetRequiredService<IMessageService>())
+                scope.ServiceProvider.GetRequiredService<IMessageService>(), scope.ServiceProvider.GetRequiredService<IUserService>())
             {
                 ControllerContext = BuildContext(userId)
             };

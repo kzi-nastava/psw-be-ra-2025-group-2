@@ -106,7 +106,7 @@ namespace Explorer.Stakeholders.Tests.Integration
         private static MessageController CreateController(IServiceScope scope, string userId)
         {
             return new MessageController(
-                scope.ServiceProvider.GetRequiredService<IMessageService>())
+                scope.ServiceProvider.GetRequiredService<IMessageService>(), scope.ServiceProvider.GetRequiredService<IUserService>())
             {
                 ControllerContext = BuildContext(userId)
             };
