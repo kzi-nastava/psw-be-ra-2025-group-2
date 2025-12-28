@@ -66,16 +66,15 @@ namespace Explorer.API.Controllers.Author
         }
 
 
-        // GET: api/author/tours/{id}
         [HttpGet("{id}")]
-        public ActionResult<TourDto> GetById(long id)
+        public async Task<ActionResult<TourDto>> GetById(long id)
         {
             var authorIdClaim = User.FindFirst("id");
             if (authorIdClaim == null) return Unauthorized();
 
             long authorId = long.Parse(authorIdClaim.Value);
 
-            var tour = _tourService.GetById(id, authorId);
+            var tour = await _tourService.GetByIdAsync(id, authorId);
             if (tour == null) return NotFound();
 
             return Ok(tour);
@@ -105,7 +104,7 @@ namespace Explorer.API.Controllers.Author
 
         // POST: api/author/tours/{tourId}/keypoints
         [HttpPost("{tourId}/keypoints")]
-        public ActionResult<KeyPointDto> AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
+        public async Task<ActionResult<KeyPointDto>> AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
         {
             try
             {
@@ -114,21 +113,8 @@ namespace Explorer.API.Controllers.Author
 
                 dto.AuthorId = long.Parse(authorIdClaim.Value);
 
-                _tourService.AddKeyPoint(tourId, dto);
-
-                var tour = _tourService.GetById(tourId, dto.AuthorId);
-                if (tour == null) return NotFound();
-
-                var createdKeyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == dto.OrdinalNo);
-                if (createdKeyPoint == null)
-                    return StatusCode(500, new { error = "KeyPoint created but not found." });
-
-                if (dto.SuggestForPublicUse)
-                {
-                    createdKeyPoint.PublicStatus = "Pending";
-                }
-
-                return Ok(createdKeyPoint);
+                var result = await _tourService.AddKeyPoint(tourId, dto);
+                return Ok(result);
             }
             catch (InvalidOperationException ex)
             {
@@ -146,7 +132,7 @@ namespace Explorer.API.Controllers.Author
 
         // PUT: api/author/tours/{tourId}/keypoints/{ordinalNo}
         [HttpPut("{tourId}/keypoints/{ordinalNo}")]
-        public ActionResult<KeyPointDto> UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
+        public async Task<ActionResult<KeyPointDto>> UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
         {
             try
             {
@@ -155,21 +141,8 @@ namespace Explorer.API.Controllers.Author
 
                 dto.AuthorId = long.Parse(authorIdClaim.Value);
 
-                _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
-
-                var tour = _tourService.GetById(tourId, dto.AuthorId);
-                if (tour == null) return NotFound();
-
-                var updatedKeyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
-                if (updatedKeyPoint == null)
-                    return NotFound(new { error = "KeyPoint not found." });
-
-                if (dto.SuggestForPublicUse)
-                {
-                    updatedKeyPoint.PublicStatus = "Pending";
-                }
-
-                return Ok(updatedKeyPoint);
+                var result = await _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
+                return Ok(result);
             }
             catch (InvalidOperationException ex)
             {

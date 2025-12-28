@@ -18,7 +18,7 @@ public class PublicKeyPointRequest : Entity
     public DateTime? ProcessedAt { get; private set; }
     public long? ProcessedByAdminId { get; private set; }
     public string? RejectionReason { get; private set; }
-    public PublicKeyPoint? PublicKeyPoint { get; private set; }
+    public PublicKeyPoint PublicKeyPoint { get; set; } = null!;
 
     private PublicKeyPointRequest() { }
 
@@ -80,5 +80,15 @@ public class PublicKeyPointRequest : Entity
     {
         if (Status != PublicKeyPointRequestStatus.Pending)
             throw new InvalidOperationException("Only pending requests can be processed.");
+    }
+    public void ResetToPending()
+    {
+        if (Status != PublicKeyPointRequestStatus.Rejected)
+            throw new InvalidOperationException("Only rejected requests can be reset to pending.");
+
+        Status = PublicKeyPointRequestStatus.Pending;
+        ProcessedAt = null;
+        ProcessedByAdminId = null;
+        RejectionReason = null;
     }
 }

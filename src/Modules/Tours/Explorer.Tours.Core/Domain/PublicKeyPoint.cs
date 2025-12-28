@@ -4,9 +4,9 @@ namespace Explorer.Tours.Core.Domain;
 
 public enum PublicKeyPointStatus
 {
-    Pending,
-    Approved,
-    Rejected
+    Pending = 0,
+    Approved = 1,
+    Rejected = 2
 }
 
 public class PublicKeyPoint : Entity
@@ -94,7 +94,8 @@ public class PublicKeyPoint : Entity
             SecretText,
             ImageUrl,
             Latitude,
-            Longitude
+            Longitude,
+            AuthorId
         );
     }
 
@@ -111,5 +112,13 @@ public class PublicKeyPoint : Entity
 
         if (longitude < -180 || longitude > 180)
             throw new ArgumentOutOfRangeException(nameof(longitude), "Longitude must be between -180 and 180.");
+    }
+
+    public void ResetToPending()
+    {
+        if (Status != PublicKeyPointStatus.Rejected)
+            throw new InvalidOperationException("Only rejected keypoints can be reset to pending.");
+
+        Status = PublicKeyPointStatus.Pending;
     }
 }

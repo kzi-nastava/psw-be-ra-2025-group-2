@@ -1,4 +1,5 @@
-﻿using Explorer.Tours.API.Dtos;
+﻿using Explorer.Stakeholders.Infrastructure.Authentication;
+using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,13 +51,24 @@ public class PublicKeyPointController : ControllerBase
     {
         try
         {
-            var authorId = long.Parse(User.FindFirst("id")?.Value ?? "0");
+            var authorId = User.UserId();
             var requests = await _service.GetAuthorRequestsAsync(authorId);
             return Ok(requests);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return StatusCode(500, new { error = "An error occurred while fetching your requests." });
+            var errorMessage = $"ERROR: {ex.Message}\n" +
+                              $"STACK: {ex.StackTrace}\n" +
+                              $"INNER: {ex.InnerException?.Message}";
+
+            Console.WriteLine(errorMessage);
+
+            return StatusCode(500, new
+            {
+                error = ex.Message,
+                innerError = ex.InnerException?.Message,
+                stackTrace = ex.StackTrace
+            });
         }
     }
 }

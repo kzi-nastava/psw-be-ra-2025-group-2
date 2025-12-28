@@ -12,7 +12,7 @@ public class KeyPoint : Entity, IKeyPointInfo
     public double Latitude { get; init; }
     public double Longitude { get; init; }
     public long AuthorId { get; private set; }
-    public PublicPointRequestStatus PublicStatus { get; private set; }
+    public bool IsPublic { get; private set; } = false;
 
     private KeyPoint() { }
 
@@ -24,8 +24,7 @@ public class KeyPoint : Entity, IKeyPointInfo
         string imageUrl,
         double latitude,
         double longitude,
-        long authorId,
-        bool suggestForPublic = false)
+        long authorId)
     {
         OrdinalNo = ordinalNo;
         Name = name;
@@ -35,23 +34,26 @@ public class KeyPoint : Entity, IKeyPointInfo
         Latitude = latitude;
         Longitude = longitude;
         AuthorId = authorId;
-
-        PublicStatus = PublicPointRequestStatus.Private;
-
+        IsPublic = false;
 
         Validate();
     }
 
     public KeyPoint(
-        int ordinalNo,
-        string name,
-        string description,
-        string secretText,
-        string imageUrl,
-        double latitude,
-        double longitude)
-        : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, false)
+     int ordinalNo,
+     string name,
+     string description,
+     string secretText,
+     string imageUrl,
+     double latitude,
+     double longitude)
+     : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0) 
     {
+    }
+
+    public void MarkAsPublic()
+    {
+        IsPublic = true;
     }
 
     private void Validate()
@@ -91,40 +93,5 @@ public class KeyPoint : Entity, IKeyPointInfo
             throw new ArgumentOutOfRangeException(nameof(newOrdinal));
 
         OrdinalNo = newOrdinal;
-    }
-
-    public void SuggestForPublicUse()
-    {
-        if (PublicStatus == PublicPointRequestStatus.Pending)
-            throw new InvalidOperationException("Request already submitted");
-
-        if (PublicStatus == PublicPointRequestStatus.Approved)
-            throw new InvalidOperationException("KeyPoint is already public");
-
-        PublicStatus = PublicPointRequestStatus.Pending;
-    }
-
-    public void ApprovePublicRequest()
-    {
-        if (PublicStatus != PublicPointRequestStatus.Pending)
-            throw new InvalidOperationException("Only pending requests can be approved");
-
-        PublicStatus = PublicPointRequestStatus.Approved;
-    }
-
-    public void RejectPublicRequest()
-    {
-        if (PublicStatus != PublicPointRequestStatus.Pending)
-            throw new InvalidOperationException("Only pending requests can be rejected");
-
-        PublicStatus = PublicPointRequestStatus.Rejected;
-    }
-
-    public void MakePrivate()
-    {
-        if (PublicStatus == PublicPointRequestStatus.Approved)
-            throw new InvalidOperationException("Cannot remove public status");
-
-        PublicStatus = PublicPointRequestStatus.Private;
     }
 }

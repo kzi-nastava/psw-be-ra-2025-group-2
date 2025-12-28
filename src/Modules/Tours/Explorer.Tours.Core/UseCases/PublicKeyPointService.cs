@@ -26,23 +26,41 @@ public class PublicKeyPointService : IPublicKeyPointService
     }
 
     public async Task<PublicKeyPointRequestDto> SubmitRequestAsync(
-     long tourId,
-     int ordinalNo,
-     long authorId)
+    long tourId,
+    int ordinalNo,
+    long authorId)
     {
         var tour = await GetTourWithKeyPointsOrThrow(tourId);
         var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
 
-        if (keyPoint.PublicStatus == PublicPointRequestStatus.Approved)
-            throw new InvalidOperationException("This keypoint is already public.");
-
         var publicKeyPoint = await GetOrCreatePublicKeyPoint(tourId, ordinalNo, keyPoint, authorId);
+
+        if (publicKeyPoint.Status == PublicKeyPointStatus.Approved)
+            throw new InvalidOperationException("This keypoint is already approved for public use.");
+
+        var existingRejectedRequest = await _requestRepository
+            .GetByPublicKeyPointIdAndStatusAsync(publicKeyPoint.Id, PublicKeyPointRequestStatus.Rejected);
+
+        if (existingRejectedRequest != null)
+        {
+            publicKeyPoint.ResetToPending();
+            await _requestRepository.UpdatePublicKeyPointAsync(publicKeyPoint);
+
+            existingRejectedRequest.ResetToPending();
+            await _requestRepository.UpdateAsync(existingRejectedRequest);
+
+            return _mapper.Map<PublicKeyPointRequestDto>(existingRejectedRequest);
+        }
+
+        if (publicKeyPoint.Status == PublicKeyPointStatus.Rejected)
+        {
+            publicKeyPoint.ResetToPending();
+            await _requestRepository.UpdatePublicKeyPointAsync(publicKeyPoint);
+        }
+
         await ValidateNoPendingRequest(publicKeyPoint.Id);
 
         var request = await CreateAndSaveRequest(publicKeyPoint.Id, authorId);
-
-        keyPoint.SuggestForPublicUse();
-        await _tourRepository.UpdateAsync(tour);
 
         return _mapper.Map<PublicKeyPointRequestDto>(request);
     }
@@ -79,7 +97,12 @@ public class PublicKeyPointService : IPublicKeyPointService
         var request = await GetRequestOrThrow(requestId);
         ValidateRequestIsPending(request, "rejected");
 
-        await RejectRequest(request, adminId, reason);
+        var publicKeyPoint = await GetPublicKeyPointOrThrow(request.PublicKeyPointId);
+        await RejectPublicKeyPoint(publicKeyPoint);
+
+        request.Reject(adminId, reason);
+        await _requestRepository.UpdateAsync(request);
+
         await SendRejectionNotification(request.AuthorId, reason);
 
         var updatedRequest = await _requestRepository.GetByIdAsync(requestId);
@@ -90,8 +113,6 @@ public class PublicKeyPointService : IPublicKeyPointService
     {
         throw new NotImplementedException("Withdraw functionality is not yet implemented.");
     }
-
-    // Private helper methods
 
     private async Task<Tour> GetTourWithKeyPointsOrThrow(long tourId)
     {
@@ -121,7 +142,12 @@ public class PublicKeyPointService : IPublicKeyPointService
             .GetPublicKeyPointBySourceAsync(tourId, ordinalNo);
 
         if (existingPublicKeyPoint != null)
+        {
+            if (existingPublicKeyPoint.Status == PublicKeyPointStatus.Approved)
+                throw new InvalidOperationException("This keypoint is already approved for public use.");
+
             return existingPublicKeyPoint;
+        }
 
         var newPublicKeyPoint = PublicKeyPoint.CreateFromKeyPoint(keyPoint, authorId, tourId);
         await _requestRepository.AddPublicKeyPointAsync(newPublicKeyPoint);
@@ -185,10 +211,10 @@ public class PublicKeyPointService : IPublicKeyPointService
         await _notificationService.NotifyAuthorApprovedAsync(authorId, keyPointName);
     }
 
-    private async Task RejectRequest(PublicKeyPointRequest request, long adminId, string? reason)
+    private async Task RejectPublicKeyPoint(PublicKeyPoint publicKeyPoint)
     {
-        request.Reject(adminId, reason);
-        await _requestRepository.UpdateAsync(request);
+        publicKeyPoint.Reject();
+        await _requestRepository.UpdatePublicKeyPointAsync(publicKeyPoint);
     }
 
     private async Task SendRejectionNotification(long authorId, string? reason)

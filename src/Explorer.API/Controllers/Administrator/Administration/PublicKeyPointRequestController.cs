@@ -1,4 +1,5 @@
-﻿using Explorer.Tours.API.Dtos;
+﻿using Explorer.Stakeholders.Infrastructure.Authentication;
+using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,7 @@ public class PublicKeyPointRequestController : ControllerBase
     {
         try
         {
-            var adminId = long.Parse(User.FindFirst("id")?.Value ?? "0");
+            var adminId = User.UserId();
             var result = await _service.ApproveRequestAsync(requestId, adminId);
             return Ok(result);
         }
@@ -44,13 +45,11 @@ public class PublicKeyPointRequestController : ControllerBase
     }
 
     [HttpPut("{requestId}/reject")]
-    public async Task<ActionResult<PublicKeyPointRequestDto>> Reject(
-        long requestId,
-        [FromBody] RejectRequestDto dto)
+    public async Task<ActionResult<PublicKeyPointRequestDto>> Reject(long requestId, [FromBody] RejectRequestDto dto)
     {
         try
         {
-            var adminId = long.Parse(User.FindFirst("id")?.Value ?? "0");
+            var adminId = User.UserId();
             var result = await _service.RejectRequestAsync(requestId, adminId, dto.Reason);
             return Ok(result);
         }

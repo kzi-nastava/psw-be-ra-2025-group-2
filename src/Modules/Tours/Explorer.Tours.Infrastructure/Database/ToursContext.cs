@@ -34,8 +34,7 @@ public class ToursContext : DbContext
 
         modelBuilder.Entity<Tour>(builder =>
         {
-
-            builder.OwnsMany<KeyPoint>(t => t.KeyPoints, kp =>
+            builder.OwnsMany(t => t.KeyPoints, kp =>
             {
                 kp.WithOwner().HasForeignKey("TourId");
                 kp.Property(k => k.OrdinalNo).IsRequired();
@@ -55,7 +54,7 @@ public class ToursContext : DbContext
                     .IsRequired();
 
                 kp.Property(k => k.AuthorId).IsRequired();
-                kp.Property(k => k.PublicStatus).IsRequired();
+                kp.Property(k => k.IsPublic).IsRequired();
             });
 
             builder.OwnsMany(t => t.Durations, duration =>
@@ -96,11 +95,11 @@ public class ToursContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.AuthorId).IsRequired();
-            entity.Property(e => e.Status).IsRequired().HasConversion<string>();
             entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.SourceTourId);
+            entity.Property(e => e.SourceOrdinalNo);
 
             entity.HasIndex(e => e.AuthorId);
-            entity.HasIndex(e => e.Status);
         });
 
         modelBuilder.Entity<PublicKeyPointRequest>(entity =>

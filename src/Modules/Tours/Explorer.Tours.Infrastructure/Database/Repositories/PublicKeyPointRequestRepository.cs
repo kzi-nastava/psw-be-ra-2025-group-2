@@ -21,10 +21,18 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
 
     public async Task<IEnumerable<PublicKeyPointRequest>> GetByAuthorIdAsync(long authorId)
     {
-        return await GetRequestsQueryWithIncludes()
+        var requests = await _context.PublicKeyPointRequests
             .Where(r => r.AuthorId == authorId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
+
+        foreach (var request in requests)
+        {
+            request.PublicKeyPoint = await _context.PublicKeyPoints
+                .FirstOrDefaultAsync(pkp => pkp.Id == request.PublicKeyPointId);
+        }
+
+        return requests;
     }
 
     public async Task<IEnumerable<PublicKeyPointRequest>> GetPendingRequestsAsync()
@@ -148,5 +156,16 @@ public class PublicKeyPointRequestRepository : IPublicKeyPointRequestRepository
     {
         _context.PublicKeyPointRequests.Remove(request);  
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<PublicKeyPointRequest?> GetByPublicKeyPointIdAndStatusAsync(
+    long publicKeyPointId,
+    PublicKeyPointRequestStatus status)
+    {
+        return await _context.PublicKeyPointRequests
+            .Include(r => r.PublicKeyPoint)
+            .FirstOrDefaultAsync(r =>
+                r.PublicKeyPointId == publicKeyPointId &&
+                r.Status == status);
     }
 }

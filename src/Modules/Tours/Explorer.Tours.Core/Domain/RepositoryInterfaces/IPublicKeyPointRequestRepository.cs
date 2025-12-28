@@ -15,4 +15,5 @@ public interface IPublicKeyPointRequestRepository
     Task UpdatePublicKeyPointAsync(PublicKeyPoint publicKeyPoint);
     Task<IEnumerable<PublicKeyPointRequest>> GetBySourceAsync(long tourId, int ordinalNo);
     Task DeleteAsync(PublicKeyPointRequest request);
+    Task<PublicKeyPointRequest?> GetByPublicKeyPointIdAndStatusAsync(long publicKeyPointId, PublicKeyPointRequestStatus status);
 }

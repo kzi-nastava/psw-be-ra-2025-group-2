@@ -11,8 +11,8 @@ public class KeyPointDto
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public long AuthorId { get; set; }
-    public string PublicStatus { get; set; } = "Private";
     public bool IsPublic { get; set; }
+    public string? PublicStatus { get; set; }
 
     public bool SuggestForPublicUse { get; set; } = false;
 
