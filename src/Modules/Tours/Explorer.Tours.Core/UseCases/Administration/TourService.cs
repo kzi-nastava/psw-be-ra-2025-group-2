@@ -337,15 +337,31 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
-        public List<PublishedTourPreviewDto> GetPublishedForTourist()
+        public PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize)
         {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 6;
 
             var tours = _tourRepository.GetAllPublished();
 
-            var result = new List<PublishedTourPreviewDto>();
+            var totalCount = tours.Count;
 
-            foreach (var tour in tours)
+            var pageTours = tours
+                .OrderByDescending(t => t.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var results = new List<PublishedTourPreviewDto>();
+
+            foreach (var tour in pageTours)
             {
+                var orderedKeyPoints = tour.KeyPoints?
+                    .OrderBy(k => k.OrdinalNo)
+                    .ToList() ?? new List<KeyPoint>();
+
+                var firstKp = orderedKeyPoints.FirstOrDefault();
+
                 var dto = new PublishedTourPreviewDto
                 {
                     Id = tour.Id,
@@ -354,10 +370,13 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     Difficulty = tour.Difficulty,
                     Price = tour.Price,
                     Tags = tour.Tags?.ToList() ?? new List<string>(),
-                    FirstKeyPoint = tour.KeyPoints?
-                        .OrderBy(k => k.OrdinalNo)
-                        .Select(k => _mapper.Map<KeyPointDto>(k))
-                        .FirstOrDefault()
+
+                    FirstKeyPoint = firstKp != null ? _mapper.Map<KeyPointDto>(firstKp) : null,
+
+                    KeyPointCount = orderedKeyPoints.Count,
+                    TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
+                    LengthKm = tour.LengthKm,
+                    PlaceName = firstKp?.Name
                 };
 
                 dto.AverageRating = tour.GetAverageRating();
@@ -370,11 +389,16 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     return reviewDto;
                 }).ToList();
 
-                result.Add(dto);
+                results.Add(dto);
             }
 
-            return result;
+            return new PagedResultDto<PublishedTourPreviewDto>
+            {
+                Results = results,
+                TotalCount = totalCount
+            };
         }
+
 
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images)
         {

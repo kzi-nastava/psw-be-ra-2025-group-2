@@ -36,10 +36,13 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpGet("published")]
-        public ActionResult<List<PublishedTourPreviewDto>> GetPublished()
+        public ActionResult<PagedResultDto<PublishedTourPreviewDto>> GetPublished(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 6)
         {
-            return Ok(_tourService.GetPublishedForTourist());
+            return Ok(_tourService.GetPublishedForTourist(page, pageSize));
         }
+
 
         [HttpPost("rate")]
         public ActionResult<TourReviewDto> RateTour([FromBody] TourReviewDto reviewDto)
