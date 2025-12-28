@@ -441,9 +441,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return dtos;
         }
 
+        public TourDto? GetById(long id, long authorId)
+        {
+            return GetByIdAsync(id, authorId).Result;
+        }
+
         public void Publish(long tourId, long authorId)
         {
-            var tour = _tourRepository.GetByIdAsync(tourId).Result
+            var tour = _tourRepository.GetTourWithKeyPointsAsync(tourId).Result
                        ?? throw new Exception("Tour not found.");
 
             if (tour.AuthorId != authorId)
@@ -495,5 +500,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return result;
         }
+        public KeyPointDto AddKeyPointSync(long tourId, KeyPointDto dto)
+        {
+            return AddKeyPoint(tourId, dto).Result;
+        }
+
+        public KeyPointDto UpdateKeyPointSync(long tourId, int ordinalNo, KeyPointDto dto)
+        {
+            return UpdateKeyPoint(tourId, ordinalNo, dto).Result;
+        }
     }
 }
+    

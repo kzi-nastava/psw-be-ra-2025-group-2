@@ -200,7 +200,7 @@ namespace Explorer.API.Controllers.Author
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (Exception ex)
             {
