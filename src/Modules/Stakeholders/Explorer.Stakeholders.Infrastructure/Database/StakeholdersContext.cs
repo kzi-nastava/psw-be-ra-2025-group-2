@@ -1,6 +1,5 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
-using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
-using Explorer.Stakeholders.Infrastructure.Database.Configurations;
+using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Microsoft.EntityFrameworkCore;
 namespace Explorer.Stakeholders.Infrastructure.Database;
 
@@ -13,9 +12,13 @@ public class StakeholdersContext : DbContext
     public DbSet<AuthorAwards> AuthorAwards { get; set; }
     public DbSet<AppRating> AppRatings { get; set; }
     public DbSet<Club> Clubs { get; set; }
+
+    public DbSet<Diary> Diaries { get; set; }
+
     public DbSet<TouristPosition> TouristPositions { get; set; }
-    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
+
+    public DbSet<Quiz> Quizzes { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
@@ -25,9 +28,24 @@ public class StakeholdersContext : DbContext
 
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
 
-        modelBuilder.ApplyConfiguration(new ShoppingCartConfiguration());
+        modelBuilder.Entity<Quiz>(builder =>
+        {
+            builder.OwnsMany(q => q.AvailableOptions, b => b.ToJson());
 
-        modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
+            builder.Navigation(q => q.AvailableOptions).HasField("_availableOptions").UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+        modelBuilder.Entity<Message>(builder =>
+        {
+            builder.HasKey(m => m.Id);
+            builder.Property(m => m.Id).ValueGeneratedOnAdd();
+            builder.Property(m => m.SenderId).IsRequired();
+            builder.Property(m => m.ReceiverId).IsRequired();
+            builder.Property(m => m.Content).IsRequired().HasMaxLength(2000);
+            builder.Property(m => m.CreatedAt).IsRequired();
+            builder.Property(m => m.UpdatedAt).IsRequired(false);
+            builder.Property(m => m.IsDeleted).IsRequired().HasDefaultValue(false);
+        });
 
         ConfigureStakeholder(modelBuilder);
     }

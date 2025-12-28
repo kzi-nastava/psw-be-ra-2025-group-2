@@ -1,9 +1,11 @@
 ﻿using Explorer.API.Controllers.Author;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public;
+using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System.Security.Claims;
@@ -26,7 +28,7 @@ public class PublicKeyPointCommandTests : BaseToursIntegrationTest
         var submitDto = new SubmitKeyPointRequestDto
         {
             TourId = -15,
-            OrdinalNo = 1
+            OrdinalNo = 2
         };
 
         // Act
@@ -109,14 +111,29 @@ public class PublicKeyPointCommandTests : BaseToursIntegrationTest
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope); 
+        var controller = CreateController(scope);
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        await dbContext.Database.ExecuteSqlRawAsync(@"
+        DELETE FROM tours.""PublicKeyPointRequests"" 
+        WHERE ""PublicKeyPointId"" IN (
+            SELECT ""Id"" FROM tours.""PublicKeyPoints"" 
+            WHERE ""SourceTourId"" = -15 AND ""SourceOrdinalNo"" = 3
+        )
+    ");
+
+        await dbContext.Database.ExecuteSqlRawAsync(@"
+        DELETE FROM tours.""PublicKeyPoints"" 
+        WHERE ""SourceTourId"" = -15 AND ""SourceOrdinalNo"" = 3
+    ");
 
         var submitDto = new SubmitKeyPointRequestDto
         {
             TourId = -15,
-            OrdinalNo = 2
+            OrdinalNo = 3
         };
 
+        // Act
         var firstActionResult = await controller.Submit(submitDto);
         firstActionResult.Result.ShouldBeOfType<OkObjectResult>();
 

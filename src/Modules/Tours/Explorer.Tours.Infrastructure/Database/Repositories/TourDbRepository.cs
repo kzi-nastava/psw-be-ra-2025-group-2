@@ -27,36 +27,59 @@ public class TourDbRepository : ITourRepository
 
     public async Task<Tour?> GetByIdAsync(long id)
     {
-        return await GetToursQueryWithIncludes()
+        return await _dbSet
+            .Include(t => t.Equipment)
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
-        return await GetToursQueryWithKeyPoints()
+        return await _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
     }
 
-    // Tvoja metoda sa paginacijom
     public List<Tour> GetAllPublished(int page, int pageSize)
     {
-        var query = GetPublishedToursQuery();
-        if (ShouldReturnAllResults(page, pageSize))
+        var query = _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
+            .Where(t => t.Status == TourStatus.Published);
+
+        if (page <= 0 || pageSize <= 0)
             return query.ToList();
-        return ApplyPagination(query, page, pageSize).ToList();
+
+        return query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
     }
 
-    // DEV metoda bez parametara (overload)
     public List<Tour> GetAllPublished()
     {
-        return GetPublishedToursQuery().ToList();
+        return _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
+            .Where(t => t.Status == TourStatus.Published)
+            .ToList();
     }
 
-    // DEV metoda
     public List<Tour> GetAllNonDrafts()
     {
-        return _dbSet.Include(t => t.KeyPoints).Where(t => t.Status != TourStatus.Draft).ToList();
+        return _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
+            .Where(t => t.Status != TourStatus.Draft)
+            .ToList();
     }
 
     public async Task UpdateAsync(Tour tour)
@@ -82,53 +105,28 @@ public class TourDbRepository : ITourRepository
     {
         return await _dbSet
             .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
             .FirstOrDefaultAsync(t => t.Id == tourId);
     }
 
     public async Task<Tour?> GetTourByKeyPointIdAsync(long keyPointId)
     {
-        return await GetToursQueryWithKeyPoints()
+        return await _dbSet
+            .Include(t => t.KeyPoints)
+            .Include(t => t.Durations)
             .FirstOrDefaultAsync(t => t.KeyPoints.Any(kp => kp.Id == keyPointId));
     }
 
     public async Task<IEnumerable<Tour?>> GetAllAsync()
     {
-        return await GetToursQueryWithKeyPoints().ToListAsync();
-    }
-
-    // Private helper methods - Query builders
-    private IQueryable<Tour> GetToursQueryWithIncludes()
-    {
-        return _dbSet
-            .Include(t => t.Equipment)
+        return await _dbSet
             .Include(t => t.KeyPoints)
-            .Include(t => t.Durations);
+            .Include(t => t.Durations)
+            .Include(t => t.Reviews)
+            .ToListAsync();
     }
 
-    private IQueryable<Tour> GetToursQueryWithKeyPoints()
-    {
-        return _dbSet.Include(t => t.KeyPoints);
-    }
-
-    private IQueryable<Tour> GetPublishedToursQuery()
-    {
-        return GetToursQueryWithKeyPoints()
-            .Where(t => t.Status == TourStatus.Published);
-    }
-
-    private static IQueryable<Tour> ApplyPagination(IQueryable<Tour> query, int page, int pageSize)
-    {
-        return query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize);
-    }
-
-    private static bool ShouldReturnAllResults(int page, int pageSize)
-    {
-        return page == 0 || pageSize == 0;
-    }
-
-    // Private helper methods - Update operations
     private void UpdateEntityState(Tour tour)
     {
         var entry = DbContext.Entry(tour);

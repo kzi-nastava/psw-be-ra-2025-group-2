@@ -8,7 +8,7 @@ VALUES (-2, -15, 2, 'Drugi vrh', 'Opis', 'Tajna', 'url', 42.74, 25.07, -12, fals
 INSERT INTO tours."KeyPoint"("Id", "TourId", "OrdinalNo", "Name", "Description", "SecretText", "ImageUrl", "Latitude", "Longitude", "AuthorId", "IsPublic")
 VALUES (-3, -15, 3, 'Treci vrh', 'Opis', 'Tajna', 'url', 43, 25, -12, false);
 
--- DODATO: Tačke za Test Turu -1
+-- DODATO: Tačke za Test Turu -1 (Ukupno 4 tačke, da bismo lako testirali procente)
 INSERT INTO tours."KeyPoint"("Id", "TourId", "OrdinalNo", "Name", "Description", "SecretText", "ImageUrl", "Latitude", "Longitude", "AuthorId", "IsPublic")
 VALUES (-10, -1, 1, 'Tacka 1', 'Opis', 'Tajna', 'url', 45.0, 19.0, -11, false);
 

@@ -1,8 +1,6 @@
 ﻿using Explorer.API.Controllers.Tourist;
-using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
-using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -17,25 +15,34 @@ public class TourReviewQueryTests : BaseToursIntegrationTest
     [Fact]
     public void Retrieves_all_for_tour()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // Act
-        // Tražimo recenzije za turu sa ID -1 (gde smo ubacili 2 recenzije)
-        var result = ((ObjectResult)controller.GetByTourId(-1, 1, 10).Result)?.Value as PagedResult<TourReviewDto>;
+        var actionResult = controller.GetPublished(page: 1, pageSize: 1000);
 
-        // Assert
-        result.ShouldNotBeNull();
-        result.Results.Count.ShouldBe(2); // Očekujemo 2 recenzije za turu -1
-        result.TotalCount.ShouldBe(2);
+        var ok = actionResult.Result as OkObjectResult;
+        ok.ShouldNotBeNull();
+
+        var pageDto = ok.Value as PagedResultDto<PublishedTourPreviewDto>;
+        pageDto.ShouldNotBeNull();
+
+        var tours = pageDto.Results;
+        tours.ShouldNotBeNull();
+        tours.ShouldNotBeEmpty();
+
+        var targetTour = tours.FirstOrDefault(t => t.Id == -1);
+        targetTour.ShouldNotBeNull();
+
+        targetTour.Reviews.ShouldNotBeNull();
+        targetTour.Reviews.Count.ShouldBeGreaterThanOrEqualTo(2);
+
+        targetTour.AverageRating.ShouldBeGreaterThan(0);
     }
 
-    private static TourReviewController CreateController(IServiceScope scope)
+    private static TourController CreateController(IServiceScope scope)
     {
-        return new TourReviewController(
-            scope.ServiceProvider.GetRequiredService<ITourReviewService>(),
-            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
+        return new TourController(
+            scope.ServiceProvider.GetRequiredService<ITourService>()
         )
         {
             ControllerContext = BuildContext("-21")

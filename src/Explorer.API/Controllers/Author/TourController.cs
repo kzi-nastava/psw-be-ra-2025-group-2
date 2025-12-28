@@ -90,8 +90,19 @@ namespace Explorer.API.Controllers.Author
             if (dto.Difficulty < 1 || dto.Difficulty > 5)
                 throw new ArgumentOutOfRangeException(nameof(dto.Difficulty), "Difficulty must be between 1 and 5.");
 
-            var updated = _tourService.Update(id, dto);
-            return Ok(updated);
+            try
+            {
+                var updated = _tourService.Update(id, dto);
+                return Ok(updated);
+            }
+            catch (InvalidOperationException ex) // npr. tura je arhivirana
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Došlo je do neočekivane greške prilikom ažuriranja ture." });
+            }
         }
 
         // DELETE: api/author/tours/{id}

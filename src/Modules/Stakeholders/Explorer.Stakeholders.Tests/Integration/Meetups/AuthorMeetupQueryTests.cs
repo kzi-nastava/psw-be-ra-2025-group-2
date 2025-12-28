@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Explorer.API.Controllers.Author;
+using Explorer.API.Controllers.Tourist;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Mvc;
@@ -38,9 +39,9 @@ public class AuthorMeetupQueryTests : BaseStakeholdersIntegrationTest
         result.All(m => m.CreatorId == -11).ShouldBeTrue();
     }
 
-    private static AuthorMeetupController CreateController(IServiceScope scope)
+    private static TouristMeetupController CreateController(IServiceScope scope)
     {
-        return new AuthorMeetupController(scope.ServiceProvider.GetRequiredService<IMeetupService>())
+        return new TouristMeetupController(scope.ServiceProvider.GetRequiredService<IMeetupService>())
         {
             ControllerContext = BuildContext("-11")
         };

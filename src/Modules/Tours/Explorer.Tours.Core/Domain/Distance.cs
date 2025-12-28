@@ -13,6 +13,8 @@ namespace Explorer.Tours.Core.Domain
 
         public static Distance Zero => new Distance(0);
 
+        private Distance() { }
+
         private Distance(double meters)
         {
             if (meters < 0)
