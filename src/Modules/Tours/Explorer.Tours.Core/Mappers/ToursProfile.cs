@@ -59,5 +59,12 @@ public class ToursProfile : Profile
         CreateMap<UpdateTourDto, Tour>().ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>())).ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
         CreateMap<TourReviewDto, TourReview>().ReverseMap();
         CreateMap<TourReview, TourReviewPublicDto>().ForMember(d => d.TouristName, o => o.Ignore());
+
+        // ========== BUNDLE MAPPINGS ==========
+        CreateMap<Bundle, BundleDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
+        CreateMap<CreateBundleDto, Bundle>();
+        CreateMap<UpdateBundleDto, Bundle>();
     }
 }

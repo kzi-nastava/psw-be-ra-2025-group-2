@@ -80,4 +80,11 @@ public class TourDbRepository : ITourRepository
         _dbSet.Remove(tour);
         await DbContext.SaveChangesAsync();
     }
+
+    public List<Tour> GetByIds(List<long> ids)
+    {
+        return _dbSet
+            .Where(t => ids.Contains(t.Id))
+            .ToList();
+    }
 }

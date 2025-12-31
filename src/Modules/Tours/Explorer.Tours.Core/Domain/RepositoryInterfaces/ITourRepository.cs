@@ -16,5 +16,7 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         Task DeleteAsync(Tour tour);
         public List<Tour> GetAllPublished();
         public List<Tour> GetAllNonDrafts();
+
+        List<Tour> GetByIds(List<long> ids); //nova metoda za bundles
     }
 }
