@@ -17,7 +17,7 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
     public TourPublishCommandTests(ToursTestFactory factory) : base(factory) { }
 
     [Fact]
-    public void Publish_succeeds_for_valid_tour()
+    public async Task Publish_succeeds_for_valid_tour()  // ASYNC
     {
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
@@ -30,21 +30,20 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             Difficulty = 3,
             AuthorId = -11,
             Tags = new List<string> { "test", "publish" },
-
             Durations = new List<TourDurationDto>
+        {
+            new TourDurationDto
             {
-                new TourDurationDto
-                {
-                    TransportType = 0, // Walking
-                    Minutes = 120
-                }
+                TransportType = 0,
+                Minutes = 120
             }
+        }
         };
 
         var created = ((ObjectResult)controller.Create(newTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
 
-        controller.AddKeyPoint(created.Id, new KeyPointDto
+        await controller.AddKeyPoint(created.Id, new KeyPointDto 
         {
             OrdinalNo = 1,
             Name = "Prva tačka",
@@ -52,10 +51,11 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             SecretText = "Tajna 1",
             ImageUrl = "img1.jpg",
             Latitude = 45.0,
-            Longitude = 19.0
+            Longitude = 19.0,
+            AuthorId = -11
         });
 
-        controller.AddKeyPoint(created.Id, new KeyPointDto
+        await controller.AddKeyPoint(created.Id, new KeyPointDto  
         {
             OrdinalNo = 2,
             Name = "Druga tačka",
@@ -63,13 +63,14 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             SecretText = "Tajna 2",
             ImageUrl = "img2.jpg",
             Latitude = 45.001,
-            Longitude = 19.001
+            Longitude = 19.001,
+            AuthorId = -11
         });
 
-        var publishResult = controller.Publish(created.Id) as NoContentResult;
+        var publishResult = controller.Publish(created.Id);
 
         publishResult.ShouldNotBeNull();
-        publishResult.StatusCode.ShouldBe(204);
+        publishResult.ShouldBeOfType<NoContentResult>();
 
         var stored = dbContext.Tours.FirstOrDefault(t => t.Id == created.Id);
         stored.ShouldNotBeNull();
@@ -171,7 +172,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
                     SecretText = "Tajna",
                     ImageUrl = "img.jpg",
                     Latitude = 45.0,
-                    Longitude = 19.0
+                    Longitude = 19.0,
+                           AuthorId = -11  // ✅ DODAJ OVO
+
                 }
             },
             Durations = new List<TourDurationDto>() 
