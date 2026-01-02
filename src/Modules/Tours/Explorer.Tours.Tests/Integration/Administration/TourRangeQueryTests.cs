@@ -19,7 +19,7 @@ namespace Explorer.Tours.Tests.Integration.Administration
             // Kreiramo TourService sa null dependencijama (za ovaj test mu ne trebaju)
             var service = (TourService)Activator.CreateInstance(
                 typeof(TourService),
-                new object?[] { null, null, null, null, null })!;
+new object?[] { null, null, null, null, null, null, null })!;
 
             var method = typeof(TourService).GetMethod(
                 "IsWithinRange",

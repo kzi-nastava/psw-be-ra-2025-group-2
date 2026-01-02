@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Explorer.Stakeholders.API.Internal;
@@ -10,8 +9,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
-
-
+using Explorer.Tours.API.Public;
 
 namespace Explorer.Tours.Core.UseCases.Administration
 {
@@ -21,29 +19,31 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
         private readonly IEquipmentRepository? _equipmentRepository;
+        private readonly IPublicKeyPointService? _publicKeyPointService;
+        private readonly IPublicKeyPointRequestRepository? _requestRepository;
         private readonly ITourExecutionRepository _tourExecutionRepository;
 
-        /*public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService, ITourExecutionRepository tourExecutionRepository)
+        public TourService(
+            ITourRepository tourRepository,
+            IMapper mapper,
+            IEquipmentRepository equipmentRepository,
+            IInternalUserService userService,
+            IPublicKeyPointService publicKeyPointService,
+            IPublicKeyPointRequestRepository requestRepository,
+            ITourExecutionRepository tourExecutionRepository)
         {
             _tourRepository = tourRepository;
             _userService = userService;
             _mapper = mapper;
             _equipmentRepository = equipmentRepository;
-        }*/
-
-        public TourService(ITourRepository tourRepository, IMapper mapper, IEquipmentRepository equipmentRepository, IInternalUserService userService, ITourExecutionRepository tourExecutionRepository)
-        {
-            _tourRepository = tourRepository;
-            _userService = userService;
-            _mapper = mapper;
-            _equipmentRepository = equipmentRepository;
+            _publicKeyPointService = publicKeyPointService;
+            _requestRepository = requestRepository;
             _tourExecutionRepository = tourExecutionRepository;
         }
 
-        public TourDto Create(CreateTourDto dto) 
+        public TourDto Create(CreateTourDto dto)
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
-           
 
             if (dto.Durations != null)
             {
@@ -52,12 +52,30 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     tour.AddOrUpdateDuration((TransportType)d.TransportType, d.Minutes);
                 }
             }
-            
-            if ( dto.RequiredEquipmentIds.Any())
+
+            if (dto.KeyPoints != null && dto.KeyPoints.Any())
+            {
+                foreach (var kpDto in dto.KeyPoints)
+                {
+                    var keyPoint = new KeyPoint(
+                        kpDto.OrdinalNo,
+                        kpDto.Name,
+                        kpDto.Description,
+                        kpDto.SecretText ?? string.Empty,
+                        kpDto.ImageUrl,
+                        kpDto.Latitude,
+                        kpDto.Longitude,
+                        dto.AuthorId
+                    );
+                    tour.AddKeyPoint(keyPoint);
+                }
+            }
+
+            if (dto.RequiredEquipmentIds.Any())
             {
                 if (_equipmentRepository == null)
                     throw new InvalidOperationException("Equipment repository is not configured for this instance of TourService.");
-                
+
                 var requestedEquipment = _equipmentRepository.GetByIdsAsync(dto.RequiredEquipmentIds).Result;
 
                 if (requestedEquipment.Count != dto.RequiredEquipmentIds.Distinct().Count())
@@ -65,6 +83,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
                 tour.SetRequiredEquipment(requestedEquipment);
             }
+
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
         }
@@ -79,11 +98,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tours = _tourRepository.GetAllPublished();
             var filteredTours = tours
-                .Where(Tour =>Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
+                .Where(Tour => Tour.KeyPoints.Any(keypoint => IsWithinRange(lat, lon, keypoint.Latitude, keypoint.Longitude, range * 1000)))
                 .ToList();
             var totalCount = filteredTours.Count;
 
-            if(page>0)
+            if (page > 0)
             {
                 var pagedResult = filteredTours.Skip((page - 1) * pageSize).Take(pageSize).ToList();
                 var items = pagedResult.Select(_mapper.Map<TourDto>).ToList();
@@ -93,9 +112,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             {
                 var items = filteredTours.Select(_mapper.Map<TourDto>).ToList();
                 return new PagedResult<TourDto>(items, items.Count);
-
             }
-
         }
 
         private bool IsWithinRange(double latPosition, double lonPosition, double latPoint, double lonPoint, double rangeMeters)
@@ -121,9 +138,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tour = _tourRepository.GetByIdAsync(id).Result ?? throw new Exception("Tour not found.");
 
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
-           
             tour.SetLength(dto.LengthKm);
-
             _tourRepository.UpdateAsync(tour).Wait();
 
             return _mapper.Map<TourDto>(tour);
@@ -135,55 +150,133 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             if (tour.Status != TourStatus.Draft) throw new Exception("Only draft tours can be deleted.");
 
+            if (_publicKeyPointService != null && tour.KeyPoints != null)
+            {
+                foreach (var keyPoint in tour.KeyPoints)
+                {
+                    try
+                    {
+                        _publicKeyPointService.DeleteRequestsBySourceAsync(id, keyPoint.OrdinalNo).Wait();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+
             _tourRepository.DeleteAsync(tour).Wait();
         }
 
-        public TourDto? GetById(long id, long authorId)
+        public async Task<TourDto> GetByIdAsync(long id, long authorId)
         {
-            var tour = _tourRepository.GetByIdAsync(id).Result;
+            var tour = await _tourRepository.GetTourWithKeyPointsAsync(id);
             if (tour == null || tour.AuthorId != authorId) return null;
 
-            return _mapper.Map<TourDto>(tour);
-        }
+            var tourDto = _mapper.Map<TourDto>(tour);
 
-        public void AddKeyPoint(long tourId, KeyPointDto dto)
-        {
-            var tour = _tourRepository.GetByIdAsync(tourId).Result
-                       ?? throw new Exception("Tour not found.");
-            tour.AddKeyPoint(_mapper.Map<KeyPoint>(dto));
-            _tourRepository.UpdateAsync(tour).Wait();
-        }
-
-        public TourDto? GetPublishedTour(long tourId)
-        {
-            var tour = _tourRepository.GetByIdAsync(tourId).Result;
-
-            // Vraća turu samo ako postoji i ako je objavljena
-            if (tour == null || tour.Status != TourStatus.Published)
+            if (tourDto.KeyPoints != null && tourDto.KeyPoints.Any())
             {
-                return null;
+                foreach (var kpDto in tourDto.KeyPoints)
+                {
+                    kpDto.PublicStatus = await GetKeyPointPublicStatusAsync(id, kpDto.OrdinalNo);
+                }
             }
 
-            return _mapper.Map<TourDto>(tour);
+            return tourDto;
         }
 
-        public void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto)
+        public async Task<KeyPointDto> AddKeyPoint(long tourId, KeyPointDto dto)
         {
-            var tour = _tourRepository.GetByIdAsync(tourId).Result
-                       ?? throw new Exception("Tour not found.");
+            var tour = await GetTourOrThrowAsync(tourId);
 
-           
-            var update = new KeyPointUpdate(
+            var keyPoint = new KeyPoint(
+                dto.OrdinalNo,
                 dto.Name,
                 dto.Description,
-                dto.SecretText,
+                dto.SecretText ?? string.Empty,
+                dto.ImageUrl,
+                dto.Latitude,
+                dto.Longitude,
+                dto.AuthorId
+            );
+
+            tour.AddKeyPoint(keyPoint);
+            await _tourRepository.UpdateAsync(tour);
+
+            if (dto.SuggestForPublicUse && _publicKeyPointService != null)
+            {
+                try
+                {
+                    await _publicKeyPointService.SubmitRequestAsync(tourId, dto.OrdinalNo, dto.AuthorId);
+                }
+                catch (InvalidOperationException)
+                {
+                }
+            }
+
+            var createdKeyPoint = _mapper.Map<KeyPointDto>(keyPoint);
+            createdKeyPoint.PublicStatus = await GetKeyPointPublicStatusAsync(tourId, dto.OrdinalNo);
+
+            return createdKeyPoint;
+        }
+
+        public async Task<KeyPointDto> UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto)
+        {
+            var tour = await GetTourOrThrowAsync(tourId);
+            var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
+
+            keyPoint.Update(
+                dto.Name,
+                dto.Description,
+                dto.SecretText ?? string.Empty,
                 dto.ImageUrl,
                 dto.Latitude,
                 dto.Longitude
             );
 
-            tour.UpdateKeyPoint(ordinalNo, update);
-            _tourRepository.UpdateAsync(tour).Wait();
+            await _tourRepository.UpdateAsync(tour);
+
+            if (dto.SuggestForPublicUse && _publicKeyPointService != null)
+            {
+                try
+                {
+                    await _publicKeyPointService.SubmitRequestAsync(tourId, ordinalNo, dto.AuthorId);
+                }
+                catch (InvalidOperationException)
+                {
+                }
+            }
+
+            var updatedKeyPoint = _mapper.Map<KeyPointDto>(keyPoint);
+            updatedKeyPoint.PublicStatus = await GetKeyPointPublicStatusAsync(tourId, ordinalNo);
+
+            return updatedKeyPoint;
+        }
+
+        private async Task<Tour> GetTourOrThrowAsync(long tourId)
+        {
+            var tour = await _tourRepository.GetTourWithKeyPointsAsync(tourId);
+            if (tour == null)
+                throw new KeyNotFoundException($"Tour with ID {tourId} not found.");
+            return tour;
+        }
+
+        private static KeyPoint GetKeyPointFromTourOrThrow(Tour tour, int ordinalNo)
+        {
+            var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
+            if (keyPoint == null)
+                throw new KeyNotFoundException($"KeyPoint with OrdinalNo {ordinalNo} not found in tour.");
+            return keyPoint;
+        }
+
+        private async Task<string?> GetKeyPointPublicStatusAsync(long tourId, int ordinalNo)
+        {
+            if (_requestRepository == null) return null;
+
+            var publicKeyPoint = await _requestRepository.GetPublicKeyPointBySourceAsync(tourId, ordinalNo);
+            if (publicKeyPoint == null) return null;
+
+            return publicKeyPoint.Status.ToString();
         }
 
         public void RemoveKeyPoint(long tourId, int ordinalNo)
@@ -193,12 +286,12 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.RemoveKeyPoint(ordinalNo);
             _tourRepository.UpdateAsync(tour).Wait();
         }
-        
+
         public void Archive(long id)
         {
-            var tour = _tourRepository.GetByIdAsync(id).Result 
+            var tour = _tourRepository.GetByIdAsync(id).Result
                        ?? throw new Exception("Tour not found.");
-            
+
             tour.Archive(DateTime.UtcNow);
 
             _tourRepository.UpdateAsync(tour).Wait();
@@ -213,6 +306,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             _tourRepository.UpdateAsync(tour).Wait();
         }
+
         public List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId)
         {
             if (_equipmentRepository == null)
@@ -233,7 +327,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 IsRequiredForTour = tour.Equipment.Any(te => te.Id == eq.Id)
             }).ToList();
         }
-        
 
         public void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds)
         {
@@ -255,7 +348,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             _tourRepository.UpdateAsync(tour).Wait();
         }
-        
+
         public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId)
         {
             if (_equipmentRepository == null)
@@ -279,9 +372,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return _mapper.Map<TourDto>(tour);
         }
 
+        public TourDto GetPublishedTour(long id)
+        {
+            var tour = _tourRepository.GetByIdAsync(id).Result;
+            if (tour == null) throw new KeyNotFoundException("Tour not found: " + id);
+            if (tour.Status != TourStatus.Published) throw new InvalidOperationException("Tour is not published.");
+
+            return _mapper.Map<TourDto>(tour);
+        }
+
         public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
         {
-            // TODO refaktorisati kasnije
             var tours = _tourRepository.GetAllNonDrafts();
 
             var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
@@ -323,11 +424,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return dtos;
         }
-        // upravljanje statusom ture
+
+        public TourDto? GetById(long id, long authorId)
+        {
+            return GetByIdAsync(id, authorId).Result;
+        }
 
         public void Publish(long tourId, long authorId)
         {
-            var tour = _tourRepository.GetByIdAsync(tourId).Result
+            var tour = _tourRepository.GetTourWithKeyPointsAsync(tourId).Result
                        ?? throw new Exception("Tour not found.");
 
             if (tour.AuthorId != authorId)
@@ -379,6 +484,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     PlaceName = firstKp?.Name
                 };
 
+                // Use tour.GetAverageRating() method from domain
                 dto.AverageRating = tour.GetAverageRating();
 
                 dto.Reviews = tour.Reviews.Select(r =>
@@ -399,7 +505,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
             };
         }
 
-
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images)
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result;
@@ -417,7 +522,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             if (percentage < 35.0)
                 throw new InvalidOperationException($"You have completed only {percentage:F1}% of the tour. You need at least 35% to leave a review.");
 
-            var review = new TourReview(tourId, touristId, execution.Id , rating, comment, DateTime.UtcNow, (float)percentage, images);
+            var review = new TourReview(tourId, touristId, execution.Id, rating, comment, DateTime.UtcNow, (float)percentage, images);
 
             tour.AddReview(review);
 
@@ -425,6 +530,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return _mapper.Map<TourReviewDto>(review);
         }
+
         public TourReviewDto UpdateReview(TourReviewDto reviewDto)
         {
             var tour = _tourRepository.GetByIdAsync(reviewDto.TourId).Result;
@@ -446,6 +552,16 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.DeleteReview(touristId);
 
             _tourRepository.UpdateAsync(tour).Wait();
+        }
+
+        public KeyPointDto AddKeyPointSync(long tourId, KeyPointDto dto)
+        {
+            return AddKeyPoint(tourId, dto).Result;
+        }
+
+        public KeyPointDto UpdateKeyPointSync(long tourId, int ordinalNo, KeyPointDto dto)
+        {
+            return UpdateKeyPoint(tourId, ordinalNo, dto).Result;
         }
     }
 }

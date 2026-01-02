@@ -30,9 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestData\a-delete.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="TestData\c-insert-tour-problems.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -55,6 +52,10 @@
     </None>
   
     <None Update="TestData\c-tours.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  
+    <None Update="TestData\d-keypoints.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   

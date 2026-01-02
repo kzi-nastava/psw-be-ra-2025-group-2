@@ -21,9 +21,9 @@ public class TourEquipmentCommandTests
         return eq;
     }
 
-        private static Tour CreateDraftTour(long authorId = 1)
+        private static Explorer.Tours.Core.Domain.Tour CreateDraftTour(long authorId = 1)
         {
-            return new Tour(
+            return new Explorer.Tours.Core.Domain.Tour(
                 name: "Test tour",
                 description: "Opis ture",
                 difficulty: 3,
