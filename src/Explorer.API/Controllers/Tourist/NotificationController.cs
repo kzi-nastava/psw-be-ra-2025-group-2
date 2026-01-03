@@ -7,7 +7,7 @@ using Explorer.Payments.Core.Domain.Wallets;
 namespace Explorer.API.Controllers.Tourist
 {
     [Authorize(Roles = "tourist")]
-    [Route("api/notifications")]
+    [Route("api/wallet/notifications")]
     [ApiController]
     public class NotificationController : ControllerBase
     {
