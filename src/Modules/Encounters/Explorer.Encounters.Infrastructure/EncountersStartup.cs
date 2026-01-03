@@ -35,6 +35,7 @@ namespace Explorer.Encounters.Infrastructure
         private static void SetupInfrastructure(IServiceCollection services)
         {
             services.AddScoped<IEncounterRepository, EncounterDbRepository>();
+            services.AddScoped<IEncounterExecutionRepository, EncounterExecutionRepository>();
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("encounters"));
             dataSourceBuilder.EnableDynamicJson();

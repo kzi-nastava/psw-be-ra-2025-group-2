@@ -147,6 +147,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 dto.ImageUrl = keyPoint.ImageUrl;
                 dto.Latitude = keyPoint.Latitude;
                 dto.Longitude = keyPoint.Longitude;
+                dto.EncounterId = keyPoint.EncounterId;
 
                 if (execution.ShouldShowKeyPointSecret(dto.OrdinalNo))
                     dto.SecretText = keyPoint.SecretText;
