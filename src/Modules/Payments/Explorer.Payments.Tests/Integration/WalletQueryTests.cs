@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Explorer.Payments.API.Public;
+using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,7 +61,11 @@ namespace Explorer.Payments.Tests.Integration
                 var adminController = CreateAdminController(scope);
 
                 // Admin deposits
-                adminController.AdminDeposit(-22, 150);
+                adminController.AdminDeposit(-22,new Explorer.API.Controllers.Administrator.Administration.WalletController.DepositRequest
+                    {
+                        Amount = 150
+                    }
+                );
 
                 // Tourist checks balance
                 var result = touristController.GetBalance();
@@ -84,11 +89,14 @@ namespace Explorer.Payments.Tests.Integration
         private static Explorer.API.Controllers.Administrator.Administration.WalletController CreateAdminController(IServiceScope scope)
         {
             return new Explorer.API.Controllers.Administrator.Administration.WalletController(
-                scope.ServiceProvider.GetRequiredService<IWalletService>())
+                scope.ServiceProvider.GetRequiredService<IWalletService>(),
+                scope.ServiceProvider.GetRequiredService<IUserService>()
+            )
             {
                 ControllerContext = BuildContext("-1", "administrator")
             };
         }
+
 
         private static ControllerContext BuildContext(string id, string role)
         {

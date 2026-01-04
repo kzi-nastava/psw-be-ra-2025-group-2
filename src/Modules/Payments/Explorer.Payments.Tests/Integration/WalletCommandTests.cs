@@ -13,6 +13,7 @@ using Shouldly;
 using System.Collections.Generic;
 using System.Security.Claims;
 using Explorer.Payments.Core.Domain.Wallets;
+using Explorer.Stakeholders.API.Public;
 
 namespace Explorer.Payments.Tests.Integration
 {
@@ -30,7 +31,7 @@ namespace Explorer.Payments.Tests.Integration
                 var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
                 // Act
-                var result = controller.AdminDeposit(-21, 50);
+                var result = controller.AdminDeposit(-21, new WalletController.DepositRequest { Amount = 50 });
 
                 // Assert
                 result.ShouldBeOfType<OkObjectResult>();
@@ -55,8 +56,7 @@ namespace Explorer.Payments.Tests.Integration
                 var initialNotificationCount = dbContext.Notifications.Count(n => n.TouristId == -22);
 
                 // Act
-                var result = controller.AdminDeposit(-22, 100);
-
+                var result = controller.AdminDeposit(-22, new WalletController.DepositRequest { Amount = 100 });
                 // Assert
                 result.ShouldBeOfType<OkObjectResult>();
 
@@ -82,7 +82,7 @@ namespace Explorer.Payments.Tests.Integration
                 var controller = CreateAdminController(scope);
 
                 // Act
-                var result = controller.AdminDeposit(-21, -50);
+                var result = controller.AdminDeposit(-21, new WalletController.DepositRequest { Amount = -50 });
 
                 // Assert
                 result.ShouldBeOfType<BadRequestObjectResult>();
@@ -97,7 +97,7 @@ namespace Explorer.Payments.Tests.Integration
                 var controller = CreateAdminController(scope);
 
                 // Act
-                var result = controller.AdminDeposit(-21, 0);
+                var result = controller.AdminDeposit(-21, new WalletController.DepositRequest { Amount = 0 });
 
                 // Assert
                 result.ShouldBeOfType<BadRequestObjectResult>();
@@ -117,7 +117,7 @@ namespace Explorer.Payments.Tests.Integration
                 existingWallet.ShouldBeNull();
 
                 // Act
-                var result = controller.AdminDeposit(-999, 200);
+                var result = controller.AdminDeposit(-999, new WalletController.DepositRequest { Amount = 200 });
 
                 // Assert
                 result.ShouldBeOfType<OkObjectResult>();
@@ -128,10 +128,12 @@ namespace Explorer.Payments.Tests.Integration
             }
         }
 
-        private static Explorer.API.Controllers.Administrator.Administration.WalletController CreateAdminController(IServiceScope scope)
+        private static WalletController CreateAdminController(IServiceScope scope)
         {
-            return new Explorer.API.Controllers.Administrator.Administration.WalletController(
-                scope.ServiceProvider.GetRequiredService<IWalletService>())
+            return new WalletController(
+                scope.ServiceProvider.GetRequiredService<IWalletService>(),
+                scope.ServiceProvider.GetRequiredService<IUserService>()
+            )
             {
                 ControllerContext = BuildContext("-1", "administrator")
             };

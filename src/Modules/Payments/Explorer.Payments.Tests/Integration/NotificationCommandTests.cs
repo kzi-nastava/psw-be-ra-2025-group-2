@@ -4,9 +4,11 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.API.Controllers.Administrator.Administration;
 using Explorer.Payments.API.Dtos;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Infrastructure.Database;
+using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -96,8 +98,10 @@ namespace Explorer.Payments.Tests.Integration
                 var initialCount = dbContext.Notifications.Count(n => n.TouristId == -22);
 
                 // Act - Admin deponuje novac
-                adminController.AdminDeposit(-22, 150);
-
+                adminController.AdminDeposit(-22, new WalletController.DepositRequest
+                {
+                    Amount = 150
+                });
                 // Assert - Nova notifikacija je kreirana
                 var newCount = dbContext.Notifications.Count(n => n.TouristId == -22);
                 newCount.ShouldBe(initialCount + 1);
@@ -176,11 +180,12 @@ namespace Explorer.Payments.Tests.Integration
             };
         }
 
-        private static Explorer.API.Controllers.Administrator.Administration.WalletController CreateAdminWalletController(
-            IServiceScope scope)
+        private static WalletController CreateAdminWalletController(IServiceScope scope)
         {
-            return new Explorer.API.Controllers.Administrator.Administration.WalletController(
-                scope.ServiceProvider.GetRequiredService<IWalletService>())
+            return new WalletController(
+                scope.ServiceProvider.GetRequiredService<IWalletService>(),
+                scope.ServiceProvider.GetRequiredService<IUserService>()
+            )
             {
                 ControllerContext = BuildContext("-1", "administrator")
             };
