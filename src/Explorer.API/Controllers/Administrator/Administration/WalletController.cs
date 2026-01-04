@@ -1,4 +1,6 @@
 ﻿using Explorer.Payments.API.Public;
+using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,19 +13,28 @@ namespace Explorer.API.Controllers.Administrator.Administration;
 public class WalletController:ControllerBase
 {
     private readonly IWalletService _walletService;
+    private readonly IUserService _userService;
 
-    public WalletController(IWalletService walletService)
+
+    public WalletController(IWalletService walletService, IUserService userService)
     {
         _walletService = walletService;
+        _userService = userService;
     }
 
+
     [HttpPost("{touristId}/deposit")]
-    public IActionResult AdminDeposit(long touristId, [FromQuery] int amount)
+    public IActionResult AdminDeposit(long touristId, [FromBody] DepositRequest request) // IZMENJENO
     {
         try
         {
-            _walletService.AdminDeposit(touristId, amount);
-            return Ok($"Successfully deposited {amount} AC to tourist {touristId}");
+            if (request.Amount <= 0)
+            {
+                return BadRequest("Amount must be greater than 0");
+            }
+
+            _walletService.AdminDeposit(touristId, request.Amount); // IZMENJENO
+            return Ok($"Successfully deposited {request.Amount} AC to tourist {touristId}"); // IZMENJENO
         }
         catch (ArgumentException ex)
         {
@@ -34,4 +45,13 @@ public class WalletController:ControllerBase
             return StatusCode(500, $"Internal Server Error: {ex.Message}");
         }
     }
+    [HttpGet("tourists")]
+    public ActionResult<List<TouristBasicDto>> GetTourists([FromQuery] string? query)
+    {
+        return Ok(_userService.GetTourists(query));
+    }
+
+
+    public class DepositRequest
+    {public int Amount { get; set; }}
 }
