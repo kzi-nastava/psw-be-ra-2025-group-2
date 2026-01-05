@@ -97,8 +97,8 @@ namespace Explorer.Encounters.Core.Domain
         protected override void Validate()
         {
             base.Validate();
-            //if (RequiredPeople < 1) throw new EntityValidationException("Required people must be at least 1.");
-            //if (Range <= 0) throw new EntityValidationException("Range must be greater than 0.");
+            if (RequiredPeople < 1) throw new EntityValidationException("Required people must be at least 1.");
+            if (Range <= 0) throw new EntityValidationException("Range must be greater than 0.");
         }
     }
 
@@ -120,12 +120,22 @@ namespace Explorer.Encounters.Core.Domain
             Validate();
         }
 
+        public void UpdateHiddenLocationFields(string imageUrl, GeoLocation imageLocation, double distanceTreshold)
+        {
+            if (State != EncounterState.Draft)
+                throw new InvalidOperationException("Cannot update hidden-location fields when encounter is not in Draft state.");
+
+            ImageUrl = imageUrl;
+            ImageLocation = imageLocation;
+            DistanceTreshold = distanceTreshold;
+            Validate();
+        }
         protected override void Validate()
         {
             base.Validate();
-            //if (string.IsNullOrWhiteSpace(ImageUrl)) throw new EntityValidationException("Image URL cannot be empty.");
-            //if (ImageLocation == null) throw new EntityValidationException("Image location cannot be null.");
-            //if (DistanceTreshold <= 0) throw new EntityValidationException("Distance treshold must be greater than 0.");
+            if (string.IsNullOrWhiteSpace(ImageUrl)) throw new EntityValidationException("Image URL cannot be empty.");
+            if (ImageLocation == null) throw new EntityValidationException("Image location cannot be null.");
+            if (DistanceTreshold <= 0) throw new EntityValidationException("Distance treshold must be greater than 0.");
         }
     }
 

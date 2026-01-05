@@ -23,5 +23,13 @@ namespace Explorer.Encounters.API.Public
         public int GetCount();
 
         public void CompleteEncounter(long userId, long encounterId);
+        void ActivateEncounter(long userId, long encounterId);
+        (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) PingLocation(
+            long userId,
+            long encounterId,
+            double latitude,
+            double longitude,
+            int? deltaSeconds = null
+        );
     }
 }

@@ -5,6 +5,8 @@ using Explorer.Encounters.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.Encounters.API.Dtos.EncounterExecution;
+
 
 namespace Explorer.API.Controllers.Administrator.Administration
 {
@@ -139,6 +141,74 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 return BadRequest(ex.Message);
             }
         }
+        
+                // Tourist: Start/activate execution (for HiddenLocation and later Social)
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("activate-execution/{id:long}")]
+        public IActionResult ActivateExecution(long id)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims
+                    .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+                _encounterService.ActivateEncounter(userId, id);
+                return Ok();
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // Tourist: Ping location every ~10s (HiddenLocation progress)
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("location/{id:long}")]
+        public ActionResult<EncounterExecutionStatusDto> PingLocation(long id, [FromBody] EncounterLocationPingDto dto)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims
+                    .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+                var result = _encounterService.PingLocation(
+                    userId,
+                    id,
+                    dto.Latitude,
+                    dto.Longitude,
+                    dto.DeltaSeconds
+                );
+
+                return Ok(new EncounterExecutionStatusDto
+                {
+                    IsCompleted = result.IsCompleted,
+                    SecondsInsideZone = result.SecondsInsideZone,
+                    RequiredSeconds = result.RequiredSeconds,
+                    CompletionTime = result.CompletionTime?.ToString("O")
+                });
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
 
         [Authorize(Policy = "touristPolicy")]
         [HttpPost("complete/{id:long}")]

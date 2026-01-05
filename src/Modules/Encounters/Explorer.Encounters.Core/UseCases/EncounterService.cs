@@ -20,6 +20,9 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly IEncounterExecutionRepository _executionRepository;
         private readonly IMapper _mapper;
 
+        
+        private const int HiddenRequiredSecondsInZone = 30;
+        private const int DefaultPingDeltaSeconds = 10;
         public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper)
         {
             _encounterRepository = repository;
@@ -149,6 +152,104 @@ namespace Explorer.Encounters.Core.UseCases
             var updated = _encounterRepository.Update(encounter);
 
             return _mapper.Map<EncounterDto>(updated);
+        }
+ /// <summary>
+        /// Creates an "in-progress" execution if not already completed and if none exists.
+        /// </summary>
+        public void ActivateEncounter(long userId, long encounterId)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found");
+
+            if (!encounter.IsActive())
+                throw new InvalidOperationException("Encounter is not active.");
+
+            if (_executionRepository.IsCompleted(userId, encounterId))
+                return; // already completed, nothing to do
+
+            var existing = _executionRepository.Get(userId, encounterId);
+            if (existing != null && !existing.IsCompleted)
+                return; // already active/in-progress
+
+            _executionRepository.Add(new EncounterExecution(userId, encounterId));
+        }
+
+        /// <summary>
+        /// Called every ~10 seconds by the tourist app. Updates execution progress.
+        /// For HiddenLocation: must accumulate 30 seconds inside DistanceTreshold to complete.
+        /// </summary>
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) PingLocation(
+            long userId,
+            long encounterId,
+            double latitude,
+            double longitude,
+            int? deltaSeconds = null)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found");
+
+            if (encounter.Type != EncounterType.Location)
+                throw new InvalidOperationException("Location ping is only supported for Hidden Location encounters.");
+
+            if (!encounter.IsActive())
+                throw new InvalidOperationException("Encounter is not active.");
+
+            var hidden = encounter as HiddenLocationEncounter;
+            if (hidden == null)
+                throw new InvalidOperationException("Encounter is not a HiddenLocationEncounter.");
+
+            // Ensure execution exists
+            var execution = _executionRepository.Get(userId, encounterId);
+            if (execution == null)
+            {
+                // auto-activate on first ping
+                execution = _executionRepository.Add(new EncounterExecution(userId, encounterId));
+            }
+
+            if (execution.IsCompleted)
+                return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
+
+            var ds = deltaSeconds ?? DefaultPingDeltaSeconds;
+
+            var distanceMeters = CalculateDistanceMeters(
+                latitude, longitude,
+                hidden.ImageLocation.Latitude, hidden.ImageLocation.Longitude);
+
+            var isInside = distanceMeters <= hidden.DistanceTreshold;
+
+            execution.RegisterPing(isInside, ds);
+
+            if (execution.SecondsInsideZone >= HiddenRequiredSecondsInZone)
+            {
+                // mark completed once
+                execution.MarkCompleted();
+
+                // XP logic (only first completion)
+                // TODO: call XP/Level service here
+            }
+
+            _executionRepository.Update(execution);
+
+            return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
+        }
+        private static double CalculateDistanceMeters(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371000; // Earth radius in meters
+
+            static double ToRad(double deg) => deg * Math.PI / 180.0;
+
+            var dLat = ToRad(lat2 - lat1);
+            var dLon = ToRad(lon2 - lon1);
+
+            var a =
+                Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
         }
 
         public void CompleteEncounter(long userId, long encounterId)
