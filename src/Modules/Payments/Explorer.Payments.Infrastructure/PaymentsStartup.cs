@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Payments.API.Public;
+using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.Payments.Core.Mappers;
+using Explorer.Payments.Core.UseCases;
 using Explorer.Payments.Infrastructure.Database;
+using Explorer.Payments.Infrastructure.Database.Repositories;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.UseCases;
@@ -28,6 +32,9 @@ namespace Explorer.Payments.Infrastructure
         {
             services.AddScoped<IShoppingCartService, ShoppingCartService>();
             services.AddScoped<IPurchaseService, PurchaseService>();
+
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<INotificationService, NotificationService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
@@ -37,6 +44,8 @@ namespace Explorer.Payments.Infrastructure
             services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
             services.AddScoped<ITourPurchaseTokenRepository, TourPurchaseTokenRepository>();
 
+            services.AddScoped<IWalletRepository, WalletRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("payments"));
             dataSourceBuilder.EnableDynamicJson();
