@@ -1,13 +1,5 @@
-﻿using AutoMapper.Configuration.Annotations;
-using Explorer.BuildingBlocks.Core.Domain;
+﻿using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.BuildingBlocks.Core.Exceptions;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Explorer.Encounters.Core.Domain
 {
@@ -16,7 +8,7 @@ namespace Explorer.Encounters.Core.Domain
         Draft = 0,
         Active = 1,
         Archived = 2
-    };
+    }
 
     public enum EncounterType
     {
@@ -25,29 +17,28 @@ namespace Explorer.Encounters.Core.Domain
         Miscellaneous = 2
     }
 
-    public class Encounter : AggregateRoot
+    // Abstraktna bazna klasa - Aggregate Root
+    public abstract class Encounter : AggregateRoot
     {
         public string Name { get; private set; }
         public string Description { get; private set; }
         public GeoLocation Location { get; private set; }
         public ExperiencePoints XP { get; private set; }
-
         public EncounterState State { get; private set; }
         public EncounterType Type { get; private set; }
 
-        private Encounter() { }
+        // Prazan konstruktor za EF Core (mora postojati)
+        protected Encounter() { }
 
-        public Encounter(string name, string description, GeoLocation location, ExperiencePoints xp, EncounterType type)
+        protected Encounter(string name, string description, GeoLocation location, ExperiencePoints xp, EncounterType type)
         {
             Name = name;
             Description = description;
             Location = location;
             XP = xp;
             Type = type;
-
             State = EncounterState.Draft;
 
-            Validate();
         }
 
         public void Update(string name, string description, GeoLocation location, ExperiencePoints xp, EncounterType type)
@@ -60,7 +51,6 @@ namespace Explorer.Encounters.Core.Domain
             Location = location;
             XP = xp;
             Type = type;
-
             Validate();
         }
 
@@ -68,7 +58,6 @@ namespace Explorer.Encounters.Core.Domain
         {
             if (State == EncounterState.Active)
                 throw new InvalidOperationException("Cannot activate an encounter which is already active.");
-
             State = EncounterState.Active;
         }
 
@@ -76,24 +65,77 @@ namespace Explorer.Encounters.Core.Domain
         {
             if (State != EncounterState.Active)
                 throw new InvalidOperationException("Cannot archive an encounter which is not active.");
-
             State = EncounterState.Archived;
         }
 
-        private void Validate()
+        public bool IsActive() => State == EncounterState.Active;
+
+        protected virtual void Validate()
         {
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new EntityValidationException("Name cannot be empty.");
+            if (string.IsNullOrWhiteSpace(Name)) throw new EntityValidationException("Name cannot be empty.");
+            if (string.IsNullOrWhiteSpace(Description)) throw new EntityValidationException("Description cannot be empty.");
+            if (Location == null) throw new EntityValidationException("Location cannot be null.");
+            if (XP == null) throw new EntityValidationException("XP cannot be null.");
+        }
+    }
 
-            if (string.IsNullOrWhiteSpace(Description))
-                throw new EntityValidationException("Description cannot be empty.");
+    // 1. Social Encounter
+    public class SocialEncounter : Encounter
+    {
+        public int RequiredPeople { get; private set; }
+        public double Range { get; private set; }
+        protected SocialEncounter() { }
 
-            if (Location == null)
-                throw new EntityValidationException("Location cannot be null.");
-
-            if (XP == null)
-                throw new EntityValidationException("XP cannot be null.");
+        public SocialEncounter(string name, string description, GeoLocation location, ExperiencePoints xp, int requiredPeople, double range)
+            : base(name, description, location, xp, EncounterType.Social)
+        {
+            RequiredPeople = requiredPeople;
+            Range = range;
+            Validate();
         }
 
+        protected override void Validate()
+        {
+            base.Validate();
+            //if (RequiredPeople < 1) throw new EntityValidationException("Required people must be at least 1.");
+            //if (Range <= 0) throw new EntityValidationException("Range must be greater than 0.");
+        }
+    }
+
+    // 2. Hidden Location Encounter
+    public class HiddenLocationEncounter : Encounter
+    {
+        public string ImageUrl { get; private set; }
+        public GeoLocation ImageLocation { get; private set; }
+        public double DistanceTreshold { get; private set; }
+
+        protected HiddenLocationEncounter() { }
+
+        public HiddenLocationEncounter(string name, string description, GeoLocation location, ExperiencePoints xp, string imageUrl, GeoLocation imageLocation, double distanceTreshold)
+            : base(name, description, location, xp, EncounterType.Location)
+        {
+            ImageUrl = imageUrl;
+            ImageLocation = imageLocation;
+            DistanceTreshold = distanceTreshold;
+            Validate();
+        }
+
+        protected override void Validate()
+        {
+            base.Validate();
+            //if (string.IsNullOrWhiteSpace(ImageUrl)) throw new EntityValidationException("Image URL cannot be empty.");
+            //if (ImageLocation == null) throw new EntityValidationException("Image location cannot be null.");
+            //if (DistanceTreshold <= 0) throw new EntityValidationException("Distance treshold must be greater than 0.");
+        }
+    }
+
+    public class MiscEncounter : Encounter
+    {
+        protected MiscEncounter() { }
+
+        public MiscEncounter(string name, string description, GeoLocation location, ExperiencePoints xp)
+            : base(name, description, location, xp, EncounterType.Miscellaneous)
+        {
+        }
     }
 }

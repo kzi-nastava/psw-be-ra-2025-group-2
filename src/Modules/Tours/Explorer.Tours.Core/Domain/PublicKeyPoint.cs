@@ -22,6 +22,8 @@ public class PublicKeyPoint : Entity
     public DateTime CreatedAt { get; private set; }
     public long? SourceTourId { get; private set; }
     public int? SourceOrdinalNo { get; private set; }
+    public long? EncounterId { get; private set; }
+
 
     private PublicKeyPoint() { }
 
@@ -34,7 +36,8 @@ public class PublicKeyPoint : Entity
         double longitude,
         long authorId,
         long? sourceTourId = null,
-        int? sourceOrdinalNo = null)
+        int? sourceOrdinalNo = null,
+        long? encounterId = null)
     {
         ValidateInputs(name, description, latitude, longitude);
 
@@ -49,6 +52,7 @@ public class PublicKeyPoint : Entity
         CreatedAt = DateTime.UtcNow;
         SourceTourId = sourceTourId;
         SourceOrdinalNo = sourceOrdinalNo;
+        EncounterId = encounterId;
     }
 
     public static PublicKeyPoint CreateFromKeyPoint(KeyPoint keyPoint, long authorId, long tourId)
@@ -65,7 +69,8 @@ public class PublicKeyPoint : Entity
             keyPoint.Longitude,
             authorId,
             tourId,
-            keyPoint.OrdinalNo
+            keyPoint.OrdinalNo,
+            keyPoint.EncounterId
         );
     }
 
@@ -95,7 +100,8 @@ public class PublicKeyPoint : Entity
             ImageUrl,
             Latitude,
             Longitude,
-            AuthorId
+            AuthorId,
+            EncounterId
         );
     }
 

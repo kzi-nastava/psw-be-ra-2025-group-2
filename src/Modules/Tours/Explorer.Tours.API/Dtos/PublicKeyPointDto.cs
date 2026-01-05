@@ -14,4 +14,5 @@ public class PublicKeyPointDto
     public DateTime CreatedAt { get; set; }
     public long? SourceTourId { get; set; }
     public int? SourceOrdinalNo { get; set; }
+    public long? EncounterId { get; set; }
 }

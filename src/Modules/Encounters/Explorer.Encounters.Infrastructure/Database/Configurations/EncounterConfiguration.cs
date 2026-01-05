@@ -1,11 +1,6 @@
 ﻿using Explorer.Encounters.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Explorer.Encounters.Infrastructure.Database.Configurations
 {
@@ -18,21 +13,20 @@ namespace Explorer.Encounters.Infrastructure.Database.Configurations
 
             builder.OwnsOne(e => e.XP, xp =>
             {
-                xp.Property(p => p.Value)
-                .HasColumnName("XP")
-                .IsRequired();
+                xp.Property(p => p.Value).HasColumnName("XP").IsRequired();
             });
 
             builder.OwnsOne(e => e.Location, l =>
             {
-                l.Property(p => p.Latitude)
-                .HasColumnName("Latitude")
-                .IsRequired();
-
-                l.Property(p => p.Longitude)
-                .HasColumnName("Longitude")
-                .IsRequired();
+                l.Property(p => p.Latitude).HasColumnName("Latitude").IsRequired();
+                l.Property(p => p.Longitude).HasColumnName("Longitude").IsRequired();
             });
+
+            builder.HasDiscriminator<EncounterType>("Type")
+                .HasValue<SocialEncounter>(EncounterType.Social)
+                .HasValue<HiddenLocationEncounter>(EncounterType.Location)
+                .HasValue<MiscEncounter>(EncounterType.Miscellaneous);
+
         }
     }
 }

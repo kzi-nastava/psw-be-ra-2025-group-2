@@ -17,11 +17,13 @@ namespace Explorer.Encounters.Core.UseCases
     public class EncounterService : IEncounterService
     {
         private readonly IEncounterRepository _encounterRepository;
+        private readonly IEncounterExecutionRepository _executionRepository;
         private readonly IMapper _mapper;
 
-        public EncounterService(IEncounterRepository repository, IMapper mapper)
+        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper)
         {
             _encounterRepository = repository;
+            _executionRepository = executionRepository;
             _mapper = mapper;
         }
 
@@ -40,10 +42,51 @@ namespace Explorer.Encounters.Core.UseCases
 
         public EncounterDto Create(CreateEncounterDto createDto)
         {
-            var newEncounter = _mapper.Map<Encounter>(createDto);
+            EncounterType type;
+            if (!Enum.TryParse(createDto.Type, true, out type))
+            {
+                throw new ArgumentException("Invalid encounter type");
+            }
 
-            var created = _encounterRepository.Create(newEncounter);
+            Encounter encounter;
 
+            switch (type)
+            {
+                case EncounterType.Social:
+                    encounter = new SocialEncounter(
+                        createDto.Name,
+                        createDto.Description,
+                        new GeoLocation(createDto.Latitude, createDto.Longitude),
+                        new ExperiencePoints(createDto.XP),
+                        createDto.RequiredPeople ?? 5,
+                        createDto.Range ?? 10
+                    );
+                    break;
+
+                case EncounterType.Location:
+                    encounter = new HiddenLocationEncounter(
+                        createDto.Name,
+                        createDto.Description,
+                        new GeoLocation(createDto.Latitude, createDto.Longitude),
+                        new ExperiencePoints(createDto.XP),
+                        createDto.ImageUrl ?? string.Empty,
+                        new GeoLocation(createDto.ImageLatitude ?? 0, createDto.ImageLongitude ?? 0),
+                        createDto.DistanceTreshold ?? 5
+                    );
+                    break;
+
+                case EncounterType.Miscellaneous:
+                default:
+                    encounter = new MiscEncounter(
+                        createDto.Name,
+                        createDto.Description,
+                        new GeoLocation(createDto.Latitude, createDto.Longitude),
+                        new ExperiencePoints(createDto.XP)
+                    );
+                    break;
+            }
+
+            var created = _encounterRepository.Create(encounter);
             return _mapper.Map<EncounterDto>(created);
         }
 
@@ -106,6 +149,33 @@ namespace Explorer.Encounters.Core.UseCases
             var updated = _encounterRepository.Update(encounter);
 
             return _mapper.Map<EncounterDto>(updated);
+        }
+
+        public void CompleteEncounter(long userId, long encounterId)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found");
+
+            if (encounter.Type != EncounterType.Miscellaneous)
+                throw new InvalidOperationException("Only Miscellaneous encounters can be completed manually.");
+
+            bool alreadyCompleted = _executionRepository.IsCompleted(userId, encounterId);
+
+            var execution = new EncounterExecution(userId, encounterId);
+            _executionRepository.Add(execution);
+
+            // Logika za XP
+            if (!alreadyCompleted)
+            {
+                // Korisnik prvi put rešava izazov - Daj mu XP
+                // TODO: Pozovi servis za dodavanje XP-a korisniku
+            }
+            else
+            {
+                // Korisnik je već rešio ovo ranije. 
+                // Ovde ne radimo ništa oko XP-a
+            }
         }
     }
 }

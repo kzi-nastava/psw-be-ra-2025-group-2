@@ -25,6 +25,19 @@ public class PublicKeyPointCommandTests : BaseToursIntegrationTest
         var controller = CreateController(scope);
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
+        await dbContext.Database.ExecuteSqlRawAsync(@"
+            DELETE FROM tours.""PublicKeyPointRequests"" 
+            WHERE ""PublicKeyPointId"" IN (
+                SELECT ""Id"" FROM tours.""PublicKeyPoints"" 
+                WHERE ""SourceTourId"" = -15 AND ""SourceOrdinalNo"" = 2
+            )
+        ");
+
+        await dbContext.Database.ExecuteSqlRawAsync(@"
+            DELETE FROM tours.""PublicKeyPoints"" 
+            WHERE ""SourceTourId"" = -15 AND ""SourceOrdinalNo"" = 2
+        ");
+
         var submitDto = new SubmitKeyPointRequestDto
         {
             TourId = -15,
@@ -38,12 +51,6 @@ public class PublicKeyPointCommandTests : BaseToursIntegrationTest
         {
             var errorObj = badRequest.Value;
             Console.WriteLine($"❌ BadRequest Error: {errorObj}");
-            var errorType = errorObj?.GetType();
-            if (errorType?.GetProperty("error") != null)
-            {
-                var errorMsg = errorType.GetProperty("error")?.GetValue(errorObj);
-                Console.WriteLine($"❌ Error Message: {errorMsg}");
-            }
         }
 
         // Assert - Response

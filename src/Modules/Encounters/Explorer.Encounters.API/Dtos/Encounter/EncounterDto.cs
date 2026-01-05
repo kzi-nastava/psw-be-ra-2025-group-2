@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Explorer.Encounters.API.Dtos.Encounter
 {
@@ -18,5 +13,11 @@ namespace Explorer.Encounters.API.Dtos.Encounter
         public int XP { get; set; }
         public string State { get; set; }
         public string Type { get; set; }
+        public int? RequiredPeople { get; set; }
+        public double? Range { get; set; }
+        public string? ImageUrl { get; set; }
+        public double? ImageLatitude { get; set; }
+        public double? ImageLongitude { get; set; }
+        public double? DistanceTreshold { get; set; }
     }
 }
