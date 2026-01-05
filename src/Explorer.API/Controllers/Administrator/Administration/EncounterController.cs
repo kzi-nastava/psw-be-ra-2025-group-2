@@ -161,5 +161,31 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 return BadRequest(e.Message);
             }
         }
+
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("{id:long}/social/presence")]
+        public ActionResult<SocialPresenceStatusDto> PingSocialPresence(long id, [FromBody] SocialPresencePingDto dto)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims
+                    .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+                var result = _encounterService.PingSocialPresence(userId, id, dto);
+                return Ok(result);
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

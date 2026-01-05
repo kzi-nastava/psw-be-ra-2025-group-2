@@ -9,6 +9,7 @@ namespace Explorer.Encounters.Infrastructure.Database
         public DbSet<Encounter> Encounters { get; set; }
 
         public DbSet<EncounterExecution> EncounterExecutions { get; set; }
+        public DbSet<EncounterPresence> EncounterPresences { get; set; }
         public EncountersContext(DbContextOptions<EncountersContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -19,12 +19,14 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
         private readonly IMapper _mapper;
+        private readonly IEncounterPresenceRepository _presenceRepository;
 
-        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper)
+        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper, IEncounterPresenceRepository presenceRepository)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
             _mapper = mapper;
+            _presenceRepository = presenceRepository;
         }
 
         public void Archive(long id)
@@ -177,5 +179,65 @@ namespace Explorer.Encounters.Core.UseCases
                 // Ovde ne radimo ništa oko XP-a
             }
         }
+
+        public SocialPresenceStatusDto PingSocialPresence(long userId, long encounterId, SocialPresencePingDto ping)
+        {
+            var encounter = _encounterRepository.GetById(encounterId)
+                ?? throw new NotFoundException("Encounter not found");
+
+            if (encounter.Type != EncounterType.Social)
+                throw new InvalidOperationException("Encounter is not social.");
+
+            if (!encounter.IsActive())
+                throw new InvalidOperationException("Encounter is not active.");
+
+            var social = (SocialEncounter)encounter;
+
+            const int PresenceTtlSeconds = 25; // ping na 10s + tolerancija
+            var now = DateTime.UtcNow;
+            var cutoff = now.AddSeconds(-PresenceTtlSeconds);
+
+            var distance = GeoDistance.DistanceMeters(
+                ping.Latitude, ping.Longitude,
+                encounter.Location.Latitude, encounter.Location.Longitude
+            );
+
+            bool inRange = distance <= social.Range;
+
+            // 1) Očisti stare prisustva
+            _presenceRepository.RemoveOlderThan(encounterId, cutoff);
+
+            // 2) Upsert ili remove za ovog korisnika
+            if (inRange)
+                _presenceRepository.Upsert(encounterId, userId, ping.Latitude, ping.Longitude);
+            else
+                _presenceRepository.Remove(encounterId, userId);
+
+            // 3) Prebroj aktivne u opsegu
+            var activeUserIds = _presenceRepository.GetActiveUserIds(encounterId, cutoff);
+            var activeCount = activeUserIds.Count;
+
+            // 4) Kad ih ima dovoljno, reši za svakog aktivnog koji još nije rešio
+            bool justCompleted = false;
+            if (activeCount >= social.RequiredPeople)
+            {
+                foreach (var uid in activeUserIds)
+                {
+                    if (_executionRepository.IsCompleted(uid, encounterId)) continue;
+
+                    _executionRepository.Add(new EncounterExecution(uid, encounterId));
+                    justCompleted = true;
+                }
+            }
+
+            return new SocialPresenceStatusDto
+            {
+                InRange = inRange,
+                ActiveCount = activeCount,
+                RequiredPeople = social.RequiredPeople,
+                JustCompleted = justCompleted
+            };
+        }
+
     }
 }

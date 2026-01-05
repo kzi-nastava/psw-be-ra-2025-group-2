@@ -23,5 +23,7 @@ namespace Explorer.Encounters.API.Public
         public int GetCount();
 
         public void CompleteEncounter(long userId, long encounterId);
+        SocialPresenceStatusDto PingSocialPresence(long userId, long encounterId, SocialPresencePingDto ping);
+
     }
 }
