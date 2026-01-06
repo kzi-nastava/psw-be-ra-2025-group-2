@@ -34,6 +34,9 @@ public static class ToursStartup
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
 
+        services.AddHttpClient();
+        services.AddScoped<ITourChatService, TourChatService>();
+
         services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
         services.AddScoped<INotificationService, NotificationService>();
 
