@@ -30,6 +30,7 @@ namespace Explorer.Tours.Core.Domain.Report
 
             TourId = tourId;
             TouristId = touristId;
+            ReportReason = reportReason;
             State = TourReportState.Pending;
         }
 
