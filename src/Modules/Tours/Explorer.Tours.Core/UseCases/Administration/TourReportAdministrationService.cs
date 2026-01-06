@@ -38,7 +38,12 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             report.Accept();
 
-            _internalUserService.BlockUser(tour.AuthorId);
+            try
+            {
+                _internalUserService.BlockUser(tour.AuthorId);
+            }
+            catch(Exception ex) { }
+            
 
             _reportRepository.Update(report);
         }
