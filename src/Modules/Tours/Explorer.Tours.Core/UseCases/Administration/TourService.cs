@@ -65,7 +65,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                         kpDto.ImageUrl,
                         kpDto.Latitude,
                         kpDto.Longitude,
-                        dto.AuthorId
+                        dto.AuthorId,
+                        kpDto.EncounterId
                     );
                     tour.AddKeyPoint(keyPoint);
                 }
@@ -197,7 +198,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.ImageUrl,
                 dto.Latitude,
                 dto.Longitude,
-                dto.AuthorId
+                dto.AuthorId,
+                dto.EncounterId
             );
 
             tour.AddKeyPoint(keyPoint);
@@ -231,7 +233,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.SecretText ?? string.Empty,
                 dto.ImageUrl,
                 dto.Latitude,
-                dto.Longitude
+                dto.Longitude,
+                dto.EncounterId
             );
 
             await _tourRepository.UpdateAsync(tour);

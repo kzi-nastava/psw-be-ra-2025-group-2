@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.Domain;
-using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Mappers.Converters;
@@ -19,21 +13,26 @@ namespace Explorer.Encounters.Core.Mappers
             CreateMap<string, EncounterType>().ConvertUsing<EncounterTypeConverter>();
 
             CreateMap<Encounter, EncounterDto>()
-                .ForMember(dest => dest.Latitude,
-                opt => opt.MapFrom(
-                    src => src.Location.Latitude))
-                .ForMember(dest => dest.Longitude,
-                opt => opt.MapFrom(
-                    src => src.Location.Longitude))
-                .ForMember(dest => dest.XP,
-                opt => opt.MapFrom(
-                    src => src.XP.Value));
+                .Include<SocialEncounter, EncounterDto>()
+                .Include<HiddenLocationEncounter, EncounterDto>()
+                .Include<MiscEncounter, EncounterDto>()
+                .ForMember(dest => dest.Latitude, opt => opt.MapFrom(src => src.Location.Latitude))
+                .ForMember(dest => dest.Longitude, opt => opt.MapFrom(src => src.Location.Longitude))
+                .ForMember(dest => dest.XP, opt => opt.MapFrom(src => src.XP.Value))
+                .ForMember(dest => dest.State, opt => opt.MapFrom(src => src.State.ToString()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
 
-            CreateMap<CreateEncounterDto, Encounter>().ConstructUsing((src, ctx) => new Encounter(src.Name,
-                src.Description,
-                new GeoLocation(src.Latitude, src.Longitude),
-                new ExperiencePoints(src.XP),
-                ctx.Mapper.Map<EncounterType>(src.Type)));
+            CreateMap<SocialEncounter, EncounterDto>()
+                .ForMember(dest => dest.RequiredPeople, opt => opt.MapFrom(src => src.RequiredPeople))
+                .ForMember(dest => dest.Range, opt => opt.MapFrom(src => src.Range));
+
+            CreateMap<HiddenLocationEncounter, EncounterDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+                .ForMember(dest => dest.DistanceTreshold, opt => opt.MapFrom(src => src.DistanceTreshold))
+                .ForMember(dest => dest.ImageLatitude, opt => opt.MapFrom(src => src.ImageLocation.Latitude))
+                .ForMember(dest => dest.ImageLongitude, opt => opt.MapFrom(src => src.ImageLocation.Longitude));
+
+            CreateMap<MiscEncounter, EncounterDto>();
         }
     }
 }

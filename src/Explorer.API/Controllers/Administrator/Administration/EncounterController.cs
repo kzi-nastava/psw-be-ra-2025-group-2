@@ -19,7 +19,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
             _encounterService = encounterService;
         }
 
-        [Authorize(Policy = "administratorPolicy")]
+        [Authorize(Roles = "administrator, tourist")]
         [HttpGet("{id:long}")]
         public ActionResult<EncounterDto> GetById(long id)
         {
@@ -137,6 +137,28 @@ namespace Explorer.API.Controllers.Administrator.Administration
             catch(Exception ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("complete/{id:long}")]
+        public ActionResult Complete(long id)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+                _encounterService.CompleteEncounter(userId, id);
+
+                return Ok();
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
             }
         }
     }
