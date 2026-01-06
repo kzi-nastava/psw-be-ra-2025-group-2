@@ -66,5 +66,20 @@ namespace Explorer.Stakeholders.Core.UseCases.Internal
             };
         }
 
+        public void BlockUser(long id)
+        {
+            var user = _repository.GetActiveById(id);
+            if (user == null)
+            {
+                throw new Exception("User not found or already inactive");
+            }
+            if (user.Role == UserRole.Administrator)
+            {
+                throw new ArgumentException("You cannot block another Administrator.");
+            }
+            user.IsActive = false;
+            _repository.Update(user);
+        }
+
     }
 }

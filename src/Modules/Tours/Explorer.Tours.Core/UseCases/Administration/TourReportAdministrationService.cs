@@ -17,12 +17,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly ITourReportRepository _reportRepository;
         private readonly ITourRepository _tourRepository;
         private readonly IUsernameProvider _usernameProvider;
+        private readonly IInternalUserService _internalUserService;
 
-        public TourReportAdministrationService(ITourReportRepository reportRepository, IUsernameProvider usernameProvider, ITourRepository tourRepository)
+        public TourReportAdministrationService(ITourReportRepository reportRepository, IUsernameProvider usernameProvider, ITourRepository tourRepository, IInternalUserService internalUserService)
         {
             _reportRepository = reportRepository;
             _usernameProvider = usernameProvider;
             _tourRepository = tourRepository;
+            _internalUserService = internalUserService;
         }
 
         public void AcceptReport(long reportId)
@@ -30,7 +32,13 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var report = _reportRepository.GetById(reportId);
             if (report == null) throw new NotFoundException("Report not found.");
 
+            var tour = _tourRepository.GetByIdAsync(report.TourId).Result;
+
+            if (tour == null) throw new NotFoundException("Tour not found.");
+
             report.Accept();
+
+            _internalUserService.BlockUser(tour.AuthorId);
 
             _reportRepository.Update(report);
         }

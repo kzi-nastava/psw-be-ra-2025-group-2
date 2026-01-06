@@ -6,6 +6,7 @@ public interface IUserRepository
 {
     bool Exists(string username);
     User? GetActiveByName(string username);
+    User? GetActiveById(long id);
     User Create(User user);
     long GetPersonId(long userId);
     User? GetUserByUsername(string username);
