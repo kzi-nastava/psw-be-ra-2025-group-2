@@ -336,7 +336,8 @@ namespace Explorer.Encounters.Core.UseCases
             var exec = _executionRepository.Get(userId, encounterId);
 
             if (exec == null)
-                return (false, 0, 30, null); // nije aktiviran
+                throw new InvalidOperationException("Encounter is not activated.");
+
 
             return (exec.IsCompleted, exec.SecondsInsideZone, 30, exec.CompletionTime);
         }
