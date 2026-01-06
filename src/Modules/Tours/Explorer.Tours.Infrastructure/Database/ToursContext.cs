@@ -1,5 +1,6 @@
 ﻿using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.Execution;
+using Explorer.Tours.Core.Domain.Report;
 using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Tours.Infrastructure.Database;
@@ -19,6 +20,7 @@ public class ToursContext : DbContext
 
     public DbSet<TourExecution> TourExecutions { get; set; }
     public DbSet<TourReview> TourReviews { get; set; }
+    public DbSet<TourReport> TourReports { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 
@@ -142,6 +144,17 @@ public class ToursContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired();
 
             entity.HasIndex(e => e.UserId);
+        });
+
+        modelBuilder.Entity<TourReport>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+
+            entity.Property(r => r.TourId).IsRequired();
+            entity.Property(r => r.TouristId).IsRequired();
+            entity.Property(r => r.ReportReason).IsRequired();
+
+            entity.Property(r => r.State).IsRequired().HasConversion<string>();
         });
     }
 }

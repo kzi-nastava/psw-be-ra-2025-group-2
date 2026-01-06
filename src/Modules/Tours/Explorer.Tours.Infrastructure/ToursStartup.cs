@@ -38,6 +38,8 @@ public static class ToursStartup
         services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
+        services.AddScoped<ITourReportService, TourReportService>();
+        services.AddScoped<ITourReportAdministrationService, TourReportAdministrationService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -48,6 +50,7 @@ public static class ToursStartup
         services.AddScoped<ITouristObjectRepository, TouristObjectDbRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<ITourRepository, TourDbRepository>();
+        services.AddScoped<ITourReportRepository, TourReportDbRepository>();
 
         services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
