@@ -137,6 +137,15 @@ namespace Explorer.Encounters.Core.Domain
             if (ImageLocation == null) throw new EntityValidationException("Image location cannot be null.");
             if (DistanceTreshold <= 0) throw new EntityValidationException("Distance treshold must be greater than 0.");
         }
+        
+        public void UpdateHiddenLocation(string imageUrl, GeoLocation imageLocation, double distanceTreshold)
+        {
+            ImageUrl = imageUrl;
+            ImageLocation = imageLocation;
+            DistanceTreshold = distanceTreshold;
+            Validate();
+        }
+
     }
 
     public class MiscEncounter : Encounter

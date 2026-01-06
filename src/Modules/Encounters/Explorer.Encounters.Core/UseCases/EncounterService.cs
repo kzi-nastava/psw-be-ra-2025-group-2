@@ -146,8 +146,27 @@ namespace Explorer.Encounters.Core.UseCases
             if (encounter == null)
                 throw new NotFoundException($"Not found: {updateDto.Id}");
 
-            encounter.Update(updateDto.Name, updateDto.Description,
-                new GeoLocation(updateDto.Latitude, updateDto.Longitude), new ExperiencePoints(updateDto.XP), EncounterTypeParser.Parse(updateDto.Type));
+            encounter.Update(
+                updateDto.Name,
+                updateDto.Description,
+                new GeoLocation(updateDto.Latitude, updateDto.Longitude),
+                new ExperiencePoints(updateDto.XP),
+                EncounterTypeParser.Parse(updateDto.Type)
+            );
+
+            
+            if (encounter.Type == EncounterType.Location)
+            {
+                var hidden = (HiddenLocationEncounter)encounter;
+
+               
+                hidden.UpdateHiddenLocation(
+                    updateDto.ImageUrl ?? hidden.ImageUrl,
+                    new GeoLocation(updateDto.ImageLatitude ?? hidden.ImageLocation.Latitude,
+                        updateDto.ImageLongitude ?? hidden.ImageLocation.Longitude),
+                    updateDto.DistanceTreshold ?? hidden.DistanceTreshold
+                );
+            }
 
             var updated = _encounterRepository.Update(encounter);
 
@@ -156,24 +175,55 @@ namespace Explorer.Encounters.Core.UseCases
  /// <summary>
         /// Creates an "in-progress" execution if not already completed and if none exists.
         /// </summary>
-        public void ActivateEncounter(long userId, long encounterId)
+        public void ActivateEncounter(
+            long userId,
+            long encounterId,
+            double latitude,
+            double longitude)
         {
             var encounter = _encounterRepository.GetById(encounterId);
             if (encounter == null)
-                throw new NotFoundException("Encounter not found");
+                throw new NotFoundException("Encounter not found.");
 
             if (!encounter.IsActive())
                 throw new InvalidOperationException("Encounter is not active.");
 
+          
             if (_executionRepository.IsCompleted(userId, encounterId))
-                return; // already completed, nothing to do
+                return;
 
+          
             var existing = _executionRepository.Get(userId, encounterId);
             if (existing != null && !existing.IsCompleted)
-                return; // already active/in-progress
+                return;
 
-            _executionRepository.Add(new EncounterExecution(userId, encounterId));
+            
+            if (encounter.Type == EncounterType.Location)
+            {
+                var hidden = (HiddenLocationEncounter)encounter;
+
+                var distanceToEncounter = CalculateDistanceMeters(
+                    latitude,
+                    longitude,
+                    hidden.Location.Latitude,
+                    hidden.Location.Longitude
+                );
+
+                
+                if (distanceToEncounter > hidden.DistanceTreshold)
+                {
+                    throw new InvalidOperationException(
+                        $"You cannot activate this challenge until you are within {hidden.DistanceTreshold:0}m of the location."
+                    );
+                }
+            }
+
+           
+            _executionRepository.Add(
+                new EncounterExecution(userId, encounterId)
+            );
         }
+
 
         /// <summary>
         /// Called every ~10 seconds by the tourist app. Updates execution progress.
@@ -203,10 +253,7 @@ namespace Explorer.Encounters.Core.UseCases
             // Ensure execution exists
             var execution = _executionRepository.Get(userId, encounterId);
             if (execution == null)
-            {
-                // auto-activate on first ping
-                execution = _executionRepository.Add(new EncounterExecution(userId, encounterId));
-            }
+                throw new InvalidOperationException("Encounter nije aktiviran.");
 
             if (execution.IsCompleted)
                 return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
@@ -216,6 +263,7 @@ namespace Explorer.Encounters.Core.UseCases
             var distanceMeters = CalculateDistanceMeters(
                 latitude, longitude,
                 hidden.ImageLocation.Latitude, hidden.ImageLocation.Longitude);
+           
 
             var isInside = distanceMeters <= hidden.DistanceTreshold;
 
@@ -278,5 +326,20 @@ namespace Explorer.Encounters.Core.UseCases
                 // Ovde ne radimo ništa oko XP-a
             }
         }
+        
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime)GetExecutionStatus(long userId, long encounterId)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found");
+
+            var exec = _executionRepository.Get(userId, encounterId);
+
+            if (exec == null)
+                return (false, 0, 30, null); // nije aktiviran
+
+            return (exec.IsCompleted, exec.SecondsInsideZone, 30, exec.CompletionTime);
+        }
+
     }
 }

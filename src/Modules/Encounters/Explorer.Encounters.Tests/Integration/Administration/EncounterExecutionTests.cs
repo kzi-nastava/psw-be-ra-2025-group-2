@@ -27,7 +27,8 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             var encounterId = CreateAndActivateHiddenLocationEncounter(service);
             var controller = CreateControllerWithRole(scope, "-21", "tourist");
 
-            var result = controller.ActivateExecution(encounterId);
+            var activateDto = new EncounterActivateDto { Latitude = 45.0001, Longitude = 19.0001 };
+            var result = controller.ActivateExecution(encounterId, activateDto);
 
             result.ShouldBeOfType<OkResult>();
         }
@@ -54,8 +55,9 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             });
 
             var controller = CreateControllerWithRole(scope, "-21", "tourist");
-
-            var result = controller.ActivateExecution(created.Id);
+            
+            var activateDto = new EncounterActivateDto { Latitude = 45.0001, Longitude = 19.0001 };
+            var result = controller.ActivateExecution(created.Id, activateDto);
 
             // service should reject because encounter is not Active
             result.ShouldBeOfType<BadRequestObjectResult>();
@@ -70,7 +72,8 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             var encounterId = CreateAndActivateHiddenLocationEncounter(service);
             var controller = CreateControllerWithRole(scope, "-21", "tourist");
 
-            controller.ActivateExecution(encounterId).ShouldBeOfType<OkResult>();
+            var activateDto = new EncounterActivateDto { Latitude = 45.0001, Longitude = 19.0001 };
+            controller.ActivateExecution(encounterId, activateDto).ShouldBeOfType<OkResult>();
 
             var dto = new EncounterLocationPingDto
             {
@@ -96,11 +99,19 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 service,
                 imageLat: 45.2525,
                 imageLon: 19.8625,
-                thresholdMeters: 5
+                activationRangeMeters: 5
             );
 
             var controller = CreateControllerWithRole(scope, "-21", "tourist");
-            controller.ActivateExecution(encounterId).ShouldBeOfType<OkResult>();
+            var activateDto = new EncounterActivateDto
+            {
+                Latitude = 45.0001,
+                Longitude = 19.0001
+            };
+
+            controller.ActivateExecution(encounterId, activateDto)
+                .ShouldBeOfType<OkResult>();
+
 
             var inside = new EncounterLocationPingDto
             {
@@ -133,11 +144,19 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 service,
                 imageLat: 45.2525,
                 imageLon: 19.8625,
-                thresholdMeters: 5
+                activationRangeMeters: 5
             );
 
             var controller = CreateControllerWithRole(scope, "-21", "tourist");
-            controller.ActivateExecution(encounterId).ShouldBeOfType<OkResult>();
+            var activateDto = new EncounterActivateDto
+            {
+                Latitude = 45.0001,
+                Longitude = 19.0001
+            };
+
+            controller.ActivateExecution(encounterId, activateDto)
+                .ShouldBeOfType<OkResult>();
+
 
             var inside = new EncounterLocationPingDto
             {
@@ -180,8 +199,46 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             action.Result.ShouldBeOfType<BadRequestObjectResult>();
         }
 
-        
+        [Fact]
+        public void ActivateExecution_fails_when_tourist_is_outside_activation_range()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IEncounterService>();
 
+            // activation range mali da test bude jasan
+            var encounterId = CreateAndActivateHiddenLocationEncounter(service, activationRangeMeters: 5);
+            var controller = CreateControllerWithRole(scope, "-21", "tourist");
+
+            // daleko od encounter.Location (45.0001, 19.0001)
+            var activateDto = new EncounterActivateDto { Latitude = 46.0, Longitude = 20.0 };
+
+            var result = controller.ActivateExecution(encounterId, activateDto);
+
+            result.ShouldBeOfType<BadRequestObjectResult>();
+        }
+          
+        [Fact]
+        public void PingLocation_fails_when_not_activated()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IEncounterService>();
+
+            var encounterId = CreateAndActivateHiddenLocationEncounter(service);
+            var controller = CreateControllerWithRole(scope, "-21", "tourist");
+
+            var dto = new EncounterLocationPingDto
+            {
+                Latitude = 45.2525,
+                Longitude = 19.8625,
+                DeltaSeconds = 10
+            };
+
+            var action = controller.PingLocation(encounterId, dto);
+
+            action.Result.ShouldBeOfType<BadRequestObjectResult>();
+        }
+
+  
         private static EncounterExecutionStatusDto ExecutePing(EncounterController controller, long encounterId, EncounterLocationPingDto dto)
         {
             var action = controller.PingLocation(encounterId, dto);
@@ -193,7 +250,7 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             IEncounterService service,
             double imageLat = 45.0000,
             double imageLon = 19.0000,
-            double thresholdMeters = 5)
+            double activationRangeMeters = 50)
         {
             var created = service.Create(new CreateEncounterDto
             {
@@ -206,12 +263,13 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 ImageUrl = "https://example.com/test.jpg",
                 ImageLatitude = imageLat,
                 ImageLongitude = imageLon,
-                DistanceTreshold = thresholdMeters
+                DistanceTreshold = activationRangeMeters 
             });
 
             service.MakeActive(created.Id);
             return created.Id;
         }
+
 
         private static long CreateAndActivateMiscEncounter(IEncounterService service)
         {
