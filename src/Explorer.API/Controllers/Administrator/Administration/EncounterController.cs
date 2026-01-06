@@ -247,7 +247,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
             catch (NotFoundException e) { return NotFound(e.Message); }
             catch (InvalidOperationException e) { return BadRequest(e.Message); }
         }
-        
+        [ApiExplorerSettings(IgnoreApi = true)]
         [Authorize(Policy = "administratorPolicy")]
         [HttpPost("upload-image")]
         [RequestSizeLimit(10_000_000)] // 10MB
