@@ -38,6 +38,7 @@ public static class ToursStartup
         services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
+        services.AddScoped<IBundleService, BundleService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -53,6 +54,7 @@ public static class ToursStartup
         services.AddScoped<INotificationRepository, NotificationRepository>();
 
         services.AddScoped<ITourExecutionRepository, TourExecutionDbRepository>();
+        services.AddScoped<IBundleRepository, BundleDbRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("tours"));
         dataSourceBuilder.EnableDynamicJson();

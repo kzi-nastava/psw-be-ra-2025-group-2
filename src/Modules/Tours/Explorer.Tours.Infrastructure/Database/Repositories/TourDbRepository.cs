@@ -101,6 +101,15 @@ public class TourDbRepository : ITourRepository
         await DbContext.SaveChangesAsync();
     }
 
+
+    public List<Tour> GetByIds(List<long> ids)
+    {
+        return _dbSet
+            .Where(t => ids.Contains(t.Id))
+            .ToList();
+
+    }
+
     public async Task<Tour?> GetTourWithKeyPointsAsync(long tourId)
     {
         return await _dbSet
@@ -138,5 +147,6 @@ public class TourDbRepository : ITourRepository
         {
             entry.State = EntityState.Modified;
         }
+
     }
 }
