@@ -140,6 +140,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
             tour.SetLength(dto.LengthKm);
+            tour.SetPrice(dto.Price);
             _tourRepository.UpdateAsync(tour).Wait();
 
             return _mapper.Map<TourDto>(tour);
