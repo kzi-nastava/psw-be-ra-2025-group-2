@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Explorer.Payments.API.Dtos;
+using Explorer.Payments.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 
@@ -14,6 +16,7 @@ namespace Explorer.Payments.Core.Mappers
               .ReverseMap();
             CreateMap<OrderItem, OrderItemDto>().ReverseMap();
             CreateMap<Money, MoneyDto>().ReverseMap();
+            CreateMap<PaymentRecord, PaymentRecordDto>().ReverseMap();
         }
     }
 }
