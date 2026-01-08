@@ -22,6 +22,19 @@ namespace Explorer.Payments.Infrastructure.Database.Repositories
             return record;
         }
 
-     
+        public List<PaymentRecord> GetByTouristId(long touristId)
+        {
+            return _context.PaymentRecords
+                .Where(r => r.TouristId == touristId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList();
+        }
+
+        public PaymentRecord? GetByIdAndTouristId(long id, long touristId)
+        {
+            return _context.PaymentRecords
+                .FirstOrDefault(r => r.Id == id && r.TouristId == touristId);
+        }
+
     }
 }

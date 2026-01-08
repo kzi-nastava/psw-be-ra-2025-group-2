@@ -51,5 +51,35 @@ namespace Explorer.Payments.Core.UseCases
             cart.ClearCart();
             _cartRepository.Update(cart);
         }
+
+        public List<PaymentRecordDto> GetMine(long touristId)
+        {
+            var records = _paymentRecordRepository.GetByTouristId(touristId);
+
+            return records.Select(r => new PaymentRecordDto
+            {
+                Id = r.Id,
+                TouristId = r.TouristId,
+                TourId = r.TourId,
+                Price = r.Price,
+                CreatedAt = r.CreatedAt
+            }).ToList();
+        }
+
+        public PaymentRecordDto GetMineById(long touristId, long id)
+        {
+            var record = _paymentRecordRepository.GetByIdAndTouristId(id, touristId);
+            if (record == null) throw new KeyNotFoundException("Payment record not found.");
+
+            return new PaymentRecordDto
+            {
+                Id = record.Id,
+                TouristId = record.TouristId,
+                TourId = record.TourId,
+                Price = record.Price,
+                CreatedAt = record.CreatedAt
+            };
+        }
+
     }
 }

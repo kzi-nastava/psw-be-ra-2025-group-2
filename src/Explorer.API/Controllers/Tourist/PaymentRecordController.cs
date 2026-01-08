@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Tourist
 {
+
     [Authorize(Roles = "tourist")]
     [Route("api/payment-records")]
     [ApiController]
@@ -18,18 +19,37 @@ namespace Explorer.API.Controllers.Tourist
             _recordService = recordService;
         }
 
-        // POST: api/payment-records/checkout
-        [HttpPost("checkout")]
-        public IActionResult Checkout()
+        // GET: api/payment-records/mine
+        [HttpGet("mine")]
+        public IActionResult GetMine()
+        {
+            var touristIdClaim = User.FindFirst("id");
+            if (touristIdClaim == null) return Unauthorized();
+
+            var touristId = long.Parse(touristIdClaim.Value);
+            var result = _recordService.GetMine(touristId);
+
+            return Ok(result);
+        }
+
+        // GET: api/payment-records/{id}
+        [HttpGet("{id:long}")]
+        public IActionResult GetMineById(long id)
         {
             var touristIdClaim = User.FindFirst("id");
             if (touristIdClaim == null) return Unauthorized();
 
             var touristId = long.Parse(touristIdClaim.Value);
 
-            _recordService.Checkout(touristId);
-
-            return NoContent();
+            try
+            {
+                var result = _recordService.GetMineById(touristId, id);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
     }
 }

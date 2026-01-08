@@ -10,5 +10,7 @@ namespace Explorer.Payments.Core.Domain.RepositoryInterfaces
     public interface IPaymentRecordRepository
     {
         PaymentRecord Create(PaymentRecord record);
+        List<PaymentRecord> GetByTouristId(long touristId);
+        PaymentRecord? GetByIdAndTouristId(long id, long touristId);
     }
 }

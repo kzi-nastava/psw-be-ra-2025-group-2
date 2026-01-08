@@ -10,5 +10,8 @@ namespace Explorer.Payments.API.Public
     public interface IPaymentRecordService
     {
         void Checkout(long touristId);
+
+        List<PaymentRecordDto> GetMine(long touristId);
+        PaymentRecordDto GetMineById(long touristId, long id);
     }
 }
