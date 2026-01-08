@@ -9,6 +9,6 @@ namespace Explorer.Payments.API.Public
 {
     public interface IPaymentRecordService
     {
-        public PaymentRecordDto Create(PaymentRecordDto record);
+        void Checkout(long touristId);
     }
 }

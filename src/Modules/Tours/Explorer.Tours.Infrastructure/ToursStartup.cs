@@ -39,6 +39,8 @@ public static class ToursStartup
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
         services.AddScoped<IBundleService, BundleService>();
+        
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)

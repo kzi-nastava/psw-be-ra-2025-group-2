@@ -3,6 +3,7 @@ using Explorer.Payments.API.Dtos;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.Payments.Core.Domain.ShoppingCarts;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,18 +14,42 @@ namespace Explorer.Payments.Core.UseCases
 {
     public class PaymentRecordService : IPaymentRecordService
     {
-        private readonly IPaymentRecordRepository _repository;
-        private readonly IMapper _mapper;
+        private readonly IPaymentRecordRepository _paymentRecordRepository;
+        private readonly IShoppingCartRepository _cartRepository;
 
-        public PaymentRecordService(IPaymentRecordRepository repository, IMapper mapper)
+        public PaymentRecordService(
+            IPaymentRecordRepository paymentRecordRepository,
+            IShoppingCartRepository cartRepository)
         {
-            _repository = repository;
-            _mapper = mapper;
+            _paymentRecordRepository = paymentRecordRepository;
+            _cartRepository = cartRepository;
         }
-        public PaymentRecordDto Create(PaymentRecordDto record)
+
+        public void Checkout(long touristId)
         {
-            var created = _repository.Create(_mapper.Map<PaymentRecord> (record));
-            return _mapper.Map<PaymentRecordDto>(created);
+            var cart = _cartRepository.GetByTouristId(touristId);
+            if (cart == null)
+                throw new KeyNotFoundException("Shopping cart not found.");
+
+            if (!cart.Items.Any())
+                throw new InvalidOperationException("Shopping cart is empty.");
+
+            var now = DateTime.UtcNow;
+
+            foreach (var item in cart.Items)
+            {
+                var record = new PaymentRecord(
+                    touristId,
+                    item.TourId,
+                    item.Price.Amount,
+                    now
+                );
+
+                _paymentRecordRepository.Create(record);
+            }
+
+            cart.ClearCart();
+            _cartRepository.Update(cart);
         }
     }
 }
