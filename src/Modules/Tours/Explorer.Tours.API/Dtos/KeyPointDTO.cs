@@ -17,5 +17,6 @@ public class KeyPointDto
     public bool SuggestForPublicUse { get; set; } = false;
 
     public long? EncounterId { get; set; }
+    public bool IsEncounterRequired { get; set; }
 
 }

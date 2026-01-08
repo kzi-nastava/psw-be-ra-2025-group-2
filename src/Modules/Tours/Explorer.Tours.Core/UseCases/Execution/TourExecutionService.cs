@@ -7,6 +7,7 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Tours.Core.UseCases.Execution
 {
@@ -15,12 +16,14 @@ namespace Explorer.Tours.Core.UseCases.Execution
         private readonly IInternalUserService _userService;
         private readonly ITourExecutionRepository _executionRepository;
         private readonly ITourRepository _tourRepository;
+        private readonly IEncounterExecutionRepository _encounterExecutionRepository;
 
-        public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository)
+        public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository, IEncounterExecutionRepository encounterExecutionRepository)
         {
             _userService = userService;
             _executionRepository = executionRepository;
             _tourRepository = tourRepository;
+            _encounterExecutionRepository = encounterExecutionRepository;
         }
 
         public TourExecutionDto GetExecution(long touristId, long tourId)
@@ -54,7 +57,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
             if (tour == null)
                 throw new InvalidOperationException($"Cannot find tour with id {tourId}.");
 
-            if (activeTourId == tourId) 
+            if (activeTourId == tourId)
             {
                 var execution = _executionRepository.GetActiveByTouristId(touristId);
                 if (execution == null || execution.TourId != activeTourId)
@@ -71,7 +74,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 {
                     var execution = new TourExecution(touristId, tourId, tour.KeyPoints.Count);
 
-                    execution.Start(); 
+                    execution.Start();
 
                     _userService.SetActiveTourIdByUserId(touristId, tourId);
                     execution = _executionRepository.Create(execution);
@@ -148,8 +151,11 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 dto.Latitude = keyPoint.Latitude;
                 dto.Longitude = keyPoint.Longitude;
                 dto.EncounterId = keyPoint.EncounterId;
+                dto.IsEncounterRequired = keyPoint.IsEncounterRequired;
 
-                if (execution.ShouldShowKeyPointSecret(dto.OrdinalNo))
+                bool shouldShowSecret = ShouldShowKeyPointSecret(execution, keyPoint, touristId);
+
+                if (shouldShowSecret)
                     dto.SecretText = keyPoint.SecretText;
                 else
                     dto.SecretText = null;
@@ -166,6 +172,22 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 CompletedPercentage = execution.GetPercentageCompleted(),
                 LastActivity = execution.LastActivityTimestamp
             };
+        }
+
+        private bool ShouldShowKeyPointSecret(TourExecution execution, KeyPoint keyPoint, long touristId)
+        {
+            if (!execution.ShouldShowKeyPointSecret(keyPoint.OrdinalNo))
+                return false;
+
+            if (!keyPoint.EncounterId.HasValue)
+                return true;
+
+            if (!keyPoint.IsEncounterRequired)
+                return true;
+
+            bool isEncounterCompleted = _encounterExecutionRepository.IsCompleted(touristId, keyPoint.EncounterId.Value);
+
+            return isEncounterCompleted;
         }
     }
 }

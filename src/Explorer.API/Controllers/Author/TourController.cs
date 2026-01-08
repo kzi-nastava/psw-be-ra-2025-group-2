@@ -5,6 +5,8 @@ using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Public;
 
 namespace Explorer.API.Controllers.Author
 {
@@ -338,5 +340,58 @@ namespace Explorer.API.Controllers.Author
             var result = _tourService.GetAllEquipmentForAuthor(authorId);
             return Ok(result);
         }
+
+        [HttpPost("{tourId}/keypoints/{keyPointOrdinalNo}/encounter")]
+        public async Task<ActionResult<EncounterDto>> CreateEncounterFromKeyPoint(
+            long tourId,
+            int keyPointOrdinalNo,
+            [FromBody] CreateEncounterDto encounterDto)
+        {
+            try
+            {
+                var authorIdClaim = User.FindFirst("id");
+                if (authorIdClaim == null) return Unauthorized();
+
+                long authorId = long.Parse(authorIdClaim.Value);
+
+                var tour = await _tourService.GetByIdAsync(tourId, authorId);
+                if (tour == null)
+                    return NotFound(new { error = "Tour not found" });
+
+                var keyPoint = tour.KeyPoints?.FirstOrDefault(kp => kp.OrdinalNo == keyPointOrdinalNo);
+
+                if (keyPoint != null)
+                {
+                    encounterDto.Latitude = keyPoint.Latitude;
+                    encounterDto.Longitude = keyPoint.Longitude;
+                }
+                else
+                {
+                    if (encounterDto.Latitude == 0 || encounterDto.Longitude == 0)
+                    {
+                        return BadRequest(new { error = "Latitude and Longitude are required when creating encounter for new KeyPoint" });
+                    }
+                }
+
+                var encounterService = HttpContext.RequestServices.GetRequiredService<IEncounterService>();
+                var createdEncounter = encounterService.Create(encounterDto);
+                encounterService.MakeActive(createdEncounter.Id);
+
+                return Ok(createdEncounter);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
+
 }

@@ -15,6 +15,7 @@ namespace Explorer.Tours.Core.Domain
         public bool IsPublic { get; private set; } = false;
 
         public long? EncounterId { get; init; }
+        public bool IsEncounterRequired { get; init; } 
 
         private KeyPoint() { }
 
@@ -27,7 +28,8 @@ namespace Explorer.Tours.Core.Domain
             double latitude,
             double longitude,
             long authorId,
-            long? encounterId = null) 
+            long? encounterId = null,
+            bool isEncounterRequired = false) 
         {
             OrdinalNo = ordinalNo;
             Name = name;
@@ -39,6 +41,7 @@ namespace Explorer.Tours.Core.Domain
             AuthorId = authorId;
             IsPublic = false;
             EncounterId = encounterId;
+            IsEncounterRequired = isEncounterRequired; 
 
             Validate();
         }
@@ -51,7 +54,7 @@ namespace Explorer.Tours.Core.Domain
              string imageUrl,
              double latitude,
              double longitude)
-             : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null)
+             : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null, false)
         {
         }
 
@@ -73,9 +76,13 @@ namespace Explorer.Tours.Core.Domain
 
             if (Longitude < -180 || Longitude > 180)
                 throw new ArgumentOutOfRangeException(nameof(Longitude));
+
+            if (IsEncounterRequired && !EncounterId.HasValue)
+                throw new ArgumentException("Cannot mark encounter as required when no encounter is assigned.");
         }
 
-        public void Update(string name, string description, string secretText, string imageUrl, double latitude, double longitude, long? encounterId)
+        public void Update(string name, string description, string secretText, string imageUrl,
+                          double latitude, double longitude, long? encounterId, bool isEncounterRequired) 
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Name is required");
@@ -87,6 +94,7 @@ namespace Explorer.Tours.Core.Domain
             typeof(KeyPoint).GetProperty(nameof(Latitude))!.SetValue(this, latitude);
             typeof(KeyPoint).GetProperty(nameof(Longitude))!.SetValue(this, longitude);
             typeof(KeyPoint).GetProperty(nameof(EncounterId))!.SetValue(this, encounterId);
+            typeof(KeyPoint).GetProperty(nameof(IsEncounterRequired))!.SetValue(this, isEncounterRequired); 
 
             Validate();
         }

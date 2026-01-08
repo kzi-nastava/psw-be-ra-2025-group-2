@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.Encounters.API.Dtos.Encounter;
 
 namespace Explorer.Tours.API.Public.Administration
 {
@@ -39,6 +40,8 @@ namespace Explorer.Tours.API.Public.Administration
 
         public TourReviewDto UpdateReview(TourReviewDto reviewDto);
         void DeleteReview(long touristId, long tourId);
+        Task<EncounterDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, CreateEncounterDto encounterDto);
+
     }
 
 }

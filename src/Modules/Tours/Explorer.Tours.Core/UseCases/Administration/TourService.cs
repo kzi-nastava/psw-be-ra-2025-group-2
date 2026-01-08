@@ -10,6 +10,9 @@ using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
+using Explorer.Encounters.API.Public;
+using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Tours.Core.UseCases.Administration
 {
@@ -22,6 +25,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IPublicKeyPointService? _publicKeyPointService;
         private readonly IPublicKeyPointRequestRepository? _requestRepository;
         private readonly ITourExecutionRepository _tourExecutionRepository;
+        private readonly IEncounterService _encounterService;
 
         public TourService(
             ITourRepository tourRepository,
@@ -30,7 +34,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
             IInternalUserService userService,
             IPublicKeyPointService publicKeyPointService,
             IPublicKeyPointRequestRepository requestRepository,
-            ITourExecutionRepository tourExecutionRepository)
+            ITourExecutionRepository tourExecutionRepository,
+            IEncounterService encounterService) // ✅ FIXED - Removed extra comma
         {
             _tourRepository = tourRepository;
             _userService = userService;
@@ -39,6 +44,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _publicKeyPointService = publicKeyPointService;
             _requestRepository = requestRepository;
             _tourExecutionRepository = tourExecutionRepository;
+            _encounterService = encounterService;
         }
 
         public TourDto Create(CreateTourDto dto)
@@ -57,6 +63,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
             {
                 foreach (var kpDto in dto.KeyPoints)
                 {
+                    // ✅ NOVO - Validacija encounter-a ako je linkovan
+                    if (kpDto.EncounterId.HasValue)
+                    {
+                        var encounter = _encounterService.Get(kpDto.EncounterId.Value);
+                        if (encounter == null)
+                            throw new InvalidOperationException($"Encounter with ID {kpDto.EncounterId.Value} does not exist.");
+
+                        if (encounter.State != "Active")
+                            throw new InvalidOperationException($"Encounter must be Active to be linked to a KeyPoint.");
+                    }
+
                     var keyPoint = new KeyPoint(
                         kpDto.OrdinalNo,
                         kpDto.Name,
@@ -66,7 +83,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                         kpDto.Latitude,
                         kpDto.Longitude,
                         dto.AuthorId,
-                        kpDto.EncounterId
+                        kpDto.EncounterId,
+                        kpDto.IsEncounterRequired  // ✅ NOVO
                     );
                     tour.AddKeyPoint(keyPoint);
                 }
@@ -190,6 +208,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tour = await GetTourOrThrowAsync(tourId);
 
+            // ✅ NOVO - Validacija encounter-a ako je linkovan
+            if (dto.EncounterId.HasValue)
+            {
+                var encounter = _encounterService.Get(dto.EncounterId.Value);
+                if (encounter == null)
+                    throw new InvalidOperationException($"Encounter with ID {dto.EncounterId.Value} does not exist.");
+
+                if (encounter.State != "Active")
+                    throw new InvalidOperationException($"Encounter must be Active to be linked to a KeyPoint.");
+            }
+
             var keyPoint = new KeyPoint(
                 dto.OrdinalNo,
                 dto.Name,
@@ -199,7 +228,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Latitude,
                 dto.Longitude,
                 dto.AuthorId,
-                dto.EncounterId
+                dto.EncounterId,
+                dto.IsEncounterRequired  // ✅ NOVO
             );
 
             tour.AddKeyPoint(keyPoint);
@@ -227,6 +257,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tour = await GetTourOrThrowAsync(tourId);
             var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
 
+            // ✅ NOVO - Validacija encounter-a ako je linkovan
+            if (dto.EncounterId.HasValue)
+            {
+                var encounter = _encounterService.Get(dto.EncounterId.Value);
+                if (encounter == null)
+                    throw new InvalidOperationException($"Encounter with ID {dto.EncounterId.Value} does not exist.");
+
+                if (encounter.State != "Active")
+                    throw new InvalidOperationException($"Encounter must be Active to be linked to a KeyPoint.");
+            }
+
             keyPoint.Update(
                 dto.Name,
                 dto.Description,
@@ -234,7 +275,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.ImageUrl,
                 dto.Latitude,
                 dto.Longitude,
-                dto.EncounterId
+                dto.EncounterId,
+                dto.IsEncounterRequired  // ✅ NOVO
             );
 
             await _tourRepository.UpdateAsync(tour);
@@ -254,6 +296,29 @@ namespace Explorer.Tours.Core.UseCases.Administration
             updatedKeyPoint.PublicStatus = await GetKeyPointPublicStatusAsync(tourId, ordinalNo);
 
             return updatedKeyPoint;
+        }
+
+        // ✅ NOVA METODA - Kreiranje Encounter-a sa lokacijom iz KeyPoint-a
+        /// <summary>
+        /// Kreira novi encounter sa lokacijom iz KeyPoint-a.
+        /// Autor ture može kreirati encounter-e bez admin odobrenja.
+        /// </summary>
+        public async Task<EncounterDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, CreateEncounterDto encounterDto)
+        {
+            var tour = await GetTourOrThrowAsync(tourId);
+            var keyPoint = GetKeyPointFromTourOrThrow(tour, keyPointOrdinalNo);
+
+            // ✅ Automatski postavi lokaciju iz KeyPoint-a
+            encounterDto.Latitude = keyPoint.Latitude;
+            encounterDto.Longitude = keyPoint.Longitude;
+
+            // Kreiraj encounter
+            var createdEncounter = _encounterService.Create(encounterDto);
+
+            // Odmah aktiviraj (autor ture ima privilegije)
+            _encounterService.MakeActive(createdEncounter.Id);
+
+            return _encounterService.Get(createdEncounter.Id);
         }
 
         private async Task<Tour> GetTourOrThrowAsync(long tourId)
