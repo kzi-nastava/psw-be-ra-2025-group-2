@@ -24,12 +24,15 @@ public class Tour : AggregateRoot
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
 
-    public decimal? LengthKm { get; private set; }
+    public decimal? LengthKm { get;  set; }
 
     public List<TourDuration> Durations { get; private set; } = new();
     public DateTime? PublishedAt { get; private set; }
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
+
+
+
    
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();

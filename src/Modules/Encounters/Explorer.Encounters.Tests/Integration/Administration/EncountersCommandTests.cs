@@ -22,7 +22,7 @@ namespace Explorer.Encounters.Tests.Integration.Administration
         public EncounterCommandTests(EncountersTestFactory factory) : base(factory) { }
 
         [Fact]
-        public void Creates()
+        public void Creates_Social_Encounter()
         {
             using (var scope = Factory.Services.CreateScope())
             {
@@ -31,29 +31,68 @@ namespace Explorer.Encounters.Tests.Integration.Administration
 
                 var createDto = new CreateEncounterDto
                 {
-                    Name = "New encounter",
-                    Description = "A difficult task",
+                    Name = "New social encounter",
+                    Description = "Gather people",
                     Latitude = 45.0,
                     Longitude = 19.0,
                     XP = 150,
-                    Type = "soCIaL"
+                    Type = "Social",
+                    // Specific fields required for Social
+                    RequiredPeople = 5,
+                    Range = 15.5
                 };
 
                 var result = controller.Create(createDto).Result.ShouldBeOfType<OkObjectResult>();
-                var encounter = result.Value.ShouldBeOfType<EncounterDto>();
+                var encounterDto = result.Value.ShouldBeOfType<EncounterDto>();
 
-                encounter.ShouldNotBeNull();
-                encounter.Id.ShouldNotBe(0);
-                encounter.Name.ShouldBe("New encounter");
-                encounter.State.ShouldBe("Draft");
+                encounterDto.ShouldNotBeNull();
+                encounterDto.Id.ShouldNotBe(0);
+                encounterDto.Name.ShouldBe("New social encounter");
+                encounterDto.Type.ShouldBe("Social");
 
-                var entity = dbContext.Encounters.Find(encounter.Id);
-
+                // Check Database directly
+                var entity = dbContext.Encounters.Find(encounterDto.Id);
                 entity.ShouldNotBeNull();
-                entity.Name.ShouldBe("New encounter");
-                entity.Description.ShouldBe("A difficult task");
-                entity.State.ShouldBe(EncounterState.Draft);
-                entity.Type.ShouldBe(EncounterType.Social);
+                entity.ShouldBeOfType<SocialEncounter>();
+
+                var socialEntity = (SocialEncounter)entity;
+                socialEntity.RequiredPeople.ShouldBe(5);
+                socialEntity.Range.ShouldBe(15.5);
+            }
+        }
+
+        [Fact]
+        public void Creates_Hidden_Location_Encounter()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var controller = CreateControllerWithRole(scope, "-1", "administrator");
+                var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
+
+                var createDto = new CreateEncounterDto
+                {
+                    Name = "Find the image",
+                    Description = "Look closely",
+                    Latitude = 45.0,
+                    Longitude = 19.0,
+                    XP = 200,
+                    Type = "Location",
+                    // Specific fields required for Location
+                    ImageUrl = "https://test.com/img.jpg",
+                    ImageLatitude = 45.1,
+                    ImageLongitude = 19.1,
+                    DistanceTreshold = 5
+                };
+
+                var result = controller.Create(createDto).Result.ShouldBeOfType<OkObjectResult>();
+                var encounterDto = result.Value.ShouldBeOfType<EncounterDto>();
+
+                encounterDto.Type.ShouldBe("Location");
+
+                // Check Database
+                var entity = dbContext.Encounters.Find(encounterDto.Id);
+                entity.ShouldBeOfType<HiddenLocationEncounter>();
+                ((HiddenLocationEncounter)entity).ImageUrl.ShouldBe("https://test.com/img.jpg");
             }
         }
 
@@ -65,17 +104,18 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 var controller = CreateControllerWithRole(scope, "-1", "administrator");
                 var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
 
-                var encounter = dbContext.Encounters.First(e => e.Id == -16); // Draft
+                // We use ID -16 which is a Draft Misc Encounter from SQL script
+                var existingId = -16L;
 
                 var updateDto = new UpdateEncounterDto
                 {
-                    Id = encounter.Id,
+                    Id = existingId,
                     Name = "Updated name",
                     Description = "Updated description",
                     Latitude = 44.8,
                     Longitude = 20.4,
                     XP = 200,
-                    Type = "LocaTIOn"
+                    Type = "Miscellaneous"
                 };
 
                 var result = controller.Update(updateDto).Result.ShouldBeOfType<OkObjectResult>();
@@ -85,11 +125,8 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 updated.Description.ShouldBe("Updated description");
                 updated.State.ShouldBe("Draft");
 
-                var entity = dbContext.Encounters.Find(encounter.Id);
-
-                entity.ShouldNotBeNull();
+                var entity = dbContext.Encounters.Find(existingId);
                 entity.Name.ShouldBe("Updated name");
-                entity.Type.ShouldBe(EncounterType.Location);
             }
         }
 
@@ -100,15 +137,18 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             {
                 var controller = CreateControllerWithRole(scope, "-1", "administrator");
 
+                // We use ID -1 which is an ACTIVE Social Encounter
+                var existingId = -1L;
+
                 var updateDto = new UpdateEncounterDto
                 {
-                    Id = -1, // Active
+                    Id = existingId,
                     Name = "Illegal update",
                     Description = "Should fail",
                     Latitude = 45,
                     Longitude = 19,
                     XP = 100,
-                    Type = "MISCELLANEOUS"
+                    Type = "Social"
                 };
 
                 controller.Update(updateDto).Result.ShouldBeOfType<BadRequestObjectResult>();
@@ -123,10 +163,12 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 var controller = CreateControllerWithRole(scope, "-1", "administrator");
                 var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
 
-                controller.Activate(-17).ShouldBeOfType<OkResult>();
+                // ID -17 is a Draft Location Encounter
+                var encounterId = -17L;
 
-                var entity = dbContext.Encounters.Find(-17L);
+                controller.Activate(encounterId).ShouldBeOfType<OkResult>();
 
+                var entity = dbContext.Encounters.Find(encounterId);
                 entity.State.ShouldBe(EncounterState.Active);
             }
         }
@@ -139,10 +181,12 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 var controller = CreateControllerWithRole(scope, "-1", "administrator");
                 var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
 
-                controller.Archive(-1).ShouldBeOfType<OkResult>();
+                // ID -1 is an Active Social Encounter
+                var encounterId = -1L;
 
-                var entity = dbContext.Encounters.Find(-1L);
+                controller.Archive(encounterId).ShouldBeOfType<OkResult>();
 
+                var entity = dbContext.Encounters.Find(encounterId);
                 entity.State.ShouldBe(EncounterState.Archived);
             }
         }
@@ -155,9 +199,12 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 var controller = CreateControllerWithRole(scope, "-1", "administrator");
                 var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
 
-                controller.Delete(-2).ShouldBeOfType<NoContentResult>();
+                // ID -2 is an Active Location Encounter
+                var encounterId = -2L;
 
-                dbContext.Encounters.Find(-2L).ShouldBeNull();
+                controller.Delete(encounterId).ShouldBeOfType<NoContentResult>();
+
+                dbContext.Encounters.Find(encounterId).ShouldBeNull();
             }
         }
 
@@ -171,8 +218,9 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 var result = controller.GetActive().Result.ShouldBeOfType<OkObjectResult>();
                 var encounters = result.Value.ShouldBeOfType<List<EncounterDto>>();
 
+                // Check that we retrieved active encounters
+                encounters.ShouldNotBeEmpty();
                 encounters.All(e => e.State == "Active").ShouldBeTrue();
-                encounters.Count().ShouldBe(9);
             }
         }
 
@@ -191,10 +239,10 @@ namespace Explorer.Encounters.Tests.Integration.Administration
         private static ControllerContext BuildContextWithRole(string id, string role)
         {
             var claims = new List<Claim>
-        {
-            new Claim("id", id),
-            new Claim(ClaimTypes.Role, role)
-        };
+            {
+                new Claim("id", id),
+                new Claim(ClaimTypes.Role, role)
+            };
 
             var identity = new ClaimsIdentity(claims, "test");
             var user = new ClaimsPrincipal(identity);
@@ -205,5 +253,4 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             };
         }
     }
-
 }

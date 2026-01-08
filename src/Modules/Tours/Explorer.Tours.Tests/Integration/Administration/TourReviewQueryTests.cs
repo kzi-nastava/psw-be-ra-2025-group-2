@@ -15,25 +15,27 @@ public class TourReviewQueryTests : BaseToursIntegrationTest
     [Fact]
     public void Retrieves_all_for_tour()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // Act
-        // OVDE JE PROMENA: Umesto GetByTourId, zovemo GetPublished jer on vraća ture SA recenzijama
-        var response = ((OkObjectResult)controller.GetPublished().Result)?.Value as List<PublishedTourPreviewDto>;
+        var actionResult = controller.GetPublished(page: 1, pageSize: 1000);
 
-        // Assert
-        response.ShouldNotBeNull();
-        response.ShouldNotBeEmpty();
+        var ok = actionResult.Result as OkObjectResult;
+        ok.ShouldNotBeNull();
 
-        // Tražimo turu -1 koja ima seed-ovane recenzije
-        var targetTour = response.FirstOrDefault(t => t.Id == -1);
+        var pageDto = ok.Value as PagedResultDto<PublishedTourPreviewDto>;
+        pageDto.ShouldNotBeNull();
+
+        var tours = pageDto.Results;
+        tours.ShouldNotBeNull();
+        tours.ShouldNotBeEmpty();
+
+        var targetTour = tours.FirstOrDefault(t => t.Id == -1);
         targetTour.ShouldNotBeNull();
 
-        // Proveravamo da li ta tura ima recenzije (kao što je stari test proveravao listu)
         targetTour.Reviews.ShouldNotBeNull();
-        targetTour.Reviews.Count.ShouldBeGreaterThanOrEqualTo(2); // Očekujemo bar 2 recenzije iz seed-a
+        targetTour.Reviews.Count.ShouldBeGreaterThanOrEqualTo(2);
+
         targetTour.AverageRating.ShouldBeGreaterThan(0);
     }
 

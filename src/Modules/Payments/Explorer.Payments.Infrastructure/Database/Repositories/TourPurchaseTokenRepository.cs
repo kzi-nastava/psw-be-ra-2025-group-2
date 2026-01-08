@@ -1,13 +1,14 @@
 ﻿using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Infrastructure.Database;
+using Explorer.Payments.Infrastructure.Database;
 namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 {
     public class TourPurchaseTokenRepository : ITourPurchaseTokenRepository
     {
-        private readonly StakeholdersContext _dbContext;
+        private readonly PaymentsContext _dbContext;
 
-        public TourPurchaseTokenRepository(StakeholdersContext dbContext)
+        public TourPurchaseTokenRepository(PaymentsContext dbContext)
         {
             _dbContext = dbContext;
         }

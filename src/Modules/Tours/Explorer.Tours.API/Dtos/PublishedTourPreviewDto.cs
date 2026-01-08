@@ -14,11 +14,17 @@ namespace Explorer.Tours.API.Dtos
         public int Difficulty { get; set; }
         public decimal Price { get; set; }
         public List<string> Tags { get; set; } = new();
-
         public KeyPointDto? FirstKeyPoint { get; set; }
-
         public List<TourReviewPublicDto> Reviews { get; set; } = new();
         public double AverageRating { get; set; }
+        public int KeyPointCount { get; set; }                 
+        public int TotalDurationMinutes { get; set; }          
+        public decimal? LengthKm { get; set; }                
+        public string? PlaceName { get; set; }                
+
+        public bool HasAuthorAward { get; set; }              
+        public string? AuthorAwardName { get; set; }           
+
     }
 
     public class TourReviewPublicDto

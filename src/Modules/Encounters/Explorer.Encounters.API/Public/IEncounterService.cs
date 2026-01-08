@@ -21,5 +21,7 @@ namespace Explorer.Encounters.API.Public
         public void Archive(long id);
 
         public int GetCount();
+
+        public void CompleteEncounter(long userId, long encounterId);
     }
 }

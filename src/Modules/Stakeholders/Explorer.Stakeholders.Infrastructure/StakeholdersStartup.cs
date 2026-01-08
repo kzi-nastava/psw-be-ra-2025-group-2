@@ -14,7 +14,6 @@ using Explorer.Stakeholders.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Stakeholders.Infrastructure;
 
@@ -43,9 +42,6 @@ public static class StakeholdersStartup
         services.AddScoped<IDiaryService, DiaryService>();
         services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
         services.AddScoped<INotificationService, NotificationService>();
-
-        services.AddScoped<IShoppingCartService, ShoppingCartService>();
-        services.AddScoped<IPurchaseService, PurchaseService>();
         services.AddScoped<IQuizService, QuizService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
@@ -64,8 +60,6 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthorAwardsRepository, AuthorAwardsDbRepository>();
         services.AddScoped<IAppRatingRepository, AppRatingRepository>();
         services.AddScoped<IClubRepository, ClubDbRepository>();
-        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
-        services.AddScoped<ITourPurchaseTokenRepository, TourPurchaseTokenRepository>();
         services.AddScoped<IDiaryRepository, DiaryDbRepository>();      
         services.AddScoped<IQuizRepository, QuizDbRepository>();
         services.AddScoped<IMessageRepository, MessageDbRepository>();

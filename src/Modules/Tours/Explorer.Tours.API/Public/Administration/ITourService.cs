@@ -13,11 +13,11 @@ namespace Explorer.Tours.API.Public.Administration
         TourDto Create(CreateTourDto dto);
         IEnumerable<TourDto> GetByAuthor(long authorId);
         TourDto Get(long id);
-        TourDto? GetById(long id, long authorId);
+        Task<TourDto?> GetByIdAsync(long id, long authorId);
         TourDto Update(long id, UpdateTourDto dto);
         void Delete(long id);
-        void AddKeyPoint(long tourId, KeyPointDto dto);
-        void UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto);
+        Task<KeyPointDto> AddKeyPoint(long tourId, KeyPointDto dto);
+        Task<KeyPointDto> UpdateKeyPoint(long tourId, int ordinalNo, KeyPointDto dto);
         void RemoveKeyPoint(long tourId, int ordinalNo);
         void Publish(long tourId, long authorId);
         void Archive(long id);
@@ -28,7 +28,7 @@ namespace Explorer.Tours.API.Public.Administration
         List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId);
         public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId);
         void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
-        List<PublishedTourPreviewDto> GetPublishedForTourist();
+        public PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize);
 
         /* Tourist's options */
 

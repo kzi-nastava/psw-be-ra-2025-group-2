@@ -1,63 +1,102 @@
 ﻿using Explorer.BuildingBlocks.Core.Domain;
 
-namespace Explorer.Tours.Core.Domain;
-
-public class KeyPoint : Entity, IKeyPointInfo
+namespace Explorer.Tours.Core.Domain
 {
-    public int OrdinalNo { get; private set; }
-    public string Name { get; init; }
-    public string Description { get; init; }
-    public string SecretText { get; init; }
-    public string ImageUrl { get; init; }
-    public double Latitude { get; init; }
-    public double Longitude { get; init; }
-
-    public KeyPoint(
-        int ordinalNo,
-        string name,
-        string description,
-        string secretText,
-        string imageUrl,
-        double latitude,
-        double longitude)
+    public class KeyPoint : Entity, IKeyPointInfo
     {
-        OrdinalNo = ordinalNo;
-        Name = name;
-        Description = description;
-        SecretText = secretText;
-        ImageUrl = imageUrl;
-        Latitude = latitude;
-        Longitude = longitude;
+        public int OrdinalNo { get; private set; }
+        public string Name { get; init; }
+        public string Description { get; init; }
+        public string SecretText { get; init; }
+        public string ImageUrl { get; init; }
+        public double Latitude { get; init; }
+        public double Longitude { get; init; }
+        public long AuthorId { get; private set; }
+        public bool IsPublic { get; private set; } = false;
 
-        Validate();
-    }
+        public long? EncounterId { get; init; }
 
-    private void Validate()
-    {
-        if (OrdinalNo <= 0)
-            throw new ArgumentException("OrdinalNo must be positive.");
+        private KeyPoint() { }
 
-        if (string.IsNullOrWhiteSpace(Name))
-            throw new ArgumentException("Name cannot be empty.");
+        public KeyPoint(
+            int ordinalNo,
+            string name,
+            string description,
+            string secretText,
+            string imageUrl,
+            double latitude,
+            double longitude,
+            long authorId,
+            long? encounterId = null) 
+        {
+            OrdinalNo = ordinalNo;
+            Name = name;
+            Description = description;
+            SecretText = secretText ?? string.Empty;
+            ImageUrl = imageUrl ?? string.Empty;
+            Latitude = latitude;
+            Longitude = longitude;
+            AuthorId = authorId;
+            IsPublic = false;
+            EncounterId = encounterId;
 
-        if (string.IsNullOrWhiteSpace(Description))
-            throw new ArgumentException("Description cannot be empty.");
+            Validate();
+        }
 
-        if (string.IsNullOrWhiteSpace(SecretText))
-            throw new ArgumentException("SecretText cannot be empty.");
+        public KeyPoint(
+             int ordinalNo,
+             string name,
+             string description,
+             string secretText,
+             string imageUrl,
+             double latitude,
+             double longitude)
+             : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null)
+        {
+        }
 
-        if (Latitude < -90 || Latitude > 90)
-            throw new ArgumentException("Latitude must be between -90 and 90 degrees.");
+        public void MarkAsPublic()
+        {
+            IsPublic = true;
+        }
 
-        if (Longitude < -180 || Longitude > 180)
-            throw new ArgumentException("Longitude must be between -180 and 180 degrees.");
-    }
+        private void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("Name is required");
 
-    public void SetOrdinalNo(int newOrdinal)
-    {
-        if (newOrdinal <= 0)
-            throw new ArgumentException("OrdinalNo must be positive.");
+            if (string.IsNullOrWhiteSpace(Description))
+                throw new ArgumentException("Description is required");
 
-        OrdinalNo = newOrdinal;
+            if (Latitude < -90 || Latitude > 90)
+                throw new ArgumentOutOfRangeException(nameof(Latitude));
+
+            if (Longitude < -180 || Longitude > 180)
+                throw new ArgumentOutOfRangeException(nameof(Longitude));
+        }
+
+        public void Update(string name, string description, string secretText, string imageUrl, double latitude, double longitude, long? encounterId)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Name is required");
+
+            typeof(KeyPoint).GetProperty(nameof(Name))!.SetValue(this, name);
+            typeof(KeyPoint).GetProperty(nameof(Description))!.SetValue(this, description);
+            typeof(KeyPoint).GetProperty(nameof(SecretText))!.SetValue(this, secretText ?? string.Empty);
+            typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, imageUrl ?? string.Empty);
+            typeof(KeyPoint).GetProperty(nameof(Latitude))!.SetValue(this, latitude);
+            typeof(KeyPoint).GetProperty(nameof(Longitude))!.SetValue(this, longitude);
+            typeof(KeyPoint).GetProperty(nameof(EncounterId))!.SetValue(this, encounterId);
+
+            Validate();
+        }
+
+        public void SetOrdinalNo(int newOrdinal)
+        {
+            if (newOrdinal < 1)
+                throw new ArgumentOutOfRangeException(nameof(newOrdinal));
+
+            OrdinalNo = newOrdinal;
+        }
     }
 }

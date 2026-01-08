@@ -1,7 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.Domain;
 using System.Text.Json.Serialization;
 namespace Explorer.Stakeholders.Core.Domain.ShoppingCarts;
-public class ShoppingCart : Entity
+public class ShoppingCart : AggregateRoot
 {
     public long TouristId { get; private set; }
     public virtual ICollection<OrderItem> Items { get; private set; } = new List<OrderItem>();
