@@ -2,7 +2,6 @@
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Tourist
@@ -13,10 +12,13 @@ namespace Explorer.API.Controllers.Tourist
     public class TourExecutionController : ControllerBase
     {
         private readonly ITourExecutionService _executionService;
+        private readonly ITourChatService _chatService;
 
-        public TourExecutionController(ITourExecutionService executionService)
+        public TourExecutionController(ITourExecutionService executionService,
+            ITourChatService chatService)
         {
             _executionService = executionService;
+            _chatService = chatService;
         }
 
         [HttpGet("user/{tourId:long}")]
@@ -103,6 +105,31 @@ namespace Explorer.API.Controllers.Tourist
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("chat")]
+        public async Task<ActionResult<TourChatResponseDto>> Chat([FromBody] TourChatRequestDto request)
+        {
+            try
+            {
+                var response = await _chatService.GetChatResponseAsync(User.UserId(), request);
+
+                if (!response.Success)
+                {
+                    return BadRequest(response);
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new TourChatResponseDto
+                {
+                    Success = false,
+                    Error = "An unexpected error occurred",
+                    Timestamp = DateTime.UtcNow
+                });
             }
         }
     }
