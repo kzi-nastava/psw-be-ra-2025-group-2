@@ -39,12 +39,7 @@ public enum ActivityType
     Relaxing = 3
 }
 
-public enum TransportType
-{
-    Walking = 0,
-    Bicycle = 1,
-    Car = 2
-}
+
 
 public enum SuitableFor
 {

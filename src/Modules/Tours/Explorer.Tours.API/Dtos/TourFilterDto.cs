@@ -9,12 +9,12 @@ namespace Explorer.Tours.API.Dtos
         public int PageSize { get; set; } = 6;
 
         // Filters
-        public int? EnvironmentType { get; set; } // 1=Urban, 2=Nature, 3=Mixed
+        public int? EnvironmentType { get; set; } 
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
-        public List<int>? SuitableFor { get; set; } // 1=Students, 2=Children, 3=Elderly, 4=Families, 5=Adults
-        public List<int>? FoodTypes { get; set; } // 1=Vegetarian, 2=Vegan, 3=GlutenFree, etc.
-        public int? AdventureLevel { get; set; } // 1=Low, 2=Medium, 3=High
-        public List<int>? ActivityTypes { get; set; } // 1=Adrenaline, 2=Cultural, 3=Relaxing
+        public string? SuitableFor { get; set; }
+        public string? FoodTypes { get; set; } 
+        public string? AdventureLevel { get; set; } 
+        public string? ActivityTypes { get; set; } 
     }
 }
