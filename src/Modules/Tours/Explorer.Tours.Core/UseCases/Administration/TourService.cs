@@ -519,7 +519,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tours = _tourRepository.GetAllPublished();
 
             // ========== APPLY FILTERS ==========
-            // Filter by environment type (urbano / priroda / mixed)
+            // Filter by environment type
             if (filter.EnvironmentType.HasValue)
             {
                 tours = tours.Where(t => t.EnvironmentType == (TourEnvironmentType)filter.EnvironmentType.Value).ToList();
@@ -535,30 +535,30 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 tours = tours.Where(t => t.Price <= filter.MaxPrice.Value).ToList();
             }
 
-            // Filter by suitable for groups (students, children, elderly, etc.)
-            if (filter.SuitableFor != null && filter.SuitableFor.Any())
+            // Filter by suitable for groups - koristi SuitableForList
+            if (filter.SuitableForList != null && filter.SuitableForList.Any())
             {
-                var suitableForEnums = filter.SuitableFor.Select(s => (SuitableFor)s).ToList();
+                var suitableForEnums = filter.SuitableForList.Select(s => (SuitableFor)s).ToList();
                 tours = tours.Where(t => t.SuitableForGroups.Any(sf => suitableForEnums.Contains(sf))).ToList();
             }
 
-            // Filter by food types
-            if (filter.FoodTypes != null && filter.FoodTypes.Any())
+            // Filter by food types - koristi FoodTypesList
+            if (filter.FoodTypesList != null && filter.FoodTypesList.Any())
             {
-                var foodTypeEnums = filter.FoodTypes.Select(f => (FoodType)f).ToList();
+                var foodTypeEnums = filter.FoodTypesList.Select(f => (FoodType)f).ToList();
                 tours = tours.Where(t => t.FoodTypes.Any(ft => foodTypeEnums.Contains(ft))).ToList();
             }
 
-            // Filter by adventure level
-            if (filter.AdventureLevel.HasValue)
+            // Filter by adventure level - koristi AdventureLevelValue
+            if (filter.AdventureLevelValue.HasValue)
             {
-                tours = tours.Where(t => t.AdventureLevel == (AdventureLevel)filter.AdventureLevel.Value).ToList();
+                tours = tours.Where(t => t.AdventureLevel == (AdventureLevel)filter.AdventureLevelValue.Value).ToList();
             }
 
-            // Filter by activity types (adrenaline / cultural / relaxing)
-            if (filter.ActivityTypes != null && filter.ActivityTypes.Any())
+            // Filter by activity types - koristi ActivityTypesList
+            if (filter.ActivityTypesList != null && filter.ActivityTypesList.Any())
             {
-                var activityTypeEnums = filter.ActivityTypes.Select(a => (ActivityType)a).ToList();
+                var activityTypeEnums = filter.ActivityTypesList.Select(a => (ActivityType)a).ToList();
                 tours = tours.Where(t => t.ActivityTypes.Any(at => activityTypeEnums.Contains(at))).ToList();
             }
             // ====================================
