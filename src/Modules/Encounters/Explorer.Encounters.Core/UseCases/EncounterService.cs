@@ -18,14 +18,21 @@ namespace Explorer.Encounters.Core.UseCases
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
+        private readonly ITouristProgressRepository _touristProgressRepository;
         private readonly IMapper _mapper;
 
-        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper)
+        public EncounterService(
+            IEncounterRepository repository,
+            IEncounterExecutionRepository executionRepository,
+            ITouristProgressRepository touristProgressRepository,
+            IMapper mapper)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
+            _touristProgressRepository = touristProgressRepository;
             _mapper = mapper;
         }
+
 
         public void Archive(long id)
         {
@@ -151,31 +158,28 @@ namespace Explorer.Encounters.Core.UseCases
             return _mapper.Map<EncounterDto>(updated);
         }
 
-        public void CompleteEncounter(long userId, long encounterId)
+        public bool CompleteEncounter(long userId, long encounterId)
         {
-            var encounter = _encounterRepository.GetById(encounterId);
-            if (encounter == null)
-                throw new NotFoundException("Encounter not found");
+            var encounter = _encounterRepository.GetById(encounterId)
+                ?? throw new NotFoundException("Encounter not found");
 
-            if (encounter.Type != EncounterType.Miscellaneous)
-                throw new InvalidOperationException("Only Miscellaneous encounters can be completed manually.");
+            // ako je vec uradio taj encounter nece se desiti nista novo
+            if (_executionRepository.IsCompleted(userId, encounterId))
+                return false;
 
-            bool alreadyCompleted = _executionRepository.IsCompleted(userId, encounterId);
-
+            // ako nije uradio vec, onda se belezi zavrsavanje i dodeljuje se XP
             var execution = new EncounterExecution(userId, encounterId);
+            execution.MarkCompleted(encounter.XP.Value);
             _executionRepository.Add(execution);
 
-            // Logika za XP
-            if (!alreadyCompleted)
-            {
-                // Korisnik prvi put rešava izazov - Daj mu XP
-                // TODO: Pozovi servis za dodavanje XP-a korisniku
-            }
-            else
-            {
-                // Korisnik je već rešio ovo ranije. 
-                // Ovde ne radimo ništa oko XP-a
-            }
+            // dodaje se XP korisniku na njegov trenutni progres
+            var progress = _touristProgressRepository.GetByUserId(userId)
+                          ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+            bool leveledUp = progress.AddXp(encounter.XP.Value);
+            _touristProgressRepository.Update(progress);
+
+            return leveledUp;
         }
     }
 }

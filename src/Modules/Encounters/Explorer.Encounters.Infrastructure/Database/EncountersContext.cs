@@ -10,6 +10,7 @@ namespace Explorer.Encounters.Infrastructure.Database
 
         public DbSet<EncounterExecution> EncounterExecutions { get; set; }
         public EncountersContext(DbContextOptions<EncountersContext> options) : base(options) { }
+        public DbSet<TouristProgress> TouristProgresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,7 +31,10 @@ namespace Explorer.Encounters.Infrastructure.Database
             });
 
             modelBuilder.Entity<EncounterExecution>()
-            .ToTable("EncounterExecutions");
+            .HasIndex(e => new { e.UserId, e.EncounterId })
+            .IsUnique();
+            modelBuilder.Entity<TouristProgress>()
+            .ToTable("TouristProgresses");
         }
     }
 }

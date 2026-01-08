@@ -142,15 +142,15 @@ namespace Explorer.API.Controllers.Administrator.Administration
 
         [Authorize(Policy = "touristPolicy")]
         [HttpPost("complete/{id:long}")]
-        public ActionResult Complete(long id)
+        public ActionResult<bool> Complete(long id)
         {
             try
             {
                 long userId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
 
-                _encounterService.CompleteEncounter(userId, id);
+                bool leveledUp = _encounterService.CompleteEncounter(userId, id);
 
-                return Ok();
+                return Ok(leveledUp);
             }
             catch (NotFoundException e)
             {

@@ -16,12 +16,9 @@ namespace Explorer.Encounters.API.Public
         public EncounterDto Create(CreateEncounterDto createDto);
         public EncounterDto Update(UpdateEncounterDto updateDto);
         public void Delete(long id);
-
         public void MakeActive(long id);
         public void Archive(long id);
-
         public int GetCount();
-
-        public void CompleteEncounter(long userId, long encounterId);
+        public bool CompleteEncounter(long userId, long encounterId);
     }
 }
