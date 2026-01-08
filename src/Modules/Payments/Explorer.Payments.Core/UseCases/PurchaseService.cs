@@ -5,7 +5,10 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+
+
 namespace Explorer.Stakeholders.Core.UseCases
+
 {
     public class PurchaseService : IPurchaseService
     {
@@ -13,19 +16,25 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly ITourPurchaseTokenRepository _repository;
         private readonly IMapper _mapper;
         private readonly IPaymentRecordRepository _paymentRecordRepository;
+        private readonly IWalletRepository _walletRepository;
+       
+
+
 
 
         public PurchaseService(
             IShoppingCartService shoppingCartService,
             ITourPurchaseTokenRepository repository,
             IMapper mapper,
-            IPaymentRecordRepository paymentRecordRepository
+            IPaymentRecordRepository paymentRecordRepository,
+             IWalletRepository walletRepository
 )
         {
             _shoppingCartService = shoppingCartService;
             _repository = repository;
             _mapper = mapper;
             _paymentRecordRepository = paymentRecordRepository;
+            _walletRepository = walletRepository;
 
         }
 
@@ -41,6 +50,17 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             var tokens = new List<TourPurchaseTokenDto>();
             var now = DateTime.UtcNow;
+            var total = cartResult.Items.Sum(i => (int)i.Price.Amount);
+
+            var wallet = _walletRepository.GetByTouristId(touristId);
+            if (wallet == null)
+            {
+                throw new InvalidOperationException("Wallet not found.");
+            }
+
+            wallet.SpendAdventureCoins(total);
+            _walletRepository.Update(wallet);
+
 
 
             foreach (var item in cartResult.Items)
