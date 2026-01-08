@@ -38,9 +38,27 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet("published")]
         public ActionResult<PagedResultDto<PublishedTourPreviewDto>> GetPublished(
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 6)
+            [FromQuery] int pageSize = 6,
+            [FromQuery] int? environmentType = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] String? suitableFor = null,
+            [FromQuery] String? foodTypes = null,
+            [FromQuery] String? adventureLevel = null,
+            [FromQuery] String? activityTypes = null)
         {
-            return Ok(_tourService.GetPublishedForTourist(page, pageSize));
+            var filter = new TourFilterDto
+            {
+                EnvironmentType = environmentType,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SuitableFor = suitableFor,
+                FoodTypes = foodTypes,
+                AdventureLevel = adventureLevel,
+                ActivityTypes = activityTypes
+            };
+
+            return Ok(_tourService.GetFilteredTours(filter));
         }
 
 

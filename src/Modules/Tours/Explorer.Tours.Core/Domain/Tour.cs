@@ -7,12 +7,7 @@ using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Tours.Core.Domain;
 
-public enum TourStatus
-{
-    Draft,
-    Published,
-    Archived
-}
+
 
 public class Tour : AggregateRoot
 {
@@ -31,9 +26,15 @@ public class Tour : AggregateRoot
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
 
-
-
+    
    
+    public TourEnvironmentType? EnvironmentType { get; private set; }
+    public List<FoodType> FoodTypes { get; private set; } = new();
+    public AdventureLevel? AdventureLevel { get; private set; }
+    public List<ActivityType> ActivityTypes { get; private set; } = new();
+    public List<SuitableFor> SuitableForGroups { get; private set; } = new();
+   
+    
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
 
@@ -85,7 +86,44 @@ public class Tour : AggregateRoot
         Tags = tags != null ? tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList() : new List<string>();
     }
 
+  
+    public void SetEnvironmentType(TourEnvironmentType? environmentType)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        EnvironmentType = environmentType;
+    }
+
+    public void SetFoodTypes(IEnumerable<FoodType>? foodTypes)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        FoodTypes = foodTypes?.ToList() ?? new List<FoodType>();
+    }
+
+    public void SetAdventureLevel(AdventureLevel? adventureLevel)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        AdventureLevel = adventureLevel;
+    }
+
+    public void SetActivityTypes(IEnumerable<ActivityType>? activityTypes)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        ActivityTypes = activityTypes?.ToList() ?? new List<ActivityType>();
+    }
+
+    public void SetSuitableForGroups(IEnumerable<SuitableFor>? suitableFor)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        SuitableForGroups = suitableFor?.ToList() ?? new List<SuitableFor>();
+    }
+   
     public void SetStatus(TourStatus status) => Status = status;
+
     public void Archive(DateTime now)
     {
         if (Status != TourStatus.Published)
@@ -110,6 +148,7 @@ public class Tour : AggregateRoot
         Status = TourStatus.Published;
         ArchivedAt = null;
     }
+
     public void SetPrice(decimal price)
     {
         if (price < 0) throw new ArgumentException("Price cannot be negative.", nameof(price));

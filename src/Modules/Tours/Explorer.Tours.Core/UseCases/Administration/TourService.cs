@@ -508,6 +508,116 @@ namespace Explorer.Tours.Core.UseCases.Administration
             };
         }
 
+        public PagedResultDto<PublishedTourPreviewDto> GetFilteredTours(TourFilterDto filter)
+        {
+            if (filter == null)
+                throw new ArgumentNullException(nameof(filter));
+
+            int page = filter.Page < 1 ? 1 : filter.Page;
+            int pageSize = filter.PageSize < 1 ? 6 : filter.PageSize;
+
+            var tours = _tourRepository.GetAllPublished();
+
+            // ========== APPLY FILTERS ==========
+            // Filter by environment type (urbano / priroda / mixed)
+            if (filter.EnvironmentType.HasValue)
+            {
+                tours = tours.Where(t => t.EnvironmentType == (TourEnvironmentType)filter.EnvironmentType.Value).ToList();
+            }
+
+            // Filter by price range
+            if (filter.MinPrice.HasValue)
+            {
+                tours = tours.Where(t => t.Price >= filter.MinPrice.Value).ToList();
+            }
+            if (filter.MaxPrice.HasValue)
+            {
+                tours = tours.Where(t => t.Price <= filter.MaxPrice.Value).ToList();
+            }
+
+            // Filter by suitable for groups (students, children, elderly, etc.)
+            if (filter.SuitableFor != null && filter.SuitableFor.Any())
+            {
+                var suitableForEnums = filter.SuitableFor.Select(s => (SuitableFor)s).ToList();
+                tours = tours.Where(t => t.SuitableForGroups.Any(sf => suitableForEnums.Contains(sf))).ToList();
+            }
+
+            // Filter by food types
+            if (filter.FoodTypes != null && filter.FoodTypes.Any())
+            {
+                var foodTypeEnums = filter.FoodTypes.Select(f => (FoodType)f).ToList();
+                tours = tours.Where(t => t.FoodTypes.Any(ft => foodTypeEnums.Contains(ft))).ToList();
+            }
+
+            // Filter by adventure level
+            if (filter.AdventureLevel.HasValue)
+            {
+                tours = tours.Where(t => t.AdventureLevel == (AdventureLevel)filter.AdventureLevel.Value).ToList();
+            }
+
+            // Filter by activity types (adrenaline / cultural / relaxing)
+            if (filter.ActivityTypes != null && filter.ActivityTypes.Any())
+            {
+                var activityTypeEnums = filter.ActivityTypes.Select(a => (ActivityType)a).ToList();
+                tours = tours.Where(t => t.ActivityTypes.Any(at => activityTypeEnums.Contains(at))).ToList();
+            }
+            // ====================================
+
+            var totalCount = tours.Count;
+
+            var pageTours = tours
+                .OrderByDescending(t => t.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var results = new List<PublishedTourPreviewDto>();
+
+            foreach (var tour in pageTours)
+            {
+                var orderedKeyPoints = tour.KeyPoints?
+                    .OrderBy(k => k.OrdinalNo)
+                    .ToList() ?? new List<KeyPoint>();
+
+                var firstKp = orderedKeyPoints.FirstOrDefault();
+
+                var dto = new PublishedTourPreviewDto
+                {
+                    Id = tour.Id,
+                    Name = tour.Name,
+                    Description = tour.Description,
+                    Difficulty = tour.Difficulty,
+                    Price = tour.Price,
+                    Tags = tour.Tags?.ToList() ?? new List<string>(),
+
+                    FirstKeyPoint = firstKp != null ? _mapper.Map<KeyPointDto>(firstKp) : null,
+
+                    KeyPointCount = orderedKeyPoints.Count,
+                    TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
+                    LengthKm = tour.LengthKm,
+                    PlaceName = firstKp?.Name
+                };
+
+                dto.AverageRating = tour.GetAverageRating();
+
+                dto.Reviews = tour.Reviews.Select(r =>
+                {
+                    var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
+                    var u = _userService.GetById(r.TouristId);
+                    reviewDto.TouristName = u?.Username ?? "Unknown";
+                    return reviewDto;
+                }).ToList();
+
+                results.Add(dto);
+            }
+
+            return new PagedResultDto<PublishedTourPreviewDto>
+            {
+                Results = results,
+                TotalCount = totalCount
+            };
+        }
+
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images)
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result;
