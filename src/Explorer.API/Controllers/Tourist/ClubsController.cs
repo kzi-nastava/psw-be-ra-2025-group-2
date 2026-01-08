@@ -371,7 +371,7 @@ namespace Explorer.API.Controllers.Tourist
             var result = _clubService.GetMyJoinRequestClubIds(touristId);
             return Ok(result);
         }
-        
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("upload-image")]
         [RequestSizeLimit(10_000_000)] // 10MB
         public async Task<ActionResult<string>> UploadImage([FromForm] IFormFile file)
