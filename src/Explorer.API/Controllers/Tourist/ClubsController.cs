@@ -371,5 +371,26 @@ namespace Explorer.API.Controllers.Tourist
             var result = _clubService.GetMyJoinRequestClubIds(touristId);
             return Ok(result);
         }
+        
+        [HttpPost("upload-image")]
+        [RequestSizeLimit(10_000_000)] // 10MB
+        public async Task<ActionResult<string>> UploadImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("File is required.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            if (!allowed.Contains(ext)) return BadRequest("Unsupported file type.");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "clubs-images");
+            Directory.CreateDirectory(folder);
+
+            var fullPath = Path.Combine(folder, fileName);
+            await using var stream = System.IO.File.Create(fullPath);
+            await file.CopyToAsync(stream);
+
+            return Ok($"/clubs-images/{fileName}");
+        }
     }
 }
