@@ -29,8 +29,15 @@ namespace Explorer.Encounters.Infrastructure.Database
                 l.Property(p => p.Longitude).HasColumnName("ImageLongitude");
             });
 
-            modelBuilder.Entity<EncounterExecution>()
-            .ToTable("EncounterExecutions");
+            modelBuilder.Entity<EncounterExecution>(b =>
+            {
+                b.ToTable("EncounterExecutions");
+                b.Property(x => x.StartedAt).IsRequired();
+                b.Property(x => x.LastPingAt).IsRequired(false);
+                b.Property(x => x.SecondsInsideZone).IsRequired();
+                b.Property(x => x.CompletionTime).IsRequired(false);
+                b.Property(x => x.IsCompleted).IsRequired();
+            });
         }
     }
 }

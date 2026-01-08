@@ -23,6 +23,20 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
             _context.SaveChanges();
             return execution;
         }
+        public EncounterExecution? Get(long userId, long encounterId)
+        {
+            return _context.EncounterExecutions
+                       .FirstOrDefault(e => e.UserId == userId && e.EncounterId == encounterId && !e.IsCompleted)
+                   ?? _context.EncounterExecutions
+                       .FirstOrDefault(e => e.UserId == userId && e.EncounterId == encounterId);
+        }
+
+        public EncounterExecution Update(EncounterExecution execution)
+        {
+            _context.EncounterExecutions.Update(execution);
+            _context.SaveChanges();
+            return execution;
+        }
 
         public bool IsCompleted(long userId, long encounterId)
         {
