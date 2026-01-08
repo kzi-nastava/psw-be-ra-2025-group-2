@@ -7,6 +7,8 @@ DELETE FROM tours."TourExecutions";
 DELETE FROM tours."TouristEquipment";
 DELETE FROM tours."KeyPoint"; -- Ako su tačke u posebnoj tabeli
 
+DELETE FROM tours."Bundles";
+
 -- 2. TEK ONDA smemo da obrišemo Ture (jer više niko ne zavisi od njih)
 DELETE FROM tours."Tours";
 
