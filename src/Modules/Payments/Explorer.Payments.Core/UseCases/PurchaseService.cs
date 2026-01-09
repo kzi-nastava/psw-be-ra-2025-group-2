@@ -1,11 +1,15 @@
 ﻿using AutoMapper;
-using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+using Explorer.Payments.Core.Domain.RepositoryInterfaces;
+using Explorer.Payments.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.API.Dtos;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+
 namespace Explorer.Stakeholders.Core.UseCases
+
 {
     public class PurchaseService : IPurchaseService
     {
@@ -13,17 +17,24 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly ITourPurchaseTokenRepository _repository;
         private readonly ICouponService _couponService;
         private readonly IMapper _mapper;
+        private readonly IPaymentRecordRepository _paymentRecordRepository;
+        private readonly IWalletRepository _walletRepository;
 
         public PurchaseService(
             IShoppingCartService shoppingCartService,
             ITourPurchaseTokenRepository repository,
             ICouponService couponService,
-            IMapper mapper)
+            IMapper mapper,
+            IPaymentRecordRepository paymentRecordRepository,
+            IWalletRepository walletRepository)
         {
             _shoppingCartService = shoppingCartService;
             _repository = repository;
             _couponService = couponService;
             _mapper = mapper;
+            _paymentRecordRepository = paymentRecordRepository;
+            _walletRepository = walletRepository;
+
         }
 
         public List<TourPurchaseTokenDto> CompletePurchase(long touristId, string? couponCode = null)
@@ -70,6 +81,33 @@ namespace Explorer.Stakeholders.Core.UseCases
             }
 
             var tokens = new List<TourPurchaseTokenDto>();
+            var now = DateTime.UtcNow;
+            //var total = cartResult.Items.Sum(i => (int)i.Price.Amount);
+
+            decimal total = 0;
+
+            foreach (var item in cartResult.Items)
+            {
+                decimal price = item.Price.Amount;
+
+                if (itemToDiscount != null && coupon != null && item.TourId == itemToDiscount.TourId)
+                {
+                    price -= price * coupon.DiscountPercentage / 100m;
+                }
+
+                total += price;
+            }
+
+            var wallet = _walletRepository.GetByTouristId(touristId);
+            if (wallet == null)
+            {
+                throw new InvalidOperationException("Wallet not found.");
+            }
+
+            wallet.SpendAdventureCoins((int)total);
+            _walletRepository.Update(wallet);
+
+
 
             foreach (var item in cartResult.Items)
             {
@@ -82,6 +120,15 @@ namespace Explorer.Stakeholders.Core.UseCases
 
            
                 }
+
+                var record = new PaymentRecord(
+                    touristId,
+                    item.TourId,
+                    finalPrice,
+                    now
+                );
+                _paymentRecordRepository.Create(record);
+    
 
                 var token = new TourPurchaseToken(touristId, item.TourId);
                 var saved = _repository.Create(token);

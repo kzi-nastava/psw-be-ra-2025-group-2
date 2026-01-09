@@ -1,6 +1,7 @@
-
 using Explorer.Payments.Core.Domain;
 ﻿using Explorer.Payments.Core.Domain.Wallets;
+﻿using Explorer.Payments.Core.Domain.ShoppingCarts;
+using Explorer.Payments.Core.Domain.Wallets;
 using Explorer.Payments.Infrastructure.Database.Configurations;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.Infrastructure.Database.Configurations;
@@ -17,6 +18,7 @@ public class PaymentsContext : DbContext
     public DbSet<Wallet> Wallets { get; set; }
     public DbSet<WalletTransaction> WalletTransactions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<PaymentRecord> PaymentRecords { get; set; }
 
     public PaymentsContext(DbContextOptions<PaymentsContext> options)
         : base(options)
