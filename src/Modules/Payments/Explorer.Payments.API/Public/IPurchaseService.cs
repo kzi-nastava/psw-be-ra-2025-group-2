@@ -3,6 +3,6 @@ namespace Explorer.Stakeholders.API.Public
 {
     public interface IPurchaseService
     {
-        List<TourPurchaseTokenDto> CompletePurchase(long touristId);
+        List<TourPurchaseTokenDto> CompletePurchase(long touristId, string? couponCode = null);
     }
 }
