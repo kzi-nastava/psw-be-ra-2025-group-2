@@ -34,11 +34,16 @@ public static class ToursStartup
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
 
+        services.AddHttpClient();
+        services.AddScoped<ITourChatService, TourChatService>();
+
         services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
         services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
         services.AddScoped<IBundleService, BundleService>();
+        
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
