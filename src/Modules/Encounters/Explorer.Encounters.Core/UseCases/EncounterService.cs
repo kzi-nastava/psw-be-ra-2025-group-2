@@ -312,24 +312,21 @@ namespace Explorer.Encounters.Core.UseCases
             if (encounter.Type != EncounterType.Miscellaneous)
                 throw new InvalidOperationException("Only Miscellaneous encounters can be completed manually.");
 
-            bool alreadyCompleted = _executionRepository.IsCompleted(userId, encounterId);
+            var execution = _executionRepository.Get(userId, encounterId);
 
-            var execution = new EncounterExecution(userId, encounterId);
-            _executionRepository.Add(execution);
-
-            // Logika za XP
-            if (!alreadyCompleted)
+            if (execution == null)
             {
-                // Korisnik prvi put rešava izazov - Daj mu XP
-                // TODO: Pozovi servis za dodavanje XP-a korisniku
+                execution = new EncounterExecution(userId, encounterId);
+                execution.MarkCompleted();
+                _executionRepository.Add(execution);
             }
             else
             {
-                // Korisnik je već rešio ovo ranije. 
-                // Ovde ne radimo ništa oko XP-a
+                execution.MarkCompleted();
+                _executionRepository.Update(execution);
             }
         }
-        
+
         public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime)GetExecutionStatus(long userId, long encounterId)
         {
             var encounter = _encounterRepository.GetById(encounterId);
@@ -359,32 +356,37 @@ namespace Explorer.Encounters.Core.UseCases
             if (myExecution == null)
                 throw new InvalidOperationException("You haven't activated this encounter.");
 
-            // 1. Update my location
             myExecution.UpdateLocation(latitude, longitude);
             _executionRepository.Update(myExecution);
 
-            // 2. Check other users
             var allExecutions = _executionRepository.GetActiveByEncounter(encounterId);
-            var nearbyCount = 0;
+
+            var validUsersCount = 0;
 
             foreach (var exec in allExecutions)
             {
-                // Check if user is active (e.g., within last 5 mins)
                 if ((DateTime.UtcNow - exec.LastActivity).TotalMinutes > 5) continue;
 
-                double distance = CalculateDistanceMeters(latitude, longitude, exec.LastLatitude, exec.LastLongitude);
-                if (distance <= range)
+                double distanceToCenter = CalculateDistanceMeters(
+                    exec.LastLatitude,
+                    exec.LastLongitude,
+                    socialEncounter.Location.Latitude,
+                    socialEncounter.Location.Longitude
+                );
+
+                if (distanceToCenter <= range)
                 {
-                    nearbyCount++;
+                    validUsersCount++;
                 }
             }
 
-            // 3. Check completion condition
-            // Note: nearbyCount includes myself if distance calculation returns 0 for same coords
-            if (nearbyCount >= requiredPeople)
+            if (validUsersCount >= requiredPeople)
             {
-                myExecution.MarkCompleted();
-                _executionRepository.Update(myExecution);
+                if (!myExecution.IsCompleted)
+                {
+                    myExecution.MarkCompleted();
+                    _executionRepository.Update(myExecution);
+                }
             }
 
             return new EncounterExecutionStatusDto
@@ -393,8 +395,8 @@ namespace Explorer.Encounters.Core.UseCases
                 SecondsInsideZone = 0,
                 RequiredSeconds = 0,
                 CompletionTime = myExecution.CompletionTime?.ToString("O"),
-                ActiveTourists = nearbyCount,
-                InRange = true // If they can ping, they are technically "tracking"
+                ActiveTourists = validUsersCount,
+                InRange = true
             };
         }
 
