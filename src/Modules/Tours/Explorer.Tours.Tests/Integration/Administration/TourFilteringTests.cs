@@ -20,7 +20,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         // Setuj test podatke - urban tura
         var urbanTour = dbContext.Tours.First(t => t.Id == -1);
         urbanTour.SetEnvironmentType(TourEnvironmentType.Urban);
@@ -30,8 +30,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             environmentType: 1 // Urban
         );
 
@@ -41,9 +41,9 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
-        pageDto.Results.ShouldAllBe(t => 
+        pageDto.Results.ShouldAllBe(t =>
             dbContext.Tours.First(tour => tour.Id == t.Id).EnvironmentType == TourEnvironmentType.Urban
         );
     }
@@ -54,7 +54,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         // Setuj test podatke - nature tura
         var natureTour = dbContext.Tours.First(t => t.Id == -2);
         natureTour.SetEnvironmentType(TourEnvironmentType.Nature);
@@ -64,8 +64,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             environmentType: 2 // Nature
         );
 
@@ -75,9 +75,9 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
-        pageDto.Results.ShouldAllBe(t => 
+        pageDto.Results.ShouldAllBe(t =>
             dbContext.Tours.First(tour => tour.Id == t.Id).EnvironmentType == TourEnvironmentType.Nature
         );
     }
@@ -88,14 +88,14 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var controller = CreateController(scope);
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
-            minPrice: 10, 
+            page: 1,
+            pageSize: 100,
+            minPrice: 10,
             maxPrice: 50
         );
 
@@ -118,8 +118,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             minPrice: 20
         );
 
@@ -142,8 +142,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             maxPrice: 30
         );
 
@@ -163,7 +163,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetSuitableForGroups(new List<SuitableFor> { SuitableFor.Students });
         dbContext.SaveChanges();
@@ -172,8 +172,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             suitableFor: "1" // Students
         );
 
@@ -183,7 +183,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -193,7 +193,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetSuitableForGroups(new List<SuitableFor> { SuitableFor.Children, SuitableFor.Families });
         dbContext.SaveChanges();
@@ -202,8 +202,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             suitableFor: "2,4" // Children, Families
         );
 
@@ -213,7 +213,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -223,7 +223,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetFoodTypes(new List<FoodType> { FoodType.Vegetarian });
         dbContext.SaveChanges();
@@ -232,8 +232,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             foodTypes: "1" // Vegetarian
         );
 
@@ -243,7 +243,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -253,7 +253,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetFoodTypes(new List<FoodType> { FoodType.Vegetarian, FoodType.Vegan, FoodType.GlutenFree });
         dbContext.SaveChanges();
@@ -262,8 +262,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             foodTypes: "1,2,3" // Vegetarian, Vegan, GlutenFree
         );
 
@@ -273,7 +273,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -283,7 +283,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetAdventureLevel(AdventureLevel.Low);
         dbContext.SaveChanges();
@@ -292,8 +292,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             adventureLevel: "1" // Low
         );
 
@@ -303,7 +303,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -313,7 +313,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -2);
         tour.SetAdventureLevel(AdventureLevel.High);
         dbContext.SaveChanges();
@@ -322,8 +322,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             adventureLevel: "3" // High
         );
 
@@ -333,7 +333,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -343,7 +343,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetActivityTypes(new List<ActivityType> { ActivityType.Adrenaline });
         dbContext.SaveChanges();
@@ -352,8 +352,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             activityTypes: "1" // Adrenaline
         );
 
@@ -363,7 +363,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -373,7 +373,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetActivityTypes(new List<ActivityType> { ActivityType.Cultural, ActivityType.Relaxing });
         dbContext.SaveChanges();
@@ -382,8 +382,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             activityTypes: "2,3" // Cultural, Relaxing
         );
 
@@ -393,7 +393,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 
@@ -403,7 +403,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         // Setuj test ture sa kombinovanim filterima
         var tour1 = dbContext.Tours.First(t => t.Id == -1);
         tour1.SetEnvironmentType(TourEnvironmentType.Urban);
@@ -411,15 +411,15 @@ public class TourFilteringTests : BaseToursIntegrationTest
         tour1.SetSuitableForGroups(new List<SuitableFor> { SuitableFor.Families, SuitableFor.Children });
         tour1.SetActivityTypes(new List<ActivityType> { ActivityType.Cultural });
         tour1.SetPrice(25m);
-        
+
         dbContext.SaveChanges();
 
         var controller = CreateController(scope);
 
         // Act - Kombinacija više filtera
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             environmentType: 1, // Urban
             minPrice: 10,
             maxPrice: 50,
@@ -434,10 +434,10 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         // Proveri da postoji bar jedna tura koja zadovoljava sve filtere
         pageDto.Results.ShouldNotBeEmpty();
-        
+
         // Proveri da sve vraćene ture zadovoljavaju filtere
         foreach (var tourDto in pageDto.Results)
         {
@@ -454,8 +454,8 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act - Nemoguća kombinacija filtera
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             environmentType: 1, // Urban
             minPrice: 10000, // Previše visoka cena
             maxPrice: 20000
@@ -467,7 +467,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldBeEmpty();
         pageDto.TotalCount.ShouldBe(0);
     }
@@ -488,7 +488,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         // Trebalo bi da vrati sve published ture
         pageDto.Results.ShouldNotBeEmpty();
         pageDto.TotalCount.ShouldBeGreaterThan(0);
@@ -501,9 +501,27 @@ public class TourFilteringTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
         
-        // Setuj više tura sa istim filterom
-        var tours = dbContext.Tours.Where(t => t.Status == TourStatus.Published).Take(3).ToList();
-        foreach (var tour in tours)
+        // Resetuj sve published ture
+        var allPublished = dbContext.Tours
+            .Where(t => t.Status == TourStatus.Published)
+            .ToList();
+        
+        foreach (var t in allPublished)
+        {
+            t.SetEnvironmentType(null);
+        }
+        dbContext.SaveChanges();
+        
+        // Setuj tačno 3 ture sa Urban
+        var toursToSetUrban = dbContext.Tours
+            .Where(t => t.Status == TourStatus.Published)
+            .OrderBy(t => t.Id)
+            .Take(3)
+            .ToList();
+        
+        toursToSetUrban.Count.ShouldBe(3);
+        
+        foreach (var tour in toursToSetUrban)
         {
             tour.SetEnvironmentType(TourEnvironmentType.Urban);
         }
@@ -518,15 +536,32 @@ public class TourFilteringTests : BaseToursIntegrationTest
             environmentType: 1
         );
 
-        // Assert
+        // Assert - Prva stranica
         var okResult1 = resultPage1.Result as OkObjectResult;
         okResult1.ShouldNotBeNull();
 
         var pageDto1 = okResult1.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto1.ShouldNotBeNull();
         
-        pageDto1.Results.Count.ShouldBeLessThanOrEqualTo(2);
-        pageDto1.TotalCount.ShouldBeGreaterThanOrEqualTo(pageDto1.Results.Count);
+        pageDto1.Results.Count.ShouldBe(2); // Tačno 2 rezultata
+        pageDto1.TotalCount.ShouldBe(3); // Ukupno 3
+        
+        // Act - Druga stranica
+        var resultPage2 = controller.GetPublished(
+            page: 2, 
+            pageSize: 2, 
+            environmentType: 1
+        );
+        
+        // Assert - Druga stranica
+        var okResult2 = resultPage2.Result as OkObjectResult;
+        okResult2.ShouldNotBeNull();
+        
+        var pageDto2 = okResult2.Value as PagedResultDto<PublishedTourPreviewDto>;
+        pageDto2.ShouldNotBeNull();
+        
+        pageDto2.Results.Count.ShouldBe(1); // Samo 1 preostala tura
+        pageDto2.TotalCount.ShouldBe(3); // I dalje ukupno 3
     }
 
     [Fact]
@@ -535,7 +570,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
-        
+
         var tour = dbContext.Tours.First(t => t.Id == -1);
         tour.SetSuitableForGroups(new List<SuitableFor> { SuitableFor.Students });
         dbContext.SaveChanges();
@@ -544,18 +579,18 @@ public class TourFilteringTests : BaseToursIntegrationTest
 
         // Act - Koristi različite formate stringa
         var result = controller.GetPublished(
-            page: 1, 
-            pageSize: 100, 
+            page: 1,
+            pageSize: 100,
             suitableFor: "1"
         );
 
         // Assert
-        var okResult = result.Result as OkObjectResult;
+        var         okResult = result.Result as OkObjectResult;
         okResult.ShouldNotBeNull();
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
         pageDto.ShouldNotBeNull();
-        
+
         pageDto.Results.ShouldNotBeEmpty();
     }
 

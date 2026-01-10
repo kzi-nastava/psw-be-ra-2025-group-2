@@ -12,12 +12,28 @@ using Shouldly;
 namespace Explorer.Tours.Tests.Integration.Administration;
 
 [Collection("Sequential")]
-public class TourPublishCommandTests : BaseToursIntegrationTest
+public class TourPublishCommandTests : BaseToursIntegrationTest, IDisposable
 {
+    private readonly List<long> _createdTourIds = new List<long>();
+
     public TourPublishCommandTests(ToursTestFactory factory) : base(factory) { }
 
+    public void Dispose()
+    {
+        // Očisti sve dinamički kreirane ture nakon izvršavanja svih testova
+        if (_createdTourIds.Any())
+        {
+            using var scope = Factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            
+            var toursToDelete = dbContext.Tours.Where(t => _createdTourIds.Contains(t.Id)).ToList();
+            dbContext.Tours.RemoveRange(toursToDelete);
+            dbContext.SaveChanges();
+        }
+    }
+
     [Fact]
-    public async Task Publish_succeeds_for_valid_tour()  // ASYNC
+    public async Task Publish_succeeds_for_valid_tour()
     {
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
@@ -31,17 +47,20 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
             AuthorId = -11,
             Tags = new List<string> { "test", "publish" },
             Durations = new List<TourDurationDto>
-        {
-            new TourDurationDto
             {
-                TransportType = 0,
-                Minutes = 120
+                new TourDurationDto
+                {
+                    TransportType = 0,
+                    Minutes = 120
+                }
             }
-        }
         };
 
         var created = ((ObjectResult)controller.Create(newTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
+        
+       
+        _createdTourIds.Add(created.Id);
 
         await controller.AddKeyPoint(created.Id, new KeyPointDto 
         {
@@ -81,10 +100,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
     [Fact]
     public void Publish_fails_if_user_is_not_author()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controllerAsAuthor11 = CreateController(scope, "-11");
-        var controllerAsAuthor12 = CreateController(scope, "-12"); // drugi autor
+        var controllerAsAuthor12 = CreateController(scope, "-12");
 
         var newTour = new CreateTourDto
         {
@@ -128,6 +146,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
 
         var created = ((ObjectResult)controllerAsAuthor11.Create(newTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
+        
+        
+        _createdTourIds.Add(created.Id);
 
         var result = controllerAsAuthor12.Publish(created.Id);
 
@@ -140,10 +161,8 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
 
-        // Act
         var result = controller.Publish(-9999) as ObjectResult;
 
-        // Assert
         result.ShouldNotBeNull();
         result.StatusCode.ShouldBe(500); 
     }
@@ -151,7 +170,6 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
     [Fact]
     public void Publish_fails_when_tour_violates_business_rules()
     {
-        // Npr. nema dovoljno ključnih tačaka ili nema durations
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
 
@@ -173,8 +191,7 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
                     ImageUrl = "img.jpg",
                     Latitude = 45.0,
                     Longitude = 19.0,
-                           AuthorId = -11  // ✅ DODAJ OVO
-
+                    AuthorId = -11
                 }
             },
             Durations = new List<TourDurationDto>() 
@@ -182,6 +199,9 @@ public class TourPublishCommandTests : BaseToursIntegrationTest
 
         var created = ((ObjectResult)controller.Create(invalidTour).Result)?.Value as TourDto;
         created.ShouldNotBeNull();
+        
+        
+        _createdTourIds.Add(created.Id);
 
         var result = controller.Publish(created.Id) as BadRequestObjectResult;
 

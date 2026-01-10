@@ -49,6 +49,8 @@ namespace Explorer.API.Controllers.Tourist
         {
             var filter = new TourFilterDto
             {
+                Page = page,                    
+                PageSize = pageSize,          
                 EnvironmentType = environmentType,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
