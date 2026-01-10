@@ -1,5 +1,6 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Dtos.TouristProgress;
 using System;
 using System.Collections.Generic;
 
@@ -18,6 +19,8 @@ namespace Explorer.Encounters.API.Public
         int GetCount();
 
         void CompleteEncounter(long userId, long encounterId);
+        EncounterDto CreateByTourist(long userId, CreateEncounterDto createDto);
+        TouristProgressDto GetMyProgress(long userId);
 
         void ActivateEncounter(long userId, long encounterId, double latitude, double longitude);
 
