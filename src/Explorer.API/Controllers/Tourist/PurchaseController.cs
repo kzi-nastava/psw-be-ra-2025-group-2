@@ -2,6 +2,7 @@
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.Payments.API.Dtos;
 
 namespace Explorer.API.Controllers.Tourist
 {
@@ -18,11 +19,11 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpPost]
-        public IActionResult Purchase()
+        public IActionResult Purchase([FromBody] PurchaseWithCouponDto dto)
         {
             try
             {
-                var result = _purchaseService.CompletePurchase(User.PersonId());
+                var result = _purchaseService.CompletePurchase(User.PersonId(), dto?.CouponCode);
                 return Ok(result);
                 
             }

@@ -5,6 +5,8 @@ using Explorer.Encounters.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.Encounters.API.Dtos.EncounterExecution;
+
 
 namespace Explorer.API.Controllers.Administrator.Administration
 {
@@ -139,6 +141,66 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 return BadRequest(ex.Message);
             }
         }
+        
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("activate-execution/{id:long}")]
+        public IActionResult ActivateExecution(long id, [FromBody] EncounterActivateDto dto)
+        {
+            long userId = long.Parse(HttpContext.User.Claims
+                .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            try
+            {
+                _encounterService.ActivateEncounter(userId, id, dto.Latitude, dto.Longitude);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+               
+                return BadRequest(ex.Message);
+            }
+        }
+
+        
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("location/{id:long}")]
+        public ActionResult<EncounterExecutionStatusDto> PingLocation(long id, [FromBody] EncounterLocationPingDto dto)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims
+                    .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+                var result = _encounterService.PingLocation(
+                    userId,
+                    id,
+                    dto.Latitude,
+                    dto.Longitude,
+                    dto.DeltaSeconds
+                );
+
+                return Ok(new EncounterExecutionStatusDto
+                {
+                    IsCompleted = result.IsCompleted,
+                    SecondsInsideZone = result.SecondsInsideZone,
+                    RequiredSeconds = result.RequiredSeconds,
+                    CompletionTime = result.CompletionTime?.ToString("O")
+                });
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
 
         [Authorize(Policy = "touristPolicy")]
         [HttpPost("complete/{id:long}")]
@@ -161,6 +223,53 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 return BadRequest(e.Message);
             }
         }
+        
+        [Authorize(Policy = "touristPolicy")]
+        [HttpGet("execution-status/{id:long}")]
+        public ActionResult<EncounterExecutionStatusDto> GetExecutionStatus(long id)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims
+                    .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+               
+                var result = _encounterService.GetExecutionStatus(userId, id);
+
+                return Ok(new EncounterExecutionStatusDto
+                {
+                    IsCompleted = result.IsCompleted,
+                    SecondsInsideZone = result.SecondsInsideZone,
+                    RequiredSeconds = result.RequiredSeconds,
+                    CompletionTime = result.CompletionTime?.ToString("O")
+                });
+            }
+            catch (NotFoundException e) { return NotFound(e.Message); }
+            catch (InvalidOperationException e) { return BadRequest(e.Message); }
+        }
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [Authorize(Policy = "administratorPolicy")]
+        [HttpPost("upload-image")]
+        [RequestSizeLimit(10_000_000)] // 10MB
+        public async Task<ActionResult<string>> UploadImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("File is required.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            if (!allowed.Contains(ext)) return BadRequest("Unsupported file type.");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "encounters-images");
+            Directory.CreateDirectory(folder);
+
+            var fullPath = Path.Combine(folder, fileName);
+            await using var stream = System.IO.File.Create(fullPath);
+            await file.CopyToAsync(stream);
+            return Ok($"/encounters-images/{fileName}");
+        }
+
+
 
         [Authorize(Policy = "touristPolicy")]
         [HttpPost("{id:long}/social/presence")]
@@ -171,7 +280,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 long userId = long.Parse(HttpContext.User.Claims
                     .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
 
-                var result = _encounterService.PingSocialPresence(userId, id, dto);
+                var result = _encounterService.PingSocialPresence(userId, id, dto.Latitude, dto.Longitude);
                 return Ok(result);
             }
             catch (NotFoundException e)

@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Dtos.EncounterExecution;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
@@ -21,7 +22,10 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly IMapper _mapper;
         private readonly IEncounterPresenceRepository _presenceRepository;
 
-        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper, IEncounterPresenceRepository presenceRepository)
+        
+        private const int HiddenRequiredSecondsInZone = 30;
+        private const int DefaultPingDeltaSeconds = 10;
+        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IEncounterPresenceRepository presenceRepository, IMapper mapper)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
@@ -145,12 +149,158 @@ namespace Explorer.Encounters.Core.UseCases
             if (encounter == null)
                 throw new NotFoundException($"Not found: {updateDto.Id}");
 
-            encounter.Update(updateDto.Name, updateDto.Description,
-                new GeoLocation(updateDto.Latitude, updateDto.Longitude), new ExperiencePoints(updateDto.XP), EncounterTypeParser.Parse(updateDto.Type));
+            encounter.Update(
+                updateDto.Name,
+                updateDto.Description,
+                new GeoLocation(updateDto.Latitude, updateDto.Longitude),
+                new ExperiencePoints(updateDto.XP),
+                EncounterTypeParser.Parse(updateDto.Type)
+            );
+
+            
+            if (encounter.Type == EncounterType.Location)
+            {
+                var hidden = (HiddenLocationEncounter)encounter;
+
+               
+                hidden.UpdateHiddenLocation(
+                    updateDto.ImageUrl ?? hidden.ImageUrl,
+                    new GeoLocation(updateDto.ImageLatitude ?? hidden.ImageLocation.Latitude,
+                        updateDto.ImageLongitude ?? hidden.ImageLocation.Longitude),
+                    updateDto.DistanceTreshold ?? hidden.DistanceTreshold
+                );
+            }
 
             var updated = _encounterRepository.Update(encounter);
 
             return _mapper.Map<EncounterDto>(updated);
+        }
+ /// <summary>
+        /// Creates an "in-progress" execution if not already completed and if none exists.
+        /// </summary>
+        public void ActivateEncounter(
+            long userId,
+            long encounterId,
+            double latitude,
+            double longitude)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found.");
+
+            if (!encounter.IsActive())
+                throw new InvalidOperationException("Encounter is not active.");
+
+          
+            if (_executionRepository.IsCompleted(userId, encounterId))
+                return;
+
+          
+            var existing = _executionRepository.Get(userId, encounterId);
+            if (existing != null && !existing.IsCompleted)
+                return;
+
+            
+            if (encounter.Type == EncounterType.Location)
+            {
+                var hidden = (HiddenLocationEncounter)encounter;
+
+                var distanceToEncounter = CalculateDistanceMeters(
+                    latitude,
+                    longitude,
+                    hidden.Location.Latitude,
+                    hidden.Location.Longitude
+                );
+
+                
+                if (distanceToEncounter > hidden.DistanceTreshold)
+                {
+                    throw new InvalidOperationException(
+                        $"You cannot activate this challenge until you are within {hidden.DistanceTreshold:0}m of the location."
+                    );
+                }
+            }
+
+           
+            _executionRepository.Add(
+                new EncounterExecution(userId, encounterId)
+            );
+        }
+
+
+        /// <summary>
+        /// Called every ~10 seconds by the tourist app. Updates execution progress.
+        /// For HiddenLocation: must accumulate 30 seconds inside DistanceTreshold to complete.
+        /// </summary>
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) PingLocation(
+            long userId,
+            long encounterId,
+            double latitude,
+            double longitude,
+            int? deltaSeconds = null)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found");
+
+            if (encounter.Type != EncounterType.Location)
+                throw new InvalidOperationException("Location ping is only supported for Hidden Location encounters.");
+
+            if (!encounter.IsActive())
+                throw new InvalidOperationException("Encounter is not active.");
+
+            var hidden = encounter as HiddenLocationEncounter;
+            if (hidden == null)
+                throw new InvalidOperationException("Encounter is not a HiddenLocationEncounter.");
+
+            // Ensure execution exists
+            var execution = _executionRepository.Get(userId, encounterId);
+            if (execution == null)
+                throw new InvalidOperationException("Encounter nije aktiviran.");
+
+            if (execution.IsCompleted)
+                return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
+
+            var ds = deltaSeconds ?? DefaultPingDeltaSeconds;
+
+            var distanceMeters = CalculateDistanceMeters(
+                latitude, longitude,
+                hidden.ImageLocation.Latitude, hidden.ImageLocation.Longitude);
+           
+
+            var isInside = distanceMeters <= hidden.DistanceTreshold;
+
+            execution.RegisterPing(isInside, ds);
+
+            if (execution.SecondsInsideZone >= HiddenRequiredSecondsInZone)
+            {
+                // mark completed once
+                execution.MarkCompleted();
+
+                // XP logic (only first completion)
+                // TODO: call XP/Level service here
+            }
+
+            _executionRepository.Update(execution);
+
+            return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
+        }
+        private static double CalculateDistanceMeters(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371000; // Earth radius in meters
+
+            static double ToRad(double deg) => deg * Math.PI / 180.0;
+
+            var dLat = ToRad(lat2 - lat1);
+            var dLon = ToRad(lon2 - lon1);
+
+            var a =
+                Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
         }
 
         public void CompleteEncounter(long userId, long encounterId)
@@ -179,63 +329,72 @@ namespace Explorer.Encounters.Core.UseCases
                 // Ovde ne radimo ništa oko XP-a
             }
         }
-
-        public SocialPresenceStatusDto PingSocialPresence(long userId, long encounterId, SocialPresencePingDto ping)
+        
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime)GetExecutionStatus(long userId, long encounterId)
         {
-            var encounter = _encounterRepository.GetById(encounterId)
-                ?? throw new NotFoundException("Encounter not found");
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null)
+                throw new NotFoundException("Encounter not found");
 
-            if (encounter.Type != EncounterType.Social)
-                throw new InvalidOperationException("Encounter is not social.");
+            var exec = _executionRepository.Get(userId, encounterId);
 
-            if (!encounter.IsActive())
-                throw new InvalidOperationException("Encounter is not active.");
+            if (exec == null)
+                throw new InvalidOperationException("Encounter is not activated.");
 
-            var social = (SocialEncounter)encounter;
 
-            const int PresenceTtlSeconds = 25; // ping na 10s + tolerancija
-            var now = DateTime.UtcNow;
-            var cutoff = now.AddSeconds(-PresenceTtlSeconds);
+            return (exec.IsCompleted, exec.SecondsInsideZone, 30, exec.CompletionTime);
+        }
 
-            var distance = GeoDistance.DistanceMeters(
-                ping.Latitude, ping.Longitude,
-                encounter.Location.Latitude, encounter.Location.Longitude
-            );
+        public EncounterExecutionStatusDto PingSocialPresence(long userId, long encounterId, double latitude, double longitude)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null || encounter.Type != EncounterType.Social)
+                throw new InvalidOperationException("Not a social encounter.");
 
-            bool inRange = distance <= social.Range;
+            var socialEncounter = (SocialEncounter)encounter;
+            var requiredPeople = socialEncounter.RequiredPeople;
+            var range = socialEncounter.Range;
 
-            // 1) Očisti stare prisustva
-            _presenceRepository.RemoveOlderThan(encounterId, cutoff);
+            var myExecution = _executionRepository.Get(userId, encounterId);
+            if (myExecution == null)
+                throw new InvalidOperationException("You haven't activated this encounter.");
 
-            // 2) Upsert ili remove za ovog korisnika
-            if (inRange)
-                _presenceRepository.Upsert(encounterId, userId, ping.Latitude, ping.Longitude);
-            else
-                _presenceRepository.Remove(encounterId, userId);
+            // 1. Update my location
+            myExecution.UpdateLocation(latitude, longitude);
+            _executionRepository.Update(myExecution);
 
-            // 3) Prebroj aktivne u opsegu
-            var activeUserIds = _presenceRepository.GetActiveUserIds(encounterId, cutoff);
-            var activeCount = activeUserIds.Count;
+            // 2. Check other users
+            var allExecutions = _executionRepository.GetActiveByEncounter(encounterId);
+            var nearbyCount = 0;
 
-            // 4) Kad ih ima dovoljno, reši za svakog aktivnog koji još nije rešio
-            bool justCompleted = false;
-            if (activeCount >= social.RequiredPeople)
+            foreach (var exec in allExecutions)
             {
-                foreach (var uid in activeUserIds)
-                {
-                    if (_executionRepository.IsCompleted(uid, encounterId)) continue;
+                // Check if user is active (e.g., within last 5 mins)
+                if ((DateTime.UtcNow - exec.LastActivity).TotalMinutes > 5) continue;
 
-                    _executionRepository.Add(new EncounterExecution(uid, encounterId));
-                    justCompleted = true;
+                double distance = CalculateDistanceMeters(latitude, longitude, exec.LastLatitude, exec.LastLongitude);
+                if (distance <= range)
+                {
+                    nearbyCount++;
                 }
             }
 
-            return new SocialPresenceStatusDto
+            // 3. Check completion condition
+            // Note: nearbyCount includes myself if distance calculation returns 0 for same coords
+            if (nearbyCount >= requiredPeople)
             {
-                InRange = inRange,
-                ActiveCount = activeCount,
-                RequiredPeople = social.RequiredPeople,
-                JustCompleted = justCompleted
+                myExecution.MarkCompleted();
+                _executionRepository.Update(myExecution);
+            }
+
+            return new EncounterExecutionStatusDto
+            {
+                IsCompleted = myExecution.IsCompleted,
+                SecondsInsideZone = 0,
+                RequiredSeconds = 0,
+                CompletionTime = myExecution.CompletionTime?.ToString("O"),
+                ActiveTourists = nearbyCount,
+                InRange = true // If they can ping, they are technically "tracking"
             };
         }
 
