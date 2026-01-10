@@ -1,5 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Dtos.EncounterExecution;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,5 +34,7 @@ namespace Explorer.Encounters.API.Public
         );
 
         public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) GetExecutionStatus(long userId, long encounterId);
+        EncounterExecutionStatusDto PingSocialPresence(long userId, long encounterId, double latitude, double longitude);
+
     }
 }

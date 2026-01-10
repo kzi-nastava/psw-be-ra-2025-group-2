@@ -43,5 +43,12 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
             return _context.EncounterExecutions
                 .Any(e => e.UserId == userId && e.EncounterId == encounterId && e.IsCompleted);
         }
+
+        public List<EncounterExecution> GetActiveByEncounter(long encounterId)
+        {
+            return _context.EncounterExecutions
+                           .Where(e => e.EncounterId == encounterId && !e.IsCompleted)
+                           .ToList();
+        }
     }
 }

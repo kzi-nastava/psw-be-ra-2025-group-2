@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Dtos.EncounterExecution;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
@@ -19,15 +20,17 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
         private readonly IMapper _mapper;
+        private readonly IEncounterPresenceRepository _presenceRepository;
 
         
         private const int HiddenRequiredSecondsInZone = 30;
         private const int DefaultPingDeltaSeconds = 10;
-        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IMapper mapper)
+        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IEncounterPresenceRepository presenceRepository, IMapper mapper)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
             _mapper = mapper;
+            _presenceRepository = presenceRepository;
         }
 
         public void Archive(long id)
@@ -340,6 +343,59 @@ namespace Explorer.Encounters.Core.UseCases
 
 
             return (exec.IsCompleted, exec.SecondsInsideZone, 30, exec.CompletionTime);
+        }
+
+        public EncounterExecutionStatusDto PingSocialPresence(long userId, long encounterId, double latitude, double longitude)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null || encounter.Type != EncounterType.Social)
+                throw new InvalidOperationException("Not a social encounter.");
+
+            var socialEncounter = (SocialEncounter)encounter;
+            var requiredPeople = socialEncounter.RequiredPeople;
+            var range = socialEncounter.Range;
+
+            var myExecution = _executionRepository.Get(userId, encounterId);
+            if (myExecution == null)
+                throw new InvalidOperationException("You haven't activated this encounter.");
+
+            // 1. Update my location
+            myExecution.UpdateLocation(latitude, longitude);
+            _executionRepository.Update(myExecution);
+
+            // 2. Check other users
+            var allExecutions = _executionRepository.GetActiveByEncounter(encounterId);
+            var nearbyCount = 0;
+
+            foreach (var exec in allExecutions)
+            {
+                // Check if user is active (e.g., within last 5 mins)
+                if ((DateTime.UtcNow - exec.LastActivity).TotalMinutes > 5) continue;
+
+                double distance = CalculateDistanceMeters(latitude, longitude, exec.LastLatitude, exec.LastLongitude);
+                if (distance <= range)
+                {
+                    nearbyCount++;
+                }
+            }
+
+            // 3. Check completion condition
+            // Note: nearbyCount includes myself if distance calculation returns 0 for same coords
+            if (nearbyCount >= requiredPeople)
+            {
+                myExecution.MarkCompleted();
+                _executionRepository.Update(myExecution);
+            }
+
+            return new EncounterExecutionStatusDto
+            {
+                IsCompleted = myExecution.IsCompleted,
+                SecondsInsideZone = 0,
+                RequiredSeconds = 0,
+                CompletionTime = myExecution.CompletionTime?.ToString("O"),
+                ActiveTourists = nearbyCount,
+                InRange = true // If they can ping, they are technically "tracking"
+            };
         }
 
     }
