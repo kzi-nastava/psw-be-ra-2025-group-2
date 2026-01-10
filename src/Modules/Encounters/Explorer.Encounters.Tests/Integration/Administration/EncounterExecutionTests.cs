@@ -237,7 +237,6 @@ namespace Explorer.Encounters.Tests.Integration.Administration
 
             action.Result.ShouldBeOfType<BadRequestObjectResult>();
         }
-
   
         private static EncounterExecutionStatusDto ExecutePing(EncounterController controller, long encounterId, EncounterLocationPingDto dto)
         {
@@ -315,5 +314,6 @@ namespace Explorer.Encounters.Tests.Integration.Administration
                 HttpContext = new DefaultHttpContext { User = user }
             };
         }
+
     }
 }
