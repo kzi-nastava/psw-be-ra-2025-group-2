@@ -48,6 +48,8 @@ public class ToursContext : DbContext
                 kp.Property(k => k.Description).IsRequired();
                 kp.Property(k => k.SecretText).IsRequired();
                 kp.Property(k => k.ImageUrl);
+                kp.Property(k => k.EncounterId).IsRequired(false);
+                kp.Property(k => k.IsEncounterRequired).HasDefaultValue(false);
 
                 kp.Property(k => k.Latitude)
                     .HasColumnType("double precision")

@@ -1,11 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Explorer.Encounters.API.Dtos.Encounter;
 
 namespace Explorer.Tours.API.Public.Administration
 {
@@ -24,25 +20,19 @@ namespace Explorer.Tours.API.Public.Administration
         void Archive(long id);
         void Reactivate(long id);
         PagedResult<TourDto> GetByRange(double lat, double lon, int range, int page, int pageSize);
-        TourDto? GetPublishedTour(long tourId); // Vraća objavljenu turu bez provere autora
+        TourDto? GetPublishedTour(long tourId);
 
         List<TourEquipmentItemDto> GetEquipmentForTour(long tourId, long authorId);
         public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId);
         void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
         public PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize);
 
-        /* Tourist's options */
-
-        // TODO Promeniti kasnije
         IEnumerable<TourDto> GetAvailableForTourist(long touristId);
-
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images);
-
         public TourReviewDto UpdateReview(TourReviewDto reviewDto);
         void DeleteReview(long touristId, long tourId);
-        Task<EncounterDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, CreateEncounterDto encounterDto, long authorId);
 
-
+        // Koristi KeyPointEncounterDto iz svog modula
+        Task<KeyPointDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, KeyPointEncounterDto encounterDto, long authorId);
     }
-
 }

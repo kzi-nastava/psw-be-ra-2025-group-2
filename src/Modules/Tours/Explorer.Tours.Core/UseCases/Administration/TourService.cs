@@ -10,7 +10,6 @@ using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
-using Explorer.Encounters.API.Dtos.Encounter;
 
 namespace Explorer.Tours.Core.UseCases.Administration
 {
@@ -262,22 +261,21 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return updatedKeyPoint;
         }
 
-        public EncounterDto CreateEncounterFromKeyPoint(long tourId, int ordinalNo, CreateEncounterDto dto, long authorId)
+        // IZMENA: Prihvata KeyPointEncounterDto
+        public async Task<KeyPointDto> CreateEncounterFromKeyPoint(long tourId, int ordinalNo, KeyPointEncounterDto dto, long authorId)
         {
-            var tour = _tourRepository.GetTourWithKeyPointsAsync(tourId).Result
-                       ?? throw new KeyNotFoundException($"Tour with ID {tourId} not found.");
+            var tour = await _tourRepository.GetTourWithKeyPointsAsync(tourId);
+            if (tour == null)
+                throw new KeyNotFoundException($"Tour with ID {tourId} not found.");
 
             if (tour.AuthorId != authorId)
                 throw new UnauthorizedAccessException("You are not the author of this tour.");
 
-            var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo)
-                           ?? throw new KeyNotFoundException($"KeyPoint with OrdinalNo {ordinalNo} not found in tour.");
+            var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo);
+            if (keyPoint == null)
+                throw new KeyNotFoundException($"KeyPoint with OrdinalNo {ordinalNo} not found in tour.");
 
-            // Ovde bi trebalo pozvati Encounter servis da kreira encounter
-            // i zatim ažurirati keyPoint sa novim encounter ID-jem
-            // Ovo zavisi od vaše implementacije IEncounterService
-
-            throw new NotImplementedException("CreateEncounterFromKeyPoint method needs to be implemented with proper encounter service integration.");
+            throw new NotImplementedException("Potrebna integracija sa Encounter modulom.");
         }
 
         private async Task<Tour> GetTourOrThrowAsync(long tourId)

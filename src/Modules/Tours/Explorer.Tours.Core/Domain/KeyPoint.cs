@@ -17,8 +17,14 @@ namespace Explorer.Tours.Core.Domain
         public long? EncounterId { get; private set; }
         public bool IsEncounterRequired { get; private set; }
 
-        private KeyPoint() { }
-
+        private KeyPoint()
+        {
+            Name = string.Empty;
+            Description = string.Empty;
+            SecretText = string.Empty;
+            ImageUrl = string.Empty;
+            IsEncounterRequired = false; 
+        }
         public KeyPoint(
             int ordinalNo,
             string name,
@@ -97,5 +103,14 @@ namespace Explorer.Tours.Core.Domain
         {
             IsPublic = true;
         }
+
+        internal void SetOrdinalNo(int ordinalNo)
+        {
+            if (ordinalNo <= 0)
+                throw new ArgumentOutOfRangeException(nameof(ordinalNo), "Ordinal number must be positive.");
+
+            OrdinalNo = ordinalNo;
+        }
+
     }
 }
