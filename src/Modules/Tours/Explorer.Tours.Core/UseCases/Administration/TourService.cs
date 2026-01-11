@@ -10,7 +10,7 @@ using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
-
+using Explorer.Encounters.API.Dtos.Encounter;
 
 namespace Explorer.Tours.Core.UseCases.Administration
 {
@@ -32,7 +32,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             IPublicKeyPointService publicKeyPointService,
             IPublicKeyPointRequestRepository requestRepository,
             ITourExecutionRepository tourExecutionRepository
-            ) 
+            )
         {
             _tourRepository = tourRepository;
             _userService = userService;
@@ -59,7 +59,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
             {
                 foreach (var kpDto in dto.KeyPoints)
                 {
-
                     var keyPoint = new KeyPoint(
                         kpDto.OrdinalNo,
                         kpDto.Name,
@@ -70,7 +69,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                         kpDto.Longitude,
                         dto.AuthorId,
                         kpDto.EncounterId,
-                        kpDto.IsEncounterRequired 
+                        kpDto.IsEncounterRequired
                     );
                     tour.AddKeyPoint(keyPoint);
                 }
@@ -144,6 +143,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
             tour.SetLength(dto.LengthKm);
+            tour.SetPrice(dto.Price);
             _tourRepository.UpdateAsync(tour).Wait();
 
             return _mapper.Map<TourDto>(tour);
@@ -172,7 +172,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _tourRepository.DeleteAsync(tour).Wait();
         }
 
-        public async Task<TourDto> GetByIdAsync(long id, long authorId)
+        public async Task<TourDto?> GetByIdAsync(long id, long authorId)
         {
             var tour = await _tourRepository.GetTourWithKeyPointsAsync(id);
             if (tour == null || tour.AuthorId != authorId) return null;
@@ -204,7 +204,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Longitude,
                 dto.AuthorId,
                 dto.EncounterId,
-                dto.IsEncounterRequired 
+                dto.IsEncounterRequired
             );
 
             tour.AddKeyPoint(keyPoint);
@@ -232,7 +232,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var tour = await GetTourOrThrowAsync(tourId);
             var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
 
-
             keyPoint.Update(
                 dto.Name,
                 dto.Description,
@@ -241,7 +240,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Latitude,
                 dto.Longitude,
                 dto.EncounterId,
-                dto.IsEncounterRequired  // ✅ NOVO
+                dto.IsEncounterRequired
             );
 
             await _tourRepository.UpdateAsync(tour);
@@ -263,7 +262,23 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return updatedKeyPoint;
         }
 
-       
+        public EncounterDto CreateEncounterFromKeyPoint(long tourId, int ordinalNo, CreateEncounterDto dto, long authorId)
+        {
+            var tour = _tourRepository.GetTourWithKeyPointsAsync(tourId).Result
+                       ?? throw new KeyNotFoundException($"Tour with ID {tourId} not found.");
+
+            if (tour.AuthorId != authorId)
+                throw new UnauthorizedAccessException("You are not the author of this tour.");
+
+            var keyPoint = tour.KeyPoints.FirstOrDefault(kp => kp.OrdinalNo == ordinalNo)
+                           ?? throw new KeyNotFoundException($"KeyPoint with OrdinalNo {ordinalNo} not found in tour.");
+
+            // Ovde bi trebalo pozvati Encounter servis da kreira encounter
+            // i zatim ažurirati keyPoint sa novim encounter ID-jem
+            // Ovo zavisi od vaše implementacije IEncounterService
+
+            throw new NotImplementedException("CreateEncounterFromKeyPoint method needs to be implemented with proper encounter service integration.");
+        }
 
         private async Task<Tour> GetTourOrThrowAsync(long tourId)
         {
@@ -496,7 +511,6 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     PlaceName = firstKp?.Name
                 };
 
-                // Use tour.GetAverageRating() method from domain
                 dto.AverageRating = tour.GetAverageRating();
 
                 dto.Reviews = tour.Reviews.Select(r =>

@@ -392,6 +392,27 @@ namespace Explorer.API.Controllers.Author
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [HttpPost("keypoints/upload-image")]
+        [RequestSizeLimit(10_000_000)] // 10MB
+        public async Task<ActionResult<string>> UploadKeyPointImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("File is required.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            if (!allowed.Contains(ext)) return BadRequest("Unsupported file type.");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "keypoints-images");
+            Directory.CreateDirectory(folder);
+
+            var fullPath = Path.Combine(folder, fileName);
+            await using var stream = System.IO.File.Create(fullPath);
+            await file.CopyToAsync(stream);
+
+            return Ok($"/keypoints-images/{fileName}");
+        }
     }
 
 }

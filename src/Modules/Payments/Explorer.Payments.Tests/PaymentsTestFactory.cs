@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Explorer.BuildingBlocks.Tests;
 using Explorer.Payments.Infrastructure.Database;
+using Explorer.Tours.Infrastructure.Database;
 
 namespace Explorer.Payments.Tests
 {
@@ -18,6 +19,11 @@ namespace Explorer.Payments.Tests
             //descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<OTHER_MODULEContext>));
             //services.Remove(descriptor!);
             //services.AddDbContext<OTHER_MODULEContext>(SetupTestContext());
+
+            descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ToursContext>));
+            services.Remove(descriptor!);
+            services.AddDbContext<ToursContext>(SetupTestContext());
+
 
             return services;
         }

@@ -1,0 +1,17 @@
+﻿using Explorer.Payments.API.Dtos;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Explorer.Payments.API.Public
+{
+    public interface IPaymentRecordService
+    {
+        void Checkout(long touristId);
+
+        List<PaymentRecordDto> GetMine(long touristId);
+        PaymentRecordDto GetMineById(long touristId, long id);
+    }
+}

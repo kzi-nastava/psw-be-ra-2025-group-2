@@ -21,3 +21,4 @@ DELETE FROM tours."Monument";
 DELETE FROM stakeholders."People"; -- Obavezno prvo People ako postoji
 DELETE FROM stakeholders."Users";
 
+DELETE FROM tours."TourReports";

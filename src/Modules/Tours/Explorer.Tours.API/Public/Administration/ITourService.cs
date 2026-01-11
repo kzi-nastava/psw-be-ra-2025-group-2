@@ -40,6 +40,8 @@ namespace Explorer.Tours.API.Public.Administration
 
         public TourReviewDto UpdateReview(TourReviewDto reviewDto);
         void DeleteReview(long touristId, long tourId);
+        Task<EncounterDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, CreateEncounterDto encounterDto, long authorId);
+
 
     }
 

@@ -28,6 +28,10 @@ public class UserDbRepository : IUserRepository
         return _dbContext.Users.FirstOrDefault(user => user.Username == username && user.IsActive);
     }
 
+    public User? GetActiveById(long id)
+    {
+        return _dbContext.Users.FirstOrDefault(user => user.Id == id && user.IsActive);
+    }
     public User Create(User user)
     {
         _dbContext.Users.Add(user);

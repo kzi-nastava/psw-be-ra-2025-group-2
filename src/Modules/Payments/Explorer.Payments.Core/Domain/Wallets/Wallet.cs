@@ -31,5 +31,21 @@ namespace Explorer.Payments.Core.Domain.Wallets
             }
             Balance += amount;
         }
+
+        public void SpendAdventureCoins(int amount)
+        {
+            if (amount <= 0)
+            {
+                throw new ArgumentException("Amount must be positive");
+            }
+
+            if (Balance < amount)
+            {
+                throw new InvalidOperationException("Not enough AC for this purchase");
+            }
+
+            Balance -= amount;
+        }
+
     }
 }

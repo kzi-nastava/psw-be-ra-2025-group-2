@@ -30,7 +30,7 @@ public class ShoppingCartService : IShoppingCartService
         return _mapper.Map<ShoppingCartDto>(cart);
     }
 
-    public ShoppingCartDto AddTourToCart(long touristId, long tourId, string tourName, double price, string category)
+    public ShoppingCartDto AddTourToCart(long touristId, long tourId, string tourName, double price, string category, long authorId)
     {
         var cart = _cartRepository.GetByTouristId(touristId);
         if (cart == null)
@@ -42,7 +42,7 @@ public class ShoppingCartService : IShoppingCartService
         // OVDE JE BITNO: Kastujemo 'double' (iz API-ja) u 'decimal' (za Domain)
         var moneyPrice = new Money((decimal)price, "AC");
 
-        cart.AddItem(tourId, tourName, moneyPrice, "Published"); // Status možemo hardkodirati ili proslediti
+        cart.AddItem(tourId, tourName, moneyPrice, "Published", authorId); // Status možemo hardkodirati ili proslediti
 
         _cartRepository.Update(cart);
 

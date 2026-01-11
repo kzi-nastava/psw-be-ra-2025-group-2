@@ -10,5 +10,9 @@ namespace Explorer.Encounters.Core.Domain.RepositoryInterfaces
     {
         EncounterExecution Add(EncounterExecution execution);
         bool IsCompleted(long userId, long encounterId);
+        EncounterExecution? Get(long userId, long encounterId);
+        EncounterExecution Update(EncounterExecution execution);
+
+        List<EncounterExecution> GetActiveByEncounter(long encounterId);
     }
 }

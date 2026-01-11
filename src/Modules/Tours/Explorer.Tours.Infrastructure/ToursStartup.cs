@@ -33,10 +33,18 @@ public static class ToursStartup
         services.AddScoped<ITouristObjectService, TouristObjectService>();
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
+
+        services.AddHttpClient();
+        services.AddScoped<ITourChatService, TourChatService>();
+
         services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ITourExecutionService, TourExecutionService>();
+        services.AddScoped<ITourReportService, TourReportService>();
+        services.AddScoped<ITourReportAdministrationService, TourReportAdministrationService>();
         services.AddScoped<IBundleService, BundleService>();
+        
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -47,6 +55,8 @@ public static class ToursStartup
         services.AddScoped<ITouristObjectRepository, TouristObjectDbRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<ITourRepository, TourDbRepository>();
+        services.AddScoped<ITourReportRepository, TourReportDbRepository>();
+
         services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<ITourExecutionRepository, TourExecutionDbRepository>();

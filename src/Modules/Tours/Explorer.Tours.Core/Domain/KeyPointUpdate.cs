@@ -8,6 +8,6 @@
         double Latitude,
         double Longitude,
         long? EncounterId,
-        bool IsEncounterRequired  
+        bool IsEncounterRequired
     );
 }
