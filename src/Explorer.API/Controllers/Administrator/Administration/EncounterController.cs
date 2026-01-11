@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Explorer.Encounters.API.Dtos.EncounterExecution;
+using Explorer.Encounters.API.Dtos.TouristProgress;
 
 
 namespace Explorer.API.Controllers.Administrator.Administration
@@ -223,7 +224,40 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 return BadRequest(e.Message);
             }
         }
-        
+
+        [Authorize(Policy = "touristPolicy")]
+        [HttpPost("tourist")]
+        public ActionResult<EncounterDto> CreateByTourist([FromBody] CreateEncounterDto createDto)
+        {
+            try
+            {
+                long userId = long.Parse(HttpContext.User.Claims
+                    .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+                var created = _encounterService.CreateByTourist(userId, createDto);
+                return Ok(created);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, e.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize(Policy = "touristPolicy")]
+        [HttpGet("progress/me")]
+        public ActionResult<TouristProgressDto> GetMyProgress()
+        {
+            long userId = long.Parse(HttpContext.User.Claims
+                .First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            return Ok(_encounterService.GetMyProgress(userId));
+        }
+
+
         [Authorize(Policy = "touristPolicy")]
         [HttpGet("execution-status/{id:long}")]
         public ActionResult<EncounterExecutionStatusDto> GetExecutionStatus(long id)

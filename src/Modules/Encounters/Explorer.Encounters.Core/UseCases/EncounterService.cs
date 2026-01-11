@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Dtos.TouristProgress;
 using Explorer.Encounters.API.Dtos.EncounterExecution;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
@@ -19,16 +20,24 @@ namespace Explorer.Encounters.Core.UseCases
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
+        private readonly ITouristProgressRepository _touristProgressRepository;
         private readonly IMapper _mapper;
         private readonly IEncounterPresenceRepository _presenceRepository;
 
-        
+
         private const int HiddenRequiredSecondsInZone = 30;
         private const int DefaultPingDeltaSeconds = 10;
-        public EncounterService(IEncounterRepository repository, IEncounterExecutionRepository executionRepository, IEncounterPresenceRepository presenceRepository, IMapper mapper)
+
+        public EncounterService(
+        IEncounterRepository repository,
+        IEncounterExecutionRepository executionRepository,
+        ITouristProgressRepository touristProgressRepository,
+        IEncounterPresenceRepository presenceRepository, 
+        IMapper mapper)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
+            _touristProgressRepository = touristProgressRepository;
             _mapper = mapper;
             _presenceRepository = presenceRepository;
         }
@@ -37,7 +46,7 @@ namespace Explorer.Encounters.Core.UseCases
         {
             var encounter = _encounterRepository.GetById(id);
 
-            if(encounter == null)
+            if (encounter == null)
             {
                 throw new NotFoundException($"Not found: {id}");
             }
@@ -157,12 +166,12 @@ namespace Explorer.Encounters.Core.UseCases
                 EncounterTypeParser.Parse(updateDto.Type)
             );
 
-            
+
             if (encounter.Type == EncounterType.Location)
             {
                 var hidden = (HiddenLocationEncounter)encounter;
 
-               
+
                 hidden.UpdateHiddenLocation(
                     updateDto.ImageUrl ?? hidden.ImageUrl,
                     new GeoLocation(updateDto.ImageLatitude ?? hidden.ImageLocation.Latitude,
@@ -175,7 +184,7 @@ namespace Explorer.Encounters.Core.UseCases
 
             return _mapper.Map<EncounterDto>(updated);
         }
- /// <summary>
+        /// <summary>
         /// Creates an "in-progress" execution if not already completed and if none exists.
         /// </summary>
         public void ActivateEncounter(
@@ -191,16 +200,16 @@ namespace Explorer.Encounters.Core.UseCases
             if (!encounter.IsActive())
                 throw new InvalidOperationException("Encounter is not active.");
 
-          
+
             if (_executionRepository.IsCompleted(userId, encounterId))
                 return;
 
-          
+
             var existing = _executionRepository.Get(userId, encounterId);
             if (existing != null && !existing.IsCompleted)
                 return;
 
-            
+
             if (encounter.Type == EncounterType.Location)
             {
                 var hidden = (HiddenLocationEncounter)encounter;
@@ -212,7 +221,7 @@ namespace Explorer.Encounters.Core.UseCases
                     hidden.Location.Longitude
                 );
 
-                
+
                 if (distanceToEncounter > hidden.DistanceTreshold)
                 {
                     throw new InvalidOperationException(
@@ -221,7 +230,7 @@ namespace Explorer.Encounters.Core.UseCases
                 }
             }
 
-           
+
             _executionRepository.Add(
                 new EncounterExecution(userId, encounterId)
             );
@@ -266,19 +275,23 @@ namespace Explorer.Encounters.Core.UseCases
             var distanceMeters = CalculateDistanceMeters(
                 latitude, longitude,
                 hidden.ImageLocation.Latitude, hidden.ImageLocation.Longitude);
-           
+
 
             var isInside = distanceMeters <= hidden.DistanceTreshold;
 
             execution.RegisterPing(isInside, ds);
 
-            if (execution.SecondsInsideZone >= HiddenRequiredSecondsInZone)
+            if (!execution.IsCompleted && execution.SecondsInsideZone >= HiddenRequiredSecondsInZone)
             {
-                // mark completed once
-                execution.MarkCompleted();
+                // markira completed i upise XP u execution
+                execution.MarkCompleted(hidden.XP.Value);
 
-                // XP logic (only first completion)
-                // TODO: call XP/Level service here
+                // doda xp i level up ako treba
+                var progress = _touristProgressRepository.GetByUserId(userId)
+                              ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+                progress.AddXp(hidden.XP.Value);
+                _touristProgressRepository.Update(progress);
             }
 
             _executionRepository.Update(execution);
@@ -305,29 +318,66 @@ namespace Explorer.Encounters.Core.UseCases
 
         public void CompleteEncounter(long userId, long encounterId)
         {
-            var encounter = _encounterRepository.GetById(encounterId);
-            if (encounter == null)
-                throw new NotFoundException("Encounter not found");
+            var encounter = _encounterRepository.GetById(encounterId)
+                ?? throw new NotFoundException("Encounter not found");
 
-            if (encounter.Type != EncounterType.Miscellaneous)
-                throw new InvalidOperationException("Only Miscellaneous encounters can be completed manually.");
+
+            if (_executionRepository.IsCompleted(userId, encounterId))
+                return;
 
             var execution = _executionRepository.Get(userId, encounterId);
 
             if (execution == null)
             {
                 execution = new EncounterExecution(userId, encounterId);
-                execution.MarkCompleted();
+                
+                execution.MarkCompleted(encounter.XP.Value);
+
                 _executionRepository.Add(execution);
             }
             else
             {
-                execution.MarkCompleted();
+
+                execution.MarkCompleted(encounter.XP.Value);
                 _executionRepository.Update(execution);
             }
+
+            var progress = _touristProgressRepository.GetByUserId(userId)
+                          ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+            progress.AddXp(encounter.XP.Value);
+            _touristProgressRepository.Update(progress);
         }
 
-        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime)GetExecutionStatus(long userId, long encounterId)
+        public EncounterDto CreateByTourist(long userId, CreateEncounterDto createDto)
+        {
+            // ako ne postoji nikakav progres kreira ga na level 1
+            var progress = _touristProgressRepository.GetByUserId(userId)
+                          ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+            // provera nivoa
+            if (progress.Level < 10)
+                throw new UnauthorizedAccessException("You must reach level 10 to create challenges.");
+
+            // kreiranje encountera
+            return Create(createDto);
+        }
+        public TouristProgressDto GetMyProgress(long userId)
+        {
+            var progress = _touristProgressRepository.GetByUserId(userId)
+                          ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+            return new TouristProgressDto
+            {
+                UserId = progress.UserId,
+                TotalXp = progress.TotalXp,
+                Level = progress.Level,
+                CanCreateChallenges = progress.CanCreateChallenges
+            };
+        }
+
+
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) GetExecutionStatus(long userId, long encounterId)
         {
             var encounter = _encounterRepository.GetById(encounterId);
             if (encounter == null)
@@ -384,8 +434,14 @@ namespace Explorer.Encounters.Core.UseCases
             {
                 if (!myExecution.IsCompleted)
                 {
-                    myExecution.MarkCompleted();
+                    myExecution.MarkCompleted(socialEncounter.XP.Value);
                     _executionRepository.Update(myExecution);
+
+                    var progress = _touristProgressRepository.GetByUserId(userId)
+                                  ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+                    progress.AddXp(socialEncounter.XP.Value);
+                    _touristProgressRepository.Update(progress);
                 }
             }
 
@@ -399,6 +455,5 @@ namespace Explorer.Encounters.Core.UseCases
                 InRange = true
             };
         }
-
     }
 }

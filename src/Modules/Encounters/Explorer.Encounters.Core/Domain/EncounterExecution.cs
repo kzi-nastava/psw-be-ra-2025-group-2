@@ -1,4 +1,4 @@
-﻿using Explorer.BuildingBlocks.Core.Domain;
+using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Encounters.Core.Domain
 {
@@ -6,13 +6,12 @@ namespace Explorer.Encounters.Core.Domain
     {
         public long UserId { get; private set; }
         public long EncounterId { get; private set; }
-
         public DateTime StartedAt { get; private set; }
         public DateTime? LastPingAt { get; private set; }
-
         public int SecondsInsideZone { get; private set; }
         public DateTime? CompletionTime { get; private set; }
         public bool IsCompleted { get; private set; }
+        public int XpAwarded { get; private set; }
         public double LastLatitude { get; private set; }
         public double LastLongitude { get; private set; }
         public DateTime LastActivity { get; private set; }
@@ -26,11 +25,11 @@ namespace Explorer.Encounters.Core.Domain
 
             StartedAt = DateTime.UtcNow;
             LastPingAt = null;
-
             SecondsInsideZone = 0;
 
             IsCompleted = false;
             CompletionTime = null;
+            XpAwarded = 0;
 
             LastLatitude = 0;
             LastLongitude = 0;
@@ -48,6 +47,9 @@ namespace Explorer.Encounters.Core.Domain
         {
             if (IsCompleted) return;
 
+            if (deltaSeconds <= 0) deltaSeconds = 1;   // defensive
+            if (deltaSeconds > 60) deltaSeconds = 60;  // defensive
+
             if (deltaSeconds <= 0) deltaSeconds = 1;
             if (deltaSeconds > 60) deltaSeconds = 60;
 
@@ -62,12 +64,13 @@ namespace Explorer.Encounters.Core.Domain
             SecondsInsideZone += deltaSeconds;
         }
 
-        public void MarkCompleted()
+        public void MarkCompleted(int xpAwarded = 0)
         {
             if (IsCompleted) return;
 
             IsCompleted = true;
             CompletionTime = DateTime.UtcNow;
+            XpAwarded = xpAwarded;
         }
 
         public void ResetProgress()
@@ -75,6 +78,7 @@ namespace Explorer.Encounters.Core.Domain
             if (IsCompleted) return;
             SecondsInsideZone = 0;
         }
+        
         public void UpdateLocation(double lat, double lon)
         {
             LastLatitude = lat;
