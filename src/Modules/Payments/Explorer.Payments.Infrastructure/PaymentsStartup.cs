@@ -32,9 +32,8 @@ namespace Explorer.Payments.Infrastructure
         {
             services.AddScoped<IShoppingCartService, ShoppingCartService>();
             services.AddScoped<IPurchaseService, PurchaseService>();
-
+            services.AddScoped<ICouponService, CouponService>();
             services.AddScoped<IPaymentRecordService,PaymentRecordService>();
-
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<INotificationService, NotificationService>();
         }
@@ -45,6 +44,7 @@ namespace Explorer.Payments.Infrastructure
             // services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
             services.AddScoped<ITourPurchaseTokenRepository, TourPurchaseTokenRepository>();
+            services.AddScoped<ICouponRepository, CouponRepository>();
 
             services.AddScoped<IPaymentRecordRepository, PaymentRecordRepository>();
 

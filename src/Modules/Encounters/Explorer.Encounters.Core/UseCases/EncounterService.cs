@@ -4,6 +4,7 @@ using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Encounters.API.Dtos.Encounter;
 using Explorer.Encounters.API.Dtos.TouristProgress;
+using Explorer.Encounters.API.Dtos.EncounterExecution;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
@@ -21,20 +22,24 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly IEncounterExecutionRepository _executionRepository;
         private readonly ITouristProgressRepository _touristProgressRepository;
         private readonly IMapper _mapper;
+        private readonly IEncounterPresenceRepository _presenceRepository;
 
 
         private const int HiddenRequiredSecondsInZone = 30;
         private const int DefaultPingDeltaSeconds = 10;
+
         public EncounterService(
         IEncounterRepository repository,
         IEncounterExecutionRepository executionRepository,
         ITouristProgressRepository touristProgressRepository,
+        IEncounterPresenceRepository presenceRepository, 
         IMapper mapper)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
             _touristProgressRepository = touristProgressRepository;
             _mapper = mapper;
+            _presenceRepository = presenceRepository;
         }
 
         public void Archive(long id)
@@ -316,6 +321,7 @@ namespace Explorer.Encounters.Core.UseCases
             var encounter = _encounterRepository.GetById(encounterId)
                 ?? throw new NotFoundException("Encounter not found");
 
+
             if (_executionRepository.IsCompleted(userId, encounterId))
                 return;
 
@@ -324,11 +330,14 @@ namespace Explorer.Encounters.Core.UseCases
             if (execution == null)
             {
                 execution = new EncounterExecution(userId, encounterId);
+                
                 execution.MarkCompleted(encounter.XP.Value);
+
                 _executionRepository.Add(execution);
             }
             else
             {
+
                 execution.MarkCompleted(encounter.XP.Value);
                 _executionRepository.Update(execution);
             }
@@ -367,7 +376,8 @@ namespace Explorer.Encounters.Core.UseCases
             };
         }
 
-        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) GetExecutionStatus(long userId, long encounterId)
+
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime)GetExecutionStatus(long userId, long encounterId)
         {
             var encounter = _encounterRepository.GetById(encounterId);
             if (encounter == null)
@@ -382,5 +392,62 @@ namespace Explorer.Encounters.Core.UseCases
             return (exec.IsCompleted, exec.SecondsInsideZone, 30, exec.CompletionTime);
         }
 
+        public EncounterExecutionStatusDto PingSocialPresence(long userId, long encounterId, double latitude, double longitude)
+        {
+            var encounter = _encounterRepository.GetById(encounterId);
+            if (encounter == null || encounter.Type != EncounterType.Social)
+                throw new InvalidOperationException("Not a social encounter.");
+
+            var socialEncounter = (SocialEncounter)encounter;
+            var requiredPeople = socialEncounter.RequiredPeople;
+            var range = socialEncounter.Range;
+
+            var myExecution = _executionRepository.Get(userId, encounterId);
+            if (myExecution == null)
+                throw new InvalidOperationException("You haven't activated this encounter.");
+
+            myExecution.UpdateLocation(latitude, longitude);
+            _executionRepository.Update(myExecution);
+
+            var allExecutions = _executionRepository.GetActiveByEncounter(encounterId);
+
+            var validUsersCount = 0;
+
+            foreach (var exec in allExecutions)
+            {
+                if ((DateTime.UtcNow - exec.LastActivity).TotalMinutes > 5) continue;
+
+                double distanceToCenter = CalculateDistanceMeters(
+                    exec.LastLatitude,
+                    exec.LastLongitude,
+                    socialEncounter.Location.Latitude,
+                    socialEncounter.Location.Longitude
+                );
+
+                if (distanceToCenter <= range)
+                {
+                    validUsersCount++;
+                }
+            }
+
+            if (validUsersCount >= requiredPeople)
+            {
+                if (!myExecution.IsCompleted)
+                {
+                    myExecution.MarkCompleted();
+                    _executionRepository.Update(myExecution);
+                }
+            }
+
+            return new EncounterExecutionStatusDto
+            {
+                IsCompleted = myExecution.IsCompleted,
+                SecondsInsideZone = 0,
+                RequiredSeconds = 0,
+                CompletionTime = myExecution.CompletionTime?.ToString("O"),
+                ActiveTourists = validUsersCount,
+                InRange = true
+            };
+        }
     }
 }
