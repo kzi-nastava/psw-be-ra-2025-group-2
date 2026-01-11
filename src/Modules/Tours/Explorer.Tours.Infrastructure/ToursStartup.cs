@@ -12,10 +12,6 @@ using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
-using Explorer.Encounters.Infrastructure.Database.Repositories;
-using Explorer.Encounters.API.Public;
-using Explorer.Encounters.Core.UseCases;
 
 namespace Explorer.Tours.Infrastructure;
 
@@ -41,7 +37,6 @@ public static class ToursStartup
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ITourExecutionService, TourExecutionService>();
         services.AddScoped<IBundleService, BundleService>();
-        services.AddScoped<IEncounterService, EncounterService>(); 
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -56,7 +51,6 @@ public static class ToursStartup
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<ITourExecutionRepository, TourExecutionDbRepository>();
         services.AddScoped<IBundleRepository, BundleDbRepository>();
-        services.AddScoped<IEncounterExecutionRepository, EncounterExecutionRepository>(); 
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("tours"));
         dataSourceBuilder.EnableDynamicJson();

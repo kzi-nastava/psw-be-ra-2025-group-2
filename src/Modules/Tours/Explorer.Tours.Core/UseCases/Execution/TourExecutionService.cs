@@ -7,7 +7,6 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Tours.Core.UseCases.Execution
 {
@@ -16,14 +15,12 @@ namespace Explorer.Tours.Core.UseCases.Execution
         private readonly IInternalUserService _userService;
         private readonly ITourExecutionRepository _executionRepository;
         private readonly ITourRepository _tourRepository;
-        private readonly IEncounterExecutionRepository _encounterExecutionRepository;
 
-        public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository, IEncounterExecutionRepository encounterExecutionRepository)
+        public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository)
         {
             _userService = userService;
             _executionRepository = executionRepository;
             _tourRepository = tourRepository;
-            _encounterExecutionRepository = encounterExecutionRepository;
         }
 
         public TourExecutionDto GetExecution(long touristId, long tourId)
@@ -184,10 +181,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
 
             if (!keyPoint.IsEncounterRequired)
                 return true;
-
-            bool isEncounterCompleted = _encounterExecutionRepository.IsCompleted(touristId, keyPoint.EncounterId.Value);
-
-            return isEncounterCompleted;
+            return true; 
         }
     }
 }
