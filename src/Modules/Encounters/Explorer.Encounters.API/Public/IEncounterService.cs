@@ -33,7 +33,6 @@ namespace Explorer.Encounters.API.Public
             long userId,
             long encounterId
         );
-        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) GetExecutionStatus(long userId, long encounterId);
         EncounterExecutionStatusDto PingSocialPresence(long userId, long encounterId, double latitude, double longitude);
     }
 }

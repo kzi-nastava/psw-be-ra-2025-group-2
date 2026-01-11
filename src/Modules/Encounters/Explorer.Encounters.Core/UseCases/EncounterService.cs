@@ -377,7 +377,7 @@ namespace Explorer.Encounters.Core.UseCases
         }
 
 
-        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime)GetExecutionStatus(long userId, long encounterId)
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) GetExecutionStatus(long userId, long encounterId)
         {
             var encounter = _encounterRepository.GetById(encounterId);
             if (encounter == null)
@@ -434,8 +434,14 @@ namespace Explorer.Encounters.Core.UseCases
             {
                 if (!myExecution.IsCompleted)
                 {
-                    myExecution.MarkCompleted();
+                    myExecution.MarkCompleted(socialEncounter.XP.Value);
                     _executionRepository.Update(myExecution);
+
+                    var progress = _touristProgressRepository.GetByUserId(userId)
+                                  ?? _touristProgressRepository.Create(new TouristProgress(userId));
+
+                    progress.AddXp(socialEncounter.XP.Value);
+                    _touristProgressRepository.Update(progress);
                 }
             }
 

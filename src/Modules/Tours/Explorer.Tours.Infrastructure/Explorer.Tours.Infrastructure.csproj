@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 		<Folder Include="Database\Scripts\" />
+		<Folder Include="Migrations\" />
 	</ItemGroup>
 
 </Project>
