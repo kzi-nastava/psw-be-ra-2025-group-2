@@ -15,7 +15,7 @@ public class Money : ValueObject
             throw new ArgumentException("Amount cannot be negative");
 
         Amount = amount;
-        Currency = "EUR"; 
+        Currency = "AC"; 
     }
 
     public static Money Zero => new Money(0);

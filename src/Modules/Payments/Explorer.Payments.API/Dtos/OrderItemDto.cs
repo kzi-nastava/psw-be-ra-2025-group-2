@@ -8,4 +8,5 @@ public class OrderItemDto
     public long TourId { get; set; }
     public string TourName { get; set; }
     public MoneyDto Price { get; set; }
+    public long AuthorId { get; set; }
 }

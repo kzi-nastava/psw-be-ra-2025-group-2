@@ -19,7 +19,7 @@ public class ShoppingCart : AggregateRoot
         Items = new List<OrderItem>();
     }
     public IReadOnlyCollection<OrderItem> GetItems() => Items.ToList().AsReadOnly();
-    public void AddItem(long tourId, string tourName, Money price, string tourStatus)
+    public void AddItem(long tourId, string tourName, Money price, string tourStatus, long authorId)
     {
         if (tourStatus != "Published")
         {
@@ -34,7 +34,8 @@ public class ShoppingCart : AggregateRoot
             throw new ArgumentException("Tour price cannot be negative");
         }
         var priceInEur = new Money(price.Amount); 
-        var item = new OrderItem(this.Id, tourId, tourName, priceInEur); Items.Add(item);
+        var item = new OrderItem(this.Id, tourId, tourName, priceInEur, authorId);
+        Items.Add(item);
         RecalculateTotalPrice();
     }
     public void RemoveItem(long itemId)
