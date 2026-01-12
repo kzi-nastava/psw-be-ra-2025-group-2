@@ -1,4 +1,5 @@
 ﻿using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Encounters.API.Internal;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
 using Explorer.Encounters.Core.Mappers;
@@ -38,6 +39,7 @@ namespace Explorer.Encounters.Infrastructure
             services.AddScoped<IEncounterExecutionRepository, EncounterExecutionRepository>();
             services.AddScoped<ITouristProgressRepository, TouristProgressRepository>();
             services.AddScoped<IEncounterPresenceRepository, EncounterPresenceRepository>();
+            services.AddScoped<IInternalEncounterExecutionService, EncounterService>();
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("encounters"));
             dataSourceBuilder.EnableDynamicJson();

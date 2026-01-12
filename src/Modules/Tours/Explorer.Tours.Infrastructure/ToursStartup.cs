@@ -1,4 +1,6 @@
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Encounters.API.Internal;
+using Explorer.Encounters.Core.UseCases;
 using Explorer.Tours.API.Public;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
@@ -43,7 +45,6 @@ public static class ToursStartup
         services.AddScoped<ITourReportService, TourReportService>();
         services.AddScoped<ITourReportAdministrationService, TourReportAdministrationService>();
         services.AddScoped<IBundleService, BundleService>();
-        
 
     }
 

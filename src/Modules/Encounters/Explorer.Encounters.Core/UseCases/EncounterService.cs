@@ -13,10 +13,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.Encounters.API.Internal;
 
 namespace Explorer.Encounters.Core.UseCases
 {
-    public class EncounterService : IEncounterService
+    public class EncounterService : IEncounterService, IInternalEncounterExecutionService
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
@@ -454,6 +455,10 @@ namespace Explorer.Encounters.Core.UseCases
                 ActiveTourists = validUsersCount,
                 InRange = true
             };
+        }
+        public bool IsEncounterCompleted(long userId, long encounterId)
+        {
+            return _executionRepository.IsCompleted(userId, encounterId);
         }
     }
 }

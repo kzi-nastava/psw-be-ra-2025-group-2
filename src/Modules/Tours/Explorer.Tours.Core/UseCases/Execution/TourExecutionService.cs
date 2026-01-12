@@ -6,6 +6,7 @@ using Explorer.Tours.Core.Domain.Execution;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using System;
 using System.Collections.Generic;
+using Explorer.Encounters.API.Internal;
 using System.Linq;
 
 namespace Explorer.Tours.Core.UseCases.Execution
@@ -15,12 +16,15 @@ namespace Explorer.Tours.Core.UseCases.Execution
         private readonly IInternalUserService _userService;
         private readonly ITourExecutionRepository _executionRepository;
         private readonly ITourRepository _tourRepository;
+        private readonly IInternalEncounterExecutionService _encounterInternalService;
 
-        public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository)
+        public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository,
+            IInternalEncounterExecutionService encounterInternalService)
         {
             _userService = userService;
             _executionRepository = executionRepository;
             _tourRepository = tourRepository;
+            _encounterInternalService = encounterInternalService; 
         }
 
         public TourExecutionDto GetExecution(long touristId, long tourId)
@@ -155,7 +159,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
                 if (shouldShowSecret)
                     dto.SecretText = keyPoint.SecretText;
                 else
-                    dto.SecretText = null;
+                    dto.SecretText = null; 
 
                 keyPointData.Add(dto);
             }
@@ -181,7 +185,8 @@ namespace Explorer.Tours.Core.UseCases.Execution
 
             if (!keyPoint.IsEncounterRequired)
                 return true;
-            return true; 
+
+            return _encounterInternalService.IsEncounterCompleted(touristId, keyPoint.EncounterId.Value);
         }
     }
 }
