@@ -31,9 +31,9 @@ public class Tour : AggregateRoot
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
 
+    public int PurchaseCount { get; private set; } = 0;
+    public bool IsTrending => PurchaseCount >= 10;
 
-
-   
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
 
@@ -298,5 +298,9 @@ public class Tour : AggregateRoot
     {
         if (_reviews.Count == 0) return 0;
         return _reviews.Average(r => r.Rating);
+    }
+    public void IncrementPurchaseCount()
+    {
+        PurchaseCount++;
     }
 }

@@ -143,6 +143,11 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(tours);
         }
 
+        [HttpGet("trending")]
+        public ActionResult<IEnumerable<PublishedTourPreviewDto>> GetTrending()
+        {
+            return Ok(_tourService.GetTrendingTours());
+        }
 
     }
 }
