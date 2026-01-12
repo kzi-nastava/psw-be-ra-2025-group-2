@@ -7,7 +7,7 @@ using Explorer.Payments.API.Public;
 using Explorer.Payments.API.Dtos;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
-using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Internal;
 
 namespace Explorer.Stakeholders.Core.UseCases
 
@@ -20,7 +20,7 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IMapper _mapper;
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly IWalletRepository _walletRepository;
-        private readonly ITourRepository _tourRepository;
+        private readonly IInternalTourService _internalTourService;
 
         public PurchaseService(
             IShoppingCartService shoppingCartService,
@@ -29,7 +29,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             IMapper mapper,
             IPaymentRecordRepository paymentRecordRepository,
             IWalletRepository walletRepository,
-            ITourRepository tourRepository)
+            IInternalTourService internalTourService)
         {
             _shoppingCartService = shoppingCartService;
             _repository = repository;
@@ -37,7 +37,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             _mapper = mapper;
             _paymentRecordRepository = paymentRecordRepository;
             _walletRepository = walletRepository;
-            _tourRepository = tourRepository;
+            _internalTourService = internalTourService;
 
         }
 
@@ -133,12 +133,7 @@ namespace Explorer.Stakeholders.Core.UseCases
                 );
                 _paymentRecordRepository.Create(record);
 
-                var tour = _tourRepository.GetByIdAsync(item.TourId).Result;
-                if (tour != null)
-                {
-                    tour.IncrementPurchaseCount();
-                    _tourRepository.UpdateAsync(tour).Wait();
-                }
+                _internalTourService.IncrementTourPurchaseCount(item.TourId);
 
                 var token = new TourPurchaseToken(touristId, item.TourId);
                 var saved = _repository.Create(token);
