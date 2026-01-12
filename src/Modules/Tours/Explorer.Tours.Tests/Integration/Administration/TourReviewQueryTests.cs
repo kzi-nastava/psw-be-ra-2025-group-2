@@ -1,6 +1,8 @@
 ﻿using Explorer.API.Controllers.Tourist;
+using Explorer.Payments.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -42,7 +44,9 @@ public class TourReviewQueryTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>()
+            scope.ServiceProvider.GetRequiredService<ITourService>(),
+            scope.ServiceProvider.GetRequiredService<IPaymentRecordService>(),
+            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
         )
         {
             ControllerContext = BuildContext("-21")
