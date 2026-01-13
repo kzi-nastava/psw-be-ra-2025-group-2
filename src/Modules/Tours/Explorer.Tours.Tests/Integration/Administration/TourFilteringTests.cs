@@ -1,6 +1,8 @@
 using Explorer.API.Controllers.Tourist;
+using Explorer.Payments.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
@@ -585,7 +587,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
         );
 
         // Assert
-        var         okResult = result.Result as OkObjectResult;
+        var okResult = result.Result as OkObjectResult;
         okResult.ShouldNotBeNull();
 
         var pageDto = okResult.Value as PagedResultDto<PublishedTourPreviewDto>;
@@ -597,7 +599,9 @@ public class TourFilteringTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>()
+            scope.ServiceProvider.GetRequiredService<ITourService>(),
+            scope.ServiceProvider.GetRequiredService<IPaymentRecordService>(),
+            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
         )
         {
             ControllerContext = BuildContext("-21")
