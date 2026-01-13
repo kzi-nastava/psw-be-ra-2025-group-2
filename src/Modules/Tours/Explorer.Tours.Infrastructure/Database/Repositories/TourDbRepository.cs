@@ -35,6 +35,10 @@ public class TourDbRepository : ITourRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public IEnumerable<Tour> GetByIds(IEnumerable<long> ids)
+    {
+        return _dbSet.Where(t => ids.Contains(t.Id)).ToList();
+    }
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
         return await _dbSet

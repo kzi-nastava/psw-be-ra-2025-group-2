@@ -15,14 +15,10 @@ namespace Explorer.API.Controllers.Tourist
     public class TourController : ControllerBase
     {
         private readonly ITourService _tourService;
-        private readonly ITourExecutionService _tourExecutionService;
-        private readonly IPaymentRecordService _paymentRecordService;
 
-        public TourController(ITourService tourService, IPaymentRecordService paymentRecordService, ITourExecutionService tourExecutionService)
+        public TourController(ITourService tourService)
         {
             _tourService = tourService;
-            _paymentRecordService = paymentRecordService;
-            _tourExecutionService = tourExecutionService;
         }
 
         [HttpGet]
@@ -139,28 +135,7 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet("mine")]
         public ActionResult<IEnumerable<TourDto>> GetMyPurchasedTours()
         {
-            var touristId = User.UserId();
-
-            var payments = _paymentRecordService.GetMine(touristId);
-
-            var tourIds = payments.Select(p => p.TourId).Distinct().ToList();
-
-            if (!tourIds.Any())
-                return Ok(new List<TourDto>());
-
-            var tours = tourIds.Select(id => _tourService.Get(id)).ToList();
-
-            foreach (var tour in tours)
-            {
-                var execution = _tourExecutionService.GetExecution(touristId, tour.Id);
-
-                tour.IsActive = execution != null;
-                tour.CanBeStarted = execution == null || execution.CompletedPercentage < 100;
-
-                tour.KeyPoints = new List<KeyPointDto>();
-            }
-
-            return Ok(tours);
+            return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
 
 
