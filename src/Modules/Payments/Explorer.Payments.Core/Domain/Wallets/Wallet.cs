@@ -34,9 +34,9 @@ namespace Explorer.Payments.Core.Domain.Wallets
 
         public void SpendAdventureCoins(int amount)
         {
-            if (amount <= 0)
+            if (amount < 0)
             {
-                throw new ArgumentException("Amount must be positive");
+                throw new ArgumentException("Amount must be non-negative");
             }
 
             if (Balance < amount)
