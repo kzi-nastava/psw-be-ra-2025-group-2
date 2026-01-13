@@ -23,7 +23,9 @@ namespace Explorer.Tours.API.Dtos
         public string? PlaceName { get; set; }                
 
         public bool HasAuthorAward { get; set; }              
-        public string? AuthorAwardName { get; set; }           
+        public string? AuthorAwardName { get; set; }
+        public int PurchaseCount { get; set; }
+        public bool IsTrending { get; set; }
 
     }
 

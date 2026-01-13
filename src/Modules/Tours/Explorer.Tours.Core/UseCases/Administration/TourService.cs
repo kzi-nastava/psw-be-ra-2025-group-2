@@ -485,7 +485,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     KeyPointCount = orderedKeyPoints.Count,
                     TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
                     LengthKm = tour.LengthKm,
-                    PlaceName = firstKp?.Name
+                    PlaceName = firstKp?.Name,
+                    PurchaseCount = tour.PurchaseCount,
+                    IsTrending = tour.IsTrending
                 };
 
                 // Use tour.GetAverageRating() method from domain
@@ -566,6 +568,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public KeyPointDto UpdateKeyPointSync(long tourId, int ordinalNo, KeyPointDto dto)
         {
             return UpdateKeyPoint(tourId, ordinalNo, dto).Result;
+        }
+        public IEnumerable<PublishedTourPreviewDto> GetTrendingTours()
+        {
+            var allPublished = GetPublishedForTourist(page: 0, pageSize: 0);
+
+            return allPublished.Results
+                .Where(t => t.PurchaseCount >= 10)
+                .OrderByDescending(t => t.PurchaseCount)
+                .ToList();
         }
     }
 }

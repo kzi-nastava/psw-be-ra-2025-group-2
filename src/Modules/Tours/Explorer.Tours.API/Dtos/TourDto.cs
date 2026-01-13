@@ -25,5 +25,8 @@ namespace Explorer.Tours.API.Dtos
 
         public bool IsActive { get; set; }
         public bool CanBeStarted { get; set; }
+
+        public int PurchaseCount { get; set; }
+        public bool IsTrending { get; set; }
     }
 }

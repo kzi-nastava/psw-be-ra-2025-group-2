@@ -29,6 +29,7 @@ namespace Explorer.Tours.API.Public.Administration
         public List<TourEquipmentItemDto> GetAllEquipmentForAuthor(long authorId);
         void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
         public PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize);
+        IEnumerable<PublishedTourPreviewDto> GetTrendingTours();
 
         /* Tourist's options */
 

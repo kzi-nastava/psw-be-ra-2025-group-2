@@ -7,6 +7,7 @@ using Explorer.Payments.API.Public;
 using Explorer.Payments.API.Dtos;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+using Explorer.Tours.API.Internal;
 
 namespace Explorer.Stakeholders.Core.UseCases
 
@@ -19,6 +20,7 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IMapper _mapper;
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly IWalletRepository _walletRepository;
+        private readonly IInternalTourService _internalTourService;
 
         public PurchaseService(
             IShoppingCartService shoppingCartService,
@@ -26,7 +28,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             ICouponService couponService,
             IMapper mapper,
             IPaymentRecordRepository paymentRecordRepository,
-            IWalletRepository walletRepository)
+            IWalletRepository walletRepository,
+            IInternalTourService internalTourService)
         {
             _shoppingCartService = shoppingCartService;
             _repository = repository;
@@ -34,6 +37,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             _mapper = mapper;
             _paymentRecordRepository = paymentRecordRepository;
             _walletRepository = walletRepository;
+            _internalTourService = internalTourService;
 
         }
 
@@ -128,7 +132,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                     now
                 );
                 _paymentRecordRepository.Create(record);
-    
+
+                _internalTourService.IncrementTourPurchaseCount(item.TourId);
 
                 var token = new TourPurchaseToken(touristId, item.TourId);
                 var saved = _repository.Create(token);
