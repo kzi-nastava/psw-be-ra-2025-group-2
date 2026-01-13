@@ -10,6 +10,7 @@ using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
+using Explorer.Payments.API.Internal;
 
 namespace Explorer.Tours.Core.UseCases.Administration
 {
@@ -22,6 +23,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IPublicKeyPointService? _publicKeyPointService;
         private readonly IPublicKeyPointRequestRepository? _requestRepository;
         private readonly ITourExecutionRepository _tourExecutionRepository;
+        private readonly IInternalTokenService _internalTokenService;
 
         public TourService(
             ITourRepository tourRepository,
@@ -30,7 +32,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
             IInternalUserService userService,
             IPublicKeyPointService publicKeyPointService,
             IPublicKeyPointRequestRepository requestRepository,
-            ITourExecutionRepository tourExecutionRepository)
+            ITourExecutionRepository tourExecutionRepository,
+            IInternalTokenService tokenService)
         {
             _tourRepository = tourRepository;
             _userService = userService;
@@ -39,6 +42,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _publicKeyPointService = publicKeyPointService;
             _requestRepository = requestRepository;
             _tourExecutionRepository = tourExecutionRepository;
+            _internalTokenService = tokenService;
         }
 
         public TourDto Create(CreateTourDto dto)
@@ -387,7 +391,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public IEnumerable<TourDto> GetAvailableForTourist(long touristId)
         {
-            var tours = _tourRepository.GetAllNonDrafts();
+            var availableTourIds = _internalTokenService.GetPurchasedTourIds(touristId);
+
+            //var tours = _tourRepository.GetAllNonDrafts();
+
+            var tours = _tourRepository.GetByIds(availableTourIds);
 
             var dtos = _mapper.Map<IEnumerable<TourDto>>(tours);
 

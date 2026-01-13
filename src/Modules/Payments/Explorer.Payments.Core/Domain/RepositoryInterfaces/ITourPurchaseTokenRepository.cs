@@ -5,5 +5,7 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
     {
         TourPurchaseToken Create(TourPurchaseToken token);
         List<TourPurchaseToken> GetByTouristId(long touristId);
+
+        IEnumerable<long> GetTourIdsByTouristId(long touristId);
     }
 }

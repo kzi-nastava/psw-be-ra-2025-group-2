@@ -599,9 +599,7 @@ public class TourFilteringTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>(),
-            scope.ServiceProvider.GetRequiredService<IPaymentRecordService>(),
-            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
+            scope.ServiceProvider.GetRequiredService<ITourService>()
         )
         {
             ControllerContext = BuildContext("-21")

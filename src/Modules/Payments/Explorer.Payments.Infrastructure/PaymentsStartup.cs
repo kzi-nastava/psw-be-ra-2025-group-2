@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.Payments.Core.Mappers;
 using Explorer.Payments.Core.UseCases;
+using Explorer.Payments.Core.UseCases.Internal;
 using Explorer.Payments.Infrastructure.Database;
 using Explorer.Payments.Infrastructure.Database.Repositories;
 using Explorer.Stakeholders.API.Public;
@@ -36,6 +38,10 @@ namespace Explorer.Payments.Infrastructure
             services.AddScoped<IPaymentRecordService,PaymentRecordService>();
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<INotificationService, NotificationService>();
+
+            // Internal
+
+            services.AddScoped<IInternalTokenService, InternalTokenService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
