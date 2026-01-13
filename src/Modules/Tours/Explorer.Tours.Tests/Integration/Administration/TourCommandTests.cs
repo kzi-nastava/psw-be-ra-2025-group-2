@@ -188,7 +188,7 @@ public class TourCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
 
-        Should.Throw<Exception>(() => controller.Delete(-12)); 
+        Should.Throw<Exception>(() => controller.Delete(-1)); 
     }
 
     private static TourController CreateController(IServiceScope scope, string authorId = "-11")

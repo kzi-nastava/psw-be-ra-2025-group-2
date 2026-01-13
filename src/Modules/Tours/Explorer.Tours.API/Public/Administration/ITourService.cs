@@ -30,6 +30,10 @@ namespace Explorer.Tours.API.Public.Administration
         void UpdateEquipmentForTour(long tourId, long authorId, List<long> equipmentIds);
         public PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize);
 
+       
+        PagedResultDto<PublishedTourPreviewDto> GetFilteredTours(TourFilterDto filter);
+       
+
         /* Tourist's options */
 
         // TODO Promeniti kasnije
