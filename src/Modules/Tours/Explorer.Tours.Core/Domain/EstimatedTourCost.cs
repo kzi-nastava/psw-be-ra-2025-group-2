@@ -21,17 +21,11 @@ public class EstimatedTourCost : ValueObject
 
         var list = breakdown.ToList();
 
-        
         if (list.GroupBy(i => i.Category).Any(g => g.Count() > 1))
             throw new InvalidOperationException("Breakdown cannot contain duplicate categories.");
 
-        // valuta mora biti ista kao total
         if (list.Any(i => i.AmountPerPerson.Currency != TotalPerPerson.Currency))
             throw new InvalidOperationException("All breakdown items must have the same currency as total.");
-
-        // zabrani negativne o
-        if (list.Any(i => i.AmountPerPerson.Amount < 0))
-            throw new InvalidOperationException("Breakdown items cannot be negative.");
 
         _breakdown.AddRange(list);
     }
@@ -40,8 +34,6 @@ public class EstimatedTourCost : ValueObject
     {
         yield return TotalPerPerson;
         yield return IsInformational;
-
-        // redosled ne treba da utiče na jednakost
         foreach (var item in _breakdown.OrderBy(i => i.Category))
             yield return item;
     }

@@ -15,5 +15,9 @@ namespace Explorer.Tours.API.Dtos
         public decimal? LengthKm { get; set; }
         public decimal Price { get; set; }
         public List<KeyPointDto> KeyPoints { get; set; } = new();
+
+        public decimal? EstimatedCostTotalPerPerson { get; set; }
+        public string? EstimatedCostCurrency { get; set; }
+        public List<EstimatedCostItemDto>? EstimatedCostBreakdown { get; set; }
     }
 }

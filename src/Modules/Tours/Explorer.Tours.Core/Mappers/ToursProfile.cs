@@ -2,6 +2,8 @@
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.Execution;
+using Explorer.Tours.Core.Domain;
+
 
 namespace Explorer.Tours.Core.Mappers;
 
@@ -76,5 +78,18 @@ public class ToursProfile : Profile
 
         CreateMap<CreateBundleDto, Bundle>();
         CreateMap<UpdateBundleDto, Bundle>();
+
+        CreateMap<EstimatedCostItem, EstimatedCostItemDto>()
+    .ForMember(d => d.Category, o => o.MapFrom(s => (int)s.Category))
+    .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.ToString()))
+    .ForMember(d => d.AmountPerPerson, o => o.MapFrom(s => s.AmountPerPerson.Amount))
+    .ForMember(d => d.Currency, o => o.MapFrom(s => s.AmountPerPerson.Currency));
+        
+        CreateMap<EstimatedTourCost, EstimatedTourCostDto>()
+        .ForMember(d => d.TotalPerPerson, o => o.MapFrom(s => s.TotalPerPerson.Amount))
+        .ForMember(d => d.Currency, o => o.MapFrom(s => s.TotalPerPerson.Currency))
+        .ForMember(d => d.Breakdown, o => o.MapFrom(s => s.Breakdown))
+        .ForMember(d => d.Disclaimer, o => o.Ignore()); 
+
     }
 }

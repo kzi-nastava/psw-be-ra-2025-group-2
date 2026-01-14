@@ -16,5 +16,9 @@ namespace Explorer.Tours.API.Dtos
         public List<KeyPointDto> KeyPoints { get; set; } = new();
         public List<TourDurationDto> Durations { get; set; } = new();
         public List<long> RequiredEquipmentIds { get; set; } = new();
+
+        public decimal? EstimatedCostTotalPerPerson { get; set; }
+        public string? EstimatedCostCurrency { get; set; }
+        public List<EstimatedCostItemDto>? EstimatedCostBreakdown { get; set; }
     }
 }
