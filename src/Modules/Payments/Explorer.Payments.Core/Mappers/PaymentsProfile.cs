@@ -3,7 +3,7 @@ using Explorer.Payments.API.Dtos;
 using Explorer.Payments.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
-
+using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Payments.Core.Mappers
 {

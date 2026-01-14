@@ -3,6 +3,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Stakeholders.Core.UseCases;
 
