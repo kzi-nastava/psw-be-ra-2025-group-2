@@ -4,6 +4,7 @@ using Explorer.Tours.Core.Domain.Report;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
+
 namespace Explorer.Tours.Infrastructure.Database;
 
 public class ToursContext : DbContext
@@ -24,6 +25,8 @@ public class ToursContext : DbContext
     public DbSet<TourReport> TourReports { get; set; }
 
     public DbSet<Bundle> Bundles { get; set; }
+
+    
 
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
@@ -71,6 +74,63 @@ public class ToursContext : DbContext
                 duration.Property(d => d.TransportType).IsRequired();
                 duration.Property(d => d.Minutes).IsRequired();
             });
+
+            //public IReadOnlyList<EstimatedCostItem> Breakdown => _breakdown;
+    // ===== EstimatedCost (Owned VO) =====
+            builder.OwnsOne(t => t.EstimatedCost, cost =>
+            {
+                // EstimatedCost može biti null
+                cost.Property<long>("TourId"); // shadow FK (EF ga često sam kreira, ali ovo pomaže)
+
+                // TotalPerPerson (Money)
+                cost.OwnsOne(c => c.TotalPerPerson, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("EstimatedCost_TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    money.Property(m => m.Currency)
+                        .HasColumnName("EstimatedCost_Currency")
+                        .HasMaxLength(10);
+                });
+
+                // IsInformational
+                cost.Property(c => c.IsInformational)
+                    .HasColumnName("EstimatedCost_IsInformational");
+
+                // Breakdown (Owned collection -> posebna tabela)
+                cost.OwnsMany(c => c.Breakdown, item =>
+                {
+                    item.ToTable("TourEstimatedCostItems"); // schema će naslediti "tours"
+
+                    item.WithOwner().HasForeignKey("TourId");
+
+                    item.Property<long>("Id");
+                    item.HasKey("Id");
+
+                    item.Property(i => i.Category)
+                        .HasConversion<int>()
+                        .IsRequired();
+
+                    item.OwnsOne(i => i.AmountPerPerson, money =>
+                    {
+                        money.Property(m => m.Amount)
+                            .HasColumnName("AmountPerPerson")
+                            .HasColumnType("decimal(18,2)");
+
+                        money.Property(m => m.Currency)
+                            .HasColumnName("Currency")
+                            .HasMaxLength(10);
+                    });
+                });
+
+                cost.Navigation(c => c.Breakdown)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            });
+
+            // EstimatedCost može biti null (nullable)
+            builder.Navigation(t => t.EstimatedCost).IsRequired(false);
+
 
             builder.Navigation(t => t.KeyPoints)
                     .HasField("_keyPoints")
@@ -154,7 +214,9 @@ public class ToursContext : DbContext
                            c => c.ToList()
                        )
                    );
-           
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ToursContext).Assembly);
+            base.OnModelCreating(modelBuilder);
+
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>
@@ -268,6 +330,16 @@ public class ToursContext : DbContext
 
             builder.Property(b => b.UpdatedAt)
                 .IsRequired(false);
+
+
+
+
+
+            
+
         });
+
+        
+
     }
 }

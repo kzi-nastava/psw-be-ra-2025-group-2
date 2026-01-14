@@ -138,6 +138,18 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
 
+        [HttpGet("{id:long}/estimated-cost")]
+        public ActionResult<EstimatedTourCostDto> GetEstimatedCost(long id)
+        {
+            var cost = _tourService.GetEstimatedCost(id);
+
+            if (cost == null)
+                return NotFound();
+
+            return Ok(cost);
+        }
+
+
 
     }
 }

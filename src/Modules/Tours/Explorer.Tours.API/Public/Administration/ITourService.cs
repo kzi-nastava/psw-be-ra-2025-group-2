@@ -43,6 +43,7 @@ namespace Explorer.Tours.API.Public.Administration
 
         public TourReviewDto UpdateReview(TourReviewDto reviewDto);
         void DeleteReview(long touristId, long tourId);
+        EstimatedTourCostDto? GetEstimatedCost(long tourId);
     }
 
 }

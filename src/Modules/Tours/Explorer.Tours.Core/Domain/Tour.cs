@@ -41,6 +41,7 @@ public class Tour : AggregateRoot
     private readonly List<TourReview> _reviews = new();
     public IReadOnlyList<TourReview> Reviews => _reviews.AsReadOnly();
 
+    public EstimatedTourCost? EstimatedCost { get; private set; }
 
     public Tour() { }
 
@@ -86,7 +87,47 @@ public class Tour : AggregateRoot
         Tags = tags != null ? tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList() : new List<string>();
     }
 
-  
+
+    public void SetEstimatedCost(decimal totalPerPerson, string currency, IEnumerable<EstimatedCostItem>? breakdown = null)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Nije moguće menjati procenjeni trošak za arhiviranu turu.");
+
+        if (totalPerPerson < 0)
+            throw new ArgumentOutOfRangeException(nameof(totalPerPerson), "Trošak ne može biti negativan.");
+
+        // koristi shared Money iz BuildingBlocks
+        var total = new Explorer.BuildingBlocks.Core.Domain.Money(totalPerPerson, currency);
+
+        // ako ti je lakše da breakdown primaš kao gotove VO iteme:
+        EstimatedCost = new EstimatedTourCost(total, breakdown);
+    }
+
+    public void SetEstimatedCost(decimal totalPerPerson, string currency, IEnumerable<(EstimatedCostCategory Category, decimal AmountPerPerson)> breakdown)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Nije moguće menjati procenjeni trošak za arhiviranu turu.");
+
+        if (totalPerPerson < 0)
+            throw new ArgumentOutOfRangeException(nameof(totalPerPerson), "Trošak ne može biti negativan.");
+
+        var total = new Money(totalPerPerson, currency);
+
+        var items = breakdown?
+            .Select(x => new EstimatedCostItem(x.Category, new Explorer.BuildingBlocks.Core.Domain.Money(x.AmountPerPerson, currency)))
+            .ToList();
+
+        EstimatedCost = new EstimatedTourCost(total, items);
+    }
+
+    public void ClearEstimatedCost()
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Nije moguće menjati procenjeni trošak za arhiviranu turu.");
+
+        EstimatedCost = null;
+    }
+
     public void SetEnvironmentType(TourEnvironmentType? environmentType)
     {
         if (Status == TourStatus.Archived)
