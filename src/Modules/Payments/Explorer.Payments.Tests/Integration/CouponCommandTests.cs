@@ -183,14 +183,23 @@ namespace Explorer.Payments.Tests.Integration
             var controller = CreateControllerWithRole(scope, "-11", "author");
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
-            var coupon = dbContext.Coupons.First(c => c.AuthorId == -11 && c.Code.StartsWith("TEST"));
+            //var coupon = dbContext.Coupons.First(c => c.AuthorId == -11 && c.Code.StartsWith("TEST"));
+            var couponToDelete = new Core.Domain.Coupon(10, -11, null, DateTime.UtcNow.AddDays(5));
+            dbContext.Coupons.Add(couponToDelete);
+            dbContext.SaveChanges();
+            // Odvajamo entitet od contexta da testiramo pravo brisanje
+            dbContext.ChangeTracker.Clear();
 
             // Act
-            var result = controller.Delete(coupon.Code);
+            var result = controller.Delete(couponToDelete.Code);
 
             // Assert
             result.ShouldBeOfType<NoContentResult>();
-            dbContext.Coupons.Find(coupon.Id).ShouldBeNull();
+
+            //dbContext.ChangeTracker.Clear();
+            //dbContext.Coupons.Find(coupon.Id).ShouldBeNull();
+            var deletedCoupon = dbContext.Coupons.FirstOrDefault(c => c.Code == couponToDelete.Code);
+            deletedCoupon.ShouldBeNull();
         }
 
         [Fact]
