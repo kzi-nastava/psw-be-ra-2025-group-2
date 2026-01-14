@@ -191,6 +191,8 @@ namespace Explorer.Payments.Tests.Integration
             // Assert
             result.ShouldBeOfType<NoContentResult>();
             dbContext.Coupons.Find(coupon.Id).ShouldBeNull();
+
+
         }
 
         [Fact]

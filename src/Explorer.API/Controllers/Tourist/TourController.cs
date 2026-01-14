@@ -1,8 +1,10 @@
 ﻿using Explorer.Payments.API.Public;
+using Explorer.Payments.Core.UseCases;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
+using Explorer.Tours.Core.UseCases.Execution;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +17,14 @@ namespace Explorer.API.Controllers.Tourist
     public class TourController : ControllerBase
     {
         private readonly ITourService _tourService;
-        private readonly ITourExecutionService _tourExecutionService;
         private readonly IPaymentRecordService _paymentRecordService;
+        private readonly ITourExecutionService _tourExecutionService;
 
-        public TourController(ITourService tourService, IPaymentRecordService paymentRecordService, ITourExecutionService tourExecutionService)
+        public TourController(ITourService tourService, IPaymentRecordService recordService, ITourExecutionService executionService)
         {
             _tourService = tourService;
-            _paymentRecordService = paymentRecordService;
-            _tourExecutionService = tourExecutionService;
+            _paymentRecordService = recordService;
+            _tourExecutionService = executionService;
         }
 
         [HttpGet]
@@ -53,8 +55,8 @@ namespace Explorer.API.Controllers.Tourist
         {
             var filter = new TourFilterDto
             {
-                Page = page,                    
-                PageSize = pageSize,          
+                Page = page,
+                PageSize = pageSize,
                 EnvironmentType = environmentType,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
@@ -135,9 +137,17 @@ namespace Explorer.API.Controllers.Tourist
             }
         }
 
-        // GET api/tourist/tours/mine
-        [HttpGet("mine")]
-        public ActionResult<IEnumerable<TourDto>> GetMyPurchasedTours()
+        //// GET api/tourist/tours/available
+        [HttpGet("available")]
+        public ActionResult<IEnumerable<TourDto>> GetAvailableTours()
+        {
+
+            return Ok(_tourService.GetAvailableForTourist(User.UserId()));
+        }
+
+        // GET api/tourist/tours/mine-tour
+        [HttpGet("mine-tour")]
+        public ActionResult<IEnumerable<TourDto>> GetMyTours()
         {
             var touristId = User.UserId();
 
@@ -161,8 +171,7 @@ namespace Explorer.API.Controllers.Tourist
             }
 
             return Ok(tours);
+
         }
-
-
     }
 }
