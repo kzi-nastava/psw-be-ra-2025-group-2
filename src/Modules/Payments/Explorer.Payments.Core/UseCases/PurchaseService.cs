@@ -1,140 +1,178 @@
 ﻿using AutoMapper;
+using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.Payments.Core.Domain.ShoppingCarts;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
-using Explorer.Payments.API.Public;
-using Explorer.Payments.API.Dtos;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Explorer.Stakeholders.Core.UseCases
-
+namespace Explorer.Payments.Core.UseCases
 {
     public class PurchaseService : IPurchaseService
     {
         private readonly IShoppingCartService _shoppingCartService;
-        private readonly ITourPurchaseTokenRepository _repository;
-        private readonly ICouponService _couponService;
-        private readonly IMapper _mapper;
-        private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly IWalletRepository _walletRepository;
+        private readonly ICouponService _couponService;
+
+        private readonly IPaymentRecordRepository _paymentRecordRepository;
+        private readonly ITourPurchaseTokenRepository _tourPurchaseTokenRepository;
+
+        private readonly IMapper _mapper;
 
         public PurchaseService(
             IShoppingCartService shoppingCartService,
-            ITourPurchaseTokenRepository repository,
+            IWalletRepository walletRepository,
             ICouponService couponService,
-            IMapper mapper,
             IPaymentRecordRepository paymentRecordRepository,
-            IWalletRepository walletRepository)
+            ITourPurchaseTokenRepository tourPurchaseTokenRepository,
+            IMapper mapper)
         {
             _shoppingCartService = shoppingCartService;
-            _repository = repository;
-            _couponService = couponService;
-            _mapper = mapper;
-            _paymentRecordRepository = paymentRecordRepository;
             _walletRepository = walletRepository;
+            _couponService = couponService;
 
+            _paymentRecordRepository = paymentRecordRepository;
+            _tourPurchaseTokenRepository = tourPurchaseTokenRepository;
+
+            _mapper = mapper;
         }
 
         public List<TourPurchaseTokenDto> CompletePurchase(long touristId, string? couponCode = null)
         {
-            var cartResult = _shoppingCartService.GetCart(touristId);
-            if (cartResult == null || !cartResult.Items.Any())
-            {
-                throw new Exception("Shopping cart is empty.");
-            }
+            var cart = _shoppingCartService.GetCart(touristId);
+            if (cart == null || cart.Items == null || !cart.Items.Any())
+                throw new InvalidOperationException("Shopping cart is empty.");
 
             OrderItemDto? itemToDiscount = null;
             CouponDto? coupon = null;
 
-            // Kuponi
-            if (!string.IsNullOrEmpty(couponCode))
+            if (!string.IsNullOrWhiteSpace(couponCode))
             {
-                coupon = _couponService.GetByCode(couponCode) ?? throw new KeyNotFoundException("Coupon not found");
+                coupon = _couponService.GetByCode(couponCode)
+                         ?? throw new KeyNotFoundException("Coupon not found");
 
                 if (DateTime.UtcNow > coupon.ValidUntil)
-                {
                     throw new InvalidOperationException("Coupon is expired");
-                }
 
+                // Kupon vezan za određenu turu
                 if (coupon.TourId.HasValue)
                 {
-                    itemToDiscount = cartResult.Items.FirstOrDefault(i => i.TourId == coupon.TourId.Value);
+                    itemToDiscount = cart.Items.FirstOrDefault(i =>
+                        i.TourId.HasValue && i.TourId.Value == coupon.TourId.Value);
+
                     if (itemToDiscount == null)
-                    {
-                        throw new InvalidOperationException("Coupon not applicable to any item in cart");
-                    }
+                        throw new InvalidOperationException("Coupon not applicable to any tour item in cart");
                 }
                 else
                 {
-                    itemToDiscount = cartResult.Items
-                        .Where(i => i.AuthorId == coupon.AuthorId)
+                    // Kupon vezan za autora: diskontuj NAJSKUPLJU TURU tog autora
+                    itemToDiscount = cart.Items
+                        .Where(i => i.TourId.HasValue && i.AuthorId == coupon.AuthorId)
                         .OrderByDescending(i => i.Price.Amount)
                         .FirstOrDefault();
 
                     if (itemToDiscount == null)
-                    {
-                        throw new InvalidOperationException("No applicable items for coupon");
-                    }
+                        throw new InvalidOperationException("No applicable tour items for coupon");
                 }
             }
 
-            var tokens = new List<TourPurchaseTokenDto>();
-            var now = DateTime.UtcNow;
-            //var total = cartResult.Items.Sum(i => (int)i.Price.Amount);
-
             decimal total = 0;
 
-            foreach (var item in cartResult.Items)
+            foreach (var item in cart.Items)
             {
                 decimal price = item.Price.Amount;
 
-                if (itemToDiscount != null && coupon != null && item.TourId == itemToDiscount.TourId)
+                var isDiscountedTour =
+                    itemToDiscount != null &&
+                    coupon != null &&
+                    item.TourId.HasValue &&
+                    itemToDiscount.TourId.HasValue &&
+                    item.TourId.Value == itemToDiscount.TourId.Value;
+
+                if (isDiscountedTour)
                 {
-                    price -= price * coupon.DiscountPercentage / 100m;
+                    price -= price * coupon!.DiscountPercentage / 100m;
                 }
 
                 total += price;
             }
 
-            var wallet = _walletRepository.GetByTouristId(touristId);
-            if (wallet == null)
-            {
-                throw new InvalidOperationException("Wallet not found.");
-            }
+
+            var wallet = _walletRepository.GetByTouristId(touristId)
+                        ?? throw new InvalidOperationException("Wallet not found.");
 
             wallet.SpendAdventureCoins((int)total);
             _walletRepository.Update(wallet);
 
+            var tokens = new List<TourPurchaseTokenDto>();
+            var now = DateTime.UtcNow;
 
-
-            foreach (var item in cartResult.Items)
+            foreach (var item in cart.Items)
             {
                 decimal finalPrice = item.Price.Amount;
 
-                if (itemToDiscount != null && coupon != null && item.TourId == itemToDiscount.TourId)
-                {
-                    var discountAmount = finalPrice * coupon.DiscountPercentage / 100m;
-                    finalPrice -= discountAmount;
+                var isDiscountedTour =
+                    itemToDiscount != null &&
+                    coupon != null &&
+                    item.TourId.HasValue &&
+                    itemToDiscount.TourId.HasValue &&
+                    item.TourId.Value == itemToDiscount.TourId.Value;
 
-           
+                if (isDiscountedTour)
+                {
+                    finalPrice -= finalPrice * coupon!.DiscountPercentage / 100m;
                 }
 
-                var record = new PaymentRecord(
-                    touristId,
-                    item.TourId.Value,
-                    finalPrice,
-                    now
-                );
-                _paymentRecordRepository.Create(record);
-    
+                if (item.TourId.HasValue)
+                {
+                    var record = new PaymentRecord(
+                        touristId: touristId,
+                        tourId: item.TourId.Value,
+                        price: finalPrice,
+                        createdAt: now
+                    );
+                    _paymentRecordRepository.Create(record);
 
-                var token = new TourPurchaseToken(touristId, item.TourId.Value);
-                var saved = _repository.Create(token);
-                tokens.Add(_mapper.Map<TourPurchaseTokenDto>(saved));
+                    var token = new TourPurchaseToken(touristId, item.TourId.Value);
+                    var savedToken = _tourPurchaseTokenRepository.Create(token);
+                    tokens.Add(_mapper.Map<TourPurchaseTokenDto>(savedToken));
+
+                    continue;
+                }
+
+                if (item.BundleId.HasValue)
+                {
+                    var record = new PaymentRecord(
+                        touristId: touristId,
+                        price: finalPrice,
+                        createdAt: now,
+                        bundleId: item.BundleId.Value
+                    );
+                    _paymentRecordRepository.Create(record);
+
+                    if (item.TourIds != null && item.TourIds.Any())
+                    {
+                        foreach (var tid in item.TourIds)
+                        {
+                            if (tid <= 0) continue;
+
+                            var token = new TourPurchaseToken(touristId, tid);
+                            var savedToken = _tourPurchaseTokenRepository.Create(token);
+                            tokens.Add(_mapper.Map<TourPurchaseTokenDto>(savedToken));
+                        }
+                    }
+
+                    continue;
+                }
+
+                
+                throw new InvalidOperationException("Cart item has neither TourId nor BundleId.");
             }
-
             _shoppingCartService.ClearCart(touristId);
 
             return tokens;
@@ -142,58 +180,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public List<TourPurchaseTokenDto> CompleteBundlePurchase(long touristId, long bundleId)
         {
-            var cartResult = _shoppingCartService.GetCart(touristId);
-            if (cartResult == null || cartResult.Items == null || !cartResult.Items.Any())
-                throw new InvalidOperationException("Shopping cart is empty.");
-
-            // Nađi bundle stavku u korpi
-            var bundleItem = cartResult.Items.FirstOrDefault(i =>
-                i.ItemType == "BUNDLE" &&
-                i.BundleId.HasValue &&
-                i.BundleId.Value == bundleId);
-
-            if (bundleItem == null)
-                throw new InvalidOperationException("Bundle nije u korpi.");
-
-            if (bundleItem.TourIds == null || !bundleItem.TourIds.Any())
-                throw new InvalidOperationException("Bundle u korpi nema TourIds.");
-
-            var wallet = _walletRepository.GetByTouristId(touristId);
-            if (wallet == null)
-                throw new InvalidOperationException("Wallet not found.");
-
-            var now = DateTime.UtcNow;
-
-            var total = bundleItem.Price.Amount;
-
-            wallet.SpendAdventureCoins((int)total);
-            _walletRepository.Update(wallet);
-
-            //  1 PaymentRecord po bundle-u
-
-            var bundleRecord = new PaymentRecord(
-                touristId,
-                total,
-                now,
-                bundleId
-            );
-            _paymentRecordRepository.Create(bundleRecord);
-
-            // Token za svaku turu iz bundle-a
-            var tokens = new List<TourPurchaseTokenDto>();
-
-            foreach (var tourId in bundleItem.TourIds)
-            {
-                var token = new TourPurchaseToken(touristId, tourId);
-                var saved = _repository.Create(token);
-                tokens.Add(_mapper.Map<TourPurchaseTokenDto>(saved));
-            }
-
-            
-            _shoppingCartService.RemoveItemFromCart(touristId, bundleItem.Id);
-
-            return tokens;
+            throw new NotImplementedException("Use CompletePurchase via cart for simplest flow.");
         }
-
     }
 }

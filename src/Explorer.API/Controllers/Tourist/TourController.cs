@@ -1,5 +1,6 @@
 ﻿using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.UseCases;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
@@ -19,12 +20,16 @@ namespace Explorer.API.Controllers.Tourist
         private readonly ITourService _tourService;
         private readonly IPaymentRecordService _paymentRecordService;
         private readonly ITourExecutionService _tourExecutionService;
+        private readonly ITourPurchaseTokenRepository _tourPurchaseTokenRepository;
 
-        public TourController(ITourService tourService, IPaymentRecordService recordService, ITourExecutionService executionService)
+
+
+        public TourController(ITourService tourService, IPaymentRecordService recordService, ITourExecutionService executionService, ITourPurchaseTokenRepository tourPurchaseTokenRepository)
         {
             _tourService = tourService;
             _paymentRecordService = recordService;
             _tourExecutionService = executionService;
+            _tourPurchaseTokenRepository = tourPurchaseTokenRepository;
         }
 
         [HttpGet]
@@ -151,14 +156,20 @@ namespace Explorer.API.Controllers.Tourist
         {
             var touristId = User.UserId();
 
-            var payments = _paymentRecordService.GetMine(touristId);
+            var tokens = _tourPurchaseTokenRepository.GetByTouristId(touristId);
 
-            var tourIds = payments.Select(p => p.TourId).Distinct().ToList();
+            var tourIds = tokens
+                .Select(t => t.TourId)   
+                .Distinct()
+                .ToList();
 
             if (!tourIds.Any())
                 return Ok(new List<TourDto>());
 
-            var tours = tourIds.Select(id => _tourService.Get(id.Value)).ToList();
+            var tours = tourIds
+                .Select(id => _tourService.Get(id))
+                .Where(t => t != null)
+                .ToList();
 
             foreach (var tour in tours)
             {
@@ -171,7 +182,7 @@ namespace Explorer.API.Controllers.Tourist
             }
 
             return Ok(tours);
-
         }
+
     }
 }

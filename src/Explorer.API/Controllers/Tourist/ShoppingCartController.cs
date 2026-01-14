@@ -100,6 +100,7 @@ public class ShoppingCartController : ControllerBase
             return StatusCode(500, $"Internal Server Error: {ex.Message} \n Stack: {ex.StackTrace}");
         }
     }
+
     [HttpPost("bundles")]
     public ActionResult<ShoppingCartDto> AddBundleToCart([FromQuery] long bundleId)
     {
@@ -138,6 +139,8 @@ public class ShoppingCartController : ControllerBase
         {
             return StatusCode(500, $"Internal Server Error: {ex.Message} \n Stack: {ex.StackTrace}");
         }
+       
+
     }
 
 
