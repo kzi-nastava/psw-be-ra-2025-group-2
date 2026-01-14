@@ -57,6 +57,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 }
             }
 
+            if (dto.EstimatedCostTotalPerPerson.HasValue && !string.IsNullOrWhiteSpace(dto.EstimatedCostCurrency))
+            {
+                var breakdown = dto.EstimatedCostBreakdown?
+                    .Select(x => ((EstimatedCostCategory)x.Category, x.AmountPerPerson));
+
+                tour.SetEstimatedCost(dto.EstimatedCostTotalPerPerson.Value, dto.EstimatedCostCurrency!, breakdown ?? Enumerable.Empty<(EstimatedCostCategory, decimal)>());
+            }
+
+
             if (dto.KeyPoints != null && dto.KeyPoints.Any())
             {
                 foreach (var kpDto in dto.KeyPoints)
@@ -145,6 +154,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
             tour.SetLength(dto.LengthKm);
             tour.SetPrice(dto.Price);
+
+            if (dto.EstimatedCostTotalPerPerson.HasValue && !string.IsNullOrWhiteSpace(dto.EstimatedCostCurrency))
+            {
+                var breakdown = dto.EstimatedCostBreakdown?
+                    .Select(x => ((EstimatedCostCategory)x.Category, x.AmountPerPerson));
+
+                tour.SetEstimatedCost(dto.EstimatedCostTotalPerPerson.Value, dto.EstimatedCostCurrency!, breakdown ?? Enumerable.Empty<(EstimatedCostCategory, decimal)>());
+            }
+
             _tourRepository.UpdateAsync(tour).Wait();
 
             return _mapper.Map<TourDto>(tour);
