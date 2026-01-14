@@ -21,6 +21,9 @@ public class EstimatedTourCost : ValueObject
 
         var list = breakdown.ToList();
 
+        if (list.Count > 4)
+            throw new InvalidOperationException("Breakdown can contain at most 4 items.");
+
         if (list.GroupBy(i => i.Category).Any(g => g.Count() > 1))
             throw new InvalidOperationException("Breakdown cannot contain duplicate categories.");
 

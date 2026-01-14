@@ -11,6 +11,7 @@ using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
 using Explorer.Payments.API.Internal;
+using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Tours.Core.UseCases.Administration
 {
@@ -703,5 +704,25 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             return UpdateKeyPoint(tourId, ordinalNo, dto).Result;
         }
+
+        public EstimatedTourCostDto? GetEstimatedCost(long tourId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+            if (tour == null) return null;
+
+            if (tour.EstimatedCost == null)
+            {
+                return new EstimatedTourCostDto
+                {
+                    TotalPerPerson = 0,
+                    Currency = Money.DefaultCurrency,
+                    Breakdown = new List<EstimatedCostItemDto>(),
+                    IsInformational = true
+                };
+            }
+
+            return _mapper.Map<EstimatedTourCostDto>(tour.EstimatedCost);
+        }
+
     }
 }

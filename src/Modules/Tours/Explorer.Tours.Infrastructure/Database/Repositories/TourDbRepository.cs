@@ -85,13 +85,13 @@ public class TourDbRepository : ITourRepository
     public List<Tour> GetAllNonDrafts()
     {
         return _dbSet
-            .Include(t => t.KeyPoints)
-            .Include(t => t.Durations)
-            .Include(t => t.Reviews)
-            .Where(t => t.Status != TourStatus.Draft)
-            .Include(t => t.EstimatedCost!.Breakdown)
-
-            .ToList();
+     .Include(t => t.KeyPoints)
+     .Include(t => t.Durations)
+     .Include(t => t.Reviews)
+     .Include(t => t.EstimatedCost!.Breakdown)
+     .Where(t => t.Status != TourStatus.Draft)
+     .ToList();
+        
     }
 
     public async Task UpdateAsync(Tour tour)

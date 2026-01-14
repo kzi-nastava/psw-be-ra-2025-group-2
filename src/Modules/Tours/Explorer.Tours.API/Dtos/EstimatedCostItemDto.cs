@@ -8,5 +8,7 @@ public class EstimatedCostItemDto
     public decimal AmountPerPerson { get; set; }
     public string Currency { get; set; } = "";
     public string? Note { get; set; }
+    
+
 
 }

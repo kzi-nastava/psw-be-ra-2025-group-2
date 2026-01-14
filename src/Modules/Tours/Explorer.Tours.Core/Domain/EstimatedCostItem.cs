@@ -2,7 +2,16 @@
 
 namespace Explorer.Tours.Core.Domain;
 
-public sealed class EstimatedCostItem : ValueObject
+public enum EstimatedCostCategory
+{
+    TicketsAndAttractions = 1,
+    Transport = 2,
+    FoodAndDrink = 3,
+    Other = 4
+}
+
+
+public class EstimatedCostItem : ValueObject
 {
     public EstimatedCostCategory Category { get; private set; }
     public Money AmountPerPerson { get; private set; }
