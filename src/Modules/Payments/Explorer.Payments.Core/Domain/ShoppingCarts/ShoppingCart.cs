@@ -38,6 +38,30 @@ public class ShoppingCart : AggregateRoot
         Items.Add(item);
         RecalculateTotalPrice();
     }
+
+    public void AddBundleItem(long bundleId, string bundleName, Money price, List<long> tourIds, long authorId)
+    {
+        if (bundleId <= 0) throw new ArgumentException("Invalid BundleId");
+        if (string.IsNullOrWhiteSpace(bundleName)) throw new ArgumentException("Bundle name cannot be empty");
+        if (price == null || price.Amount < 0) throw new ArgumentException("Invalid price");
+        if (authorId <= 0) throw new ArgumentException("Invalid AuthorId");
+        if (tourIds == null || tourIds.Count == 0 || tourIds.Any(id => id <= 0))
+            throw new ArgumentException("Bundle must contain valid tour ids");
+
+        // bundle ne sme duplo u korpu
+        if (Items.Any(i => i.ItemType == "BUNDLE" && i.BundleId == bundleId))
+            throw new InvalidOperationException("Bundle is already in the cart");
+
+        // ne sme u korpi da već postoji neka tura iz tog bundle-a
+        if (Items.Any(i => i.ItemType == "TOUR" && i.TourId.HasValue && tourIds.Contains(i.TourId.Value)))
+            throw new InvalidOperationException("Some tours from this bundle are already in the cart");
+
+        var item = OrderItem.CreateBundle(this.Id, bundleId, bundleName, price, tourIds, authorId);
+        Items.Add(item);
+
+        RecalculateTotalPrice();
+    }
+
     public void RemoveItem(long itemId)
     {
         var item = Items.FirstOrDefault(i => i.Id == itemId);

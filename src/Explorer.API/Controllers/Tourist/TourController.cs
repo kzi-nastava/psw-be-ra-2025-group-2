@@ -148,7 +148,7 @@ namespace Explorer.API.Controllers.Tourist
             if (!tourIds.Any())
                 return Ok(new List<TourDto>());
 
-            var tours = tourIds.Select(id => _tourService.Get(id)).ToList();
+            var tours = tourIds.Select(id => _tourService.Get(id.Value)).ToList();
 
             foreach (var tour in tours)
             {

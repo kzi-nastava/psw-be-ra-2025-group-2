@@ -44,5 +44,28 @@ namespace Explorer.API.Controllers.Tourist
                 return StatusCode(500, $"Internal Server Error: {ex.Message} \n Stack: {ex.StackTrace}");
             }
         }
+
+        [HttpPost("bundles/{bundleId:long}")]
+        public IActionResult PurchaseBundle(long bundleId)
+        {
+            try
+            {
+                var result = _purchaseService.CompleteBundlePurchase(User.PersonId(), bundleId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
     }
 }

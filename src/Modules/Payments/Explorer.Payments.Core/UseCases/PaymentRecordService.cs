@@ -38,12 +38,26 @@ namespace Explorer.Payments.Core.UseCases
 
             foreach (var item in cart.Items)
             {
-                var record = new PaymentRecord(
+                PaymentRecord record;
+                if (item.ItemType == "TOUR")
+                { 
+                    record = new PaymentRecord(
                     touristId,
-                    item.TourId,
+                    item.TourId.Value,
                     item.Price.Amount,
                     now
-                );
+                    );
+                }
+                else
+                {
+                    record = new PaymentRecord(
+                    touristId,
+                    item.Price.Amount,
+                    now,
+                    item.BundleId.Value
+                    );
+                }
+
 
                 _paymentRecordRepository.Create(record);
             }
@@ -60,11 +74,15 @@ namespace Explorer.Payments.Core.UseCases
             {
                 Id = r.Id,
                 TouristId = r.TouristId,
-                TourId = r.TourId,
+
+                TourId = r.TourId,       
+                BundleId = r.BundleId,  
+
                 Price = r.Price,
                 CreatedAt = r.CreatedAt
             }).ToList();
         }
+
 
         public PaymentRecordDto GetMineById(long touristId, long id)
         {

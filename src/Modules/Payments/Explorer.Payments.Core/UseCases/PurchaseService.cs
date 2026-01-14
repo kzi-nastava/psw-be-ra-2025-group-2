@@ -123,14 +123,14 @@ namespace Explorer.Stakeholders.Core.UseCases
 
                 var record = new PaymentRecord(
                     touristId,
-                    item.TourId,
+                    item.TourId.Value,
                     finalPrice,
                     now
                 );
                 _paymentRecordRepository.Create(record);
     
 
-                var token = new TourPurchaseToken(touristId, item.TourId);
+                var token = new TourPurchaseToken(touristId, item.TourId.Value);
                 var saved = _repository.Create(token);
                 tokens.Add(_mapper.Map<TourPurchaseTokenDto>(saved));
             }
@@ -139,5 +139,61 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             return tokens;
         }
+
+        public List<TourPurchaseTokenDto> CompleteBundlePurchase(long touristId, long bundleId)
+        {
+            var cartResult = _shoppingCartService.GetCart(touristId);
+            if (cartResult == null || cartResult.Items == null || !cartResult.Items.Any())
+                throw new InvalidOperationException("Shopping cart is empty.");
+
+            // Nađi bundle stavku u korpi
+            var bundleItem = cartResult.Items.FirstOrDefault(i =>
+                i.ItemType == "BUNDLE" &&
+                i.BundleId.HasValue &&
+                i.BundleId.Value == bundleId);
+
+            if (bundleItem == null)
+                throw new InvalidOperationException("Bundle nije u korpi.");
+
+            if (bundleItem.TourIds == null || !bundleItem.TourIds.Any())
+                throw new InvalidOperationException("Bundle u korpi nema TourIds.");
+
+            var wallet = _walletRepository.GetByTouristId(touristId);
+            if (wallet == null)
+                throw new InvalidOperationException("Wallet not found.");
+
+            var now = DateTime.UtcNow;
+
+            var total = bundleItem.Price.Amount;
+
+            wallet.SpendAdventureCoins((int)total);
+            _walletRepository.Update(wallet);
+
+            //  1 PaymentRecord po bundle-u
+
+            var bundleRecord = new PaymentRecord(
+                touristId,
+                total,
+                now,
+                bundleId
+            );
+            _paymentRecordRepository.Create(bundleRecord);
+
+            // Token za svaku turu iz bundle-a
+            var tokens = new List<TourPurchaseTokenDto>();
+
+            foreach (var tourId in bundleItem.TourIds)
+            {
+                var token = new TourPurchaseToken(touristId, tourId);
+                var saved = _repository.Create(token);
+                tokens.Add(_mapper.Map<TourPurchaseTokenDto>(saved));
+            }
+
+            
+            _shoppingCartService.RemoveItemFromCart(touristId, bundleItem.Id);
+
+            return tokens;
+        }
+
     }
 }

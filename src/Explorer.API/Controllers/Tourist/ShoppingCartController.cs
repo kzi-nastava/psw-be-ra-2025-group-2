@@ -1,6 +1,8 @@
 ﻿using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.DTOs;
+using Explorer.Stakeholders.Infrastructure.Authentication;
+using Explorer.Tours.API.Public;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,12 +16,14 @@ namespace Explorer.API.Controllers.Tourist;
 public class ShoppingCartController : ControllerBase
 {
     private readonly IShoppingCartService _shoppingCartService;
-    private readonly ITourService _tourService; 
+    private readonly ITourService _tourService;
+    private readonly IBundleService _bundleService;
 
-    public ShoppingCartController(IShoppingCartService shoppingCartService, ITourService tourService)
+    public ShoppingCartController(IShoppingCartService shoppingCartService, ITourService tourService, IBundleService bundleService)
     {
         _shoppingCartService = shoppingCartService;
-        _tourService = tourService; 
+        _tourService = tourService;
+        _bundleService = bundleService;
     }
 
     private long ExtractTouristId()
@@ -96,6 +100,47 @@ public class ShoppingCartController : ControllerBase
             return StatusCode(500, $"Internal Server Error: {ex.Message} \n Stack: {ex.StackTrace}");
         }
     }
+    [HttpPost("bundles")]
+    public ActionResult<ShoppingCartDto> AddBundleToCart([FromQuery] long bundleId)
+    {
+        try
+        {
+            var touristId = ExtractTouristId();
+
+            var bundle = _bundleService.GetPublishedById(bundleId);
+            if (bundle == null)
+                return NotFound($"Bundle with ID {bundleId} not found or not published.");
+
+            var result = _shoppingCartService.AddBundleToCart(
+                touristId,
+                bundle.Id,
+                bundle.Name,
+                (double)bundle.Price,
+                bundle.TourIds ?? new List<long>(),
+                bundle.AuthorId
+            );
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal Server Error: {ex.Message} \n Stack: {ex.StackTrace}");
+        }
+    }
+
+
 
     [HttpDelete("items/{itemId}")]
     public ActionResult<ShoppingCartDto> RemoveItem(long itemId)
