@@ -32,6 +32,8 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
+            .Include(t => t.EstimatedCost!.Breakdown)
+
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
@@ -45,6 +47,7 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
+             .Include(t => t.EstimatedCost!.Breakdown)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
     }
@@ -55,6 +58,7 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
+            .Include(t => t.EstimatedCost!.Breakdown)
             .Where(t => t.Status == TourStatus.Published);
 
         if (page <= 0 || pageSize <= 0)
@@ -72,6 +76,8 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
+            .Include(t => t.EstimatedCost!.Breakdown)
+
             .Where(t => t.Status == TourStatus.Published)
             .ToList();
     }
@@ -83,6 +89,8 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
             .Where(t => t.Status != TourStatus.Draft)
+            .Include(t => t.EstimatedCost!.Breakdown)
+
             .ToList();
     }
 
@@ -120,6 +128,8 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
+            .Include(t => t.EstimatedCost!.Breakdown)
+
             .FirstOrDefaultAsync(t => t.Id == tourId);
     }
 
@@ -128,6 +138,7 @@ public class TourDbRepository : ITourRepository
         return await _dbSet
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
+             .Include(t => t.EstimatedCost!.Breakdown)
             .FirstOrDefaultAsync(t => t.KeyPoints.Any(kp => kp.Id == keyPointId));
     }
 
@@ -137,6 +148,7 @@ public class TourDbRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
+             .Include(t => t.EstimatedCost!.Breakdown)
             .ToListAsync();
     }
 

@@ -25,6 +25,8 @@ public class ToursContext : DbContext
 
     public DbSet<Bundle> Bundles { get; set; }
 
+    
+
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) { }
 
@@ -154,7 +156,9 @@ public class ToursContext : DbContext
                            c => c.ToList()
                        )
                    );
-           
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ToursContext).Assembly);
+            base.OnModelCreating(modelBuilder);
+
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>
@@ -268,6 +272,16 @@ public class ToursContext : DbContext
 
             builder.Property(b => b.UpdatedAt)
                 .IsRequired(false);
+
+
+
+
+
+            
+
         });
+
+        
+
     }
 }
