@@ -1,12 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Explorer.BuildingBlocks.Core.Domain;
 
-namespace Explorer.Tours.Core.Domain
+namespace Explorer.Tours.Core.Domain;
+
+public class EstimatedTourCost : ValueObject
 {
-    internal class EstimatedTourCost
+    public Money TotalPerPerson { get; private set; }
+
+    private readonly List<EstimatedCostItem> _breakdown = new();
+    public IReadOnlyList<EstimatedCostItem> Breakdown => _breakdown.AsReadOnly();
+
+    public bool IsInformational { get; private set; } = true;
+
+    private EstimatedTourCost() { } // EF
+
+    public EstimatedTourCost(Money totalPerPerson, IEnumerable<EstimatedCostItem>? breakdown = null)
     {
+        TotalPerPerson = totalPerPerson ?? throw new ArgumentNullException(nameof(totalPerPerson));
+
+        if (breakdown == null) return;
+
+        var list = breakdown.ToList();
+
+        
+        if (list.GroupBy(i => i.Category).Any(g => g.Count() > 1))
+            throw new InvalidOperationException("Breakdown cannot contain duplicate categories.");
+
+        // valuta mora biti ista kao total
+        if (list.Any(i => i.AmountPerPerson.Currency != TotalPerPerson.Currency))
+            throw new InvalidOperationException("All breakdown items must have the same currency as total.");
+
+        // zabrani negativne o
+        if (list.Any(i => i.AmountPerPerson.Amount < 0))
+            throw new InvalidOperationException("Breakdown items cannot be negative.");
+
+        _breakdown.AddRange(list);
+    }
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return TotalPerPerson;
+        yield return IsInformational;
+
+        // redosled ne treba da utiče na jednakost
+        foreach (var item in _breakdown.OrderBy(i => i.Category))
+            yield return item;
     }
 }
