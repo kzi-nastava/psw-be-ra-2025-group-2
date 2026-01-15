@@ -141,9 +141,7 @@ public class TourReviewCommandTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope, string userId)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>(),
-            scope.ServiceProvider.GetRequiredService<IPaymentRecordService>(),
-            scope.ServiceProvider.GetRequiredService<ITourExecutionService>()
+            scope.ServiceProvider.GetRequiredService<ITourService>()
         )
         {
             ControllerContext = BuildContext(userId)

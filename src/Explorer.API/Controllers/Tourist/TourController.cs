@@ -30,6 +30,7 @@ namespace Explorer.API.Controllers.Tourist
             _paymentRecordService = recordService;
             _tourExecutionService = executionService;
             _tourPurchaseTokenRepository = tourPurchaseTokenRepository;
+
         }
 
         [HttpGet]
@@ -154,6 +155,7 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet("mine-tour")]
         public ActionResult<IEnumerable<TourDto>> GetMyTours()
         {
+
             var touristId = User.UserId();
 
             var tokens = _tourPurchaseTokenRepository.GetByTouristId(touristId);
@@ -182,6 +184,7 @@ namespace Explorer.API.Controllers.Tourist
             }
 
             return Ok(tours);
+
         }
 
     }
