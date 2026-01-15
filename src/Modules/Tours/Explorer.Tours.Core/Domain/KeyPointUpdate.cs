@@ -7,7 +7,7 @@
         string? SecretText,
         string? ImageUrl,
         double Latitude,
-        double Longitude
-
+        double Longitude,
+        long? EncounterId
     );
 }

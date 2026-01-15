@@ -6,6 +6,7 @@ public interface IUserRepository
 {
     bool Exists(string username);
     User? GetActiveByName(string username);
+    User? GetActiveById(long id);
     User Create(User user);
     long GetPersonId(long userId);
     User? GetUserByUsername(string username);
@@ -13,4 +14,6 @@ public interface IUserRepository
     PagedResult<User> GetPaged(int page, int pageSize);
     User GetByPersonId(long personId);
     User? Get(long id);
+    List<User> GetTourists(string? query);
+    List<User> GetAllActiveUsers();
 }

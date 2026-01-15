@@ -28,6 +28,10 @@ public class UserDbRepository : IUserRepository
         return _dbContext.Users.FirstOrDefault(user => user.Username == username && user.IsActive);
     }
 
+    public User? GetActiveById(long id)
+    {
+        return _dbContext.Users.FirstOrDefault(user => user.Id == id && user.IsActive);
+    }
     public User Create(User user)
     {
         _dbContext.Users.Add(user);
@@ -74,4 +78,29 @@ public class UserDbRepository : IUserRepository
         return _dbContext.Users.FirstOrDefault(u => u.Id == id);
     }
 
+    public List<User> GetTourists(string? query)
+    {
+        var usersQuery = _dbContext.Users
+            .Where(u => u.Role == UserRole.Tourist)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var q = query.Trim().ToLowerInvariant();
+            usersQuery = usersQuery.Where(u => u.Username.ToLower().Contains(q));
+        }
+
+        return usersQuery
+            .OrderBy(u => u.Username)
+            .Take(3)
+            .ToList();
+    }
+
+    public List<User> GetAllActiveUsers()
+    {
+        return _dbContext.Users
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.Username)
+            .ToList();
+    }
 }

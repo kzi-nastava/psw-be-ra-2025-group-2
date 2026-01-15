@@ -1,6 +1,8 @@
 ﻿using Explorer.API.Controllers.Tourist;
+using Explorer.Payments.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -15,20 +17,21 @@ public class PublishedToursOnlyPublishedTests : BaseToursIntegrationTest
     [Fact]
     public void Does_not_return_draft_or_archived_tours_AC1()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
 
-        // TODO: zameni ovde sa realnim ID-jevima iz vašeg d-tours.sql seed-a
-        // npr: draftTourId = -2; archivedTourId = -3;
         var draftTourId = -9999;
         var archivedTourId = -9998;
 
-        // Act
-        var response = controller.GetPublished();
-        var result = (response.Result as OkObjectResult)?.Value as List<PublishedTourPreviewDto>;
+        var actionResult = controller.GetPublished(page: 1, pageSize: 1000);
 
-        // Assert
+        var ok = actionResult.Result as OkObjectResult;
+        ok.ShouldNotBeNull();
+
+        var pageDto = ok.Value as PagedResultDto<PublishedTourPreviewDto>;
+        pageDto.ShouldNotBeNull();
+
+        var result = pageDto.Results;
         result.ShouldNotBeNull();
 
         result.Any(t => t.Id == draftTourId).ShouldBeFalse();
@@ -38,7 +41,6 @@ public class PublishedToursOnlyPublishedTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>()
-        );
+            scope.ServiceProvider.GetRequiredService<ITourService>());
     }
 }

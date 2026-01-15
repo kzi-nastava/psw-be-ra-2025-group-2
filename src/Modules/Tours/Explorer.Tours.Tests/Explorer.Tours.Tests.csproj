@@ -12,6 +12,7 @@
   <ItemGroup>
 	<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.20" />
 	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+	<PackageReference Include="Moq" Version="4.20.72" />
 	<PackageReference Include="Shouldly" Version="4.3.0" />
 	<PackageReference Include="xunit" Version="2.9.3" />
 	<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -30,9 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestData\a-delete.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="TestData\c-insert-tour-problems.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -55,6 +53,10 @@
     </None>
   
     <None Update="TestData\c-tours.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  
+    <None Update="TestData\d-keypoints.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   

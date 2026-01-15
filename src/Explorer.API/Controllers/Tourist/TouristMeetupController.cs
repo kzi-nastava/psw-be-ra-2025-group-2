@@ -7,8 +7,9 @@ using System.Linq;
 using System.Security.Claims;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 namespace Explorer.API.Controllers.Tourist;
-[Authorize(Policy = "touristPolicy")]
-[Route("api/tourist/meetups")]
+
+[Authorize(Roles = "author,tourist")]
+[Route("api/meetups")]
 [ApiController]
 public class TouristMeetupController : ControllerBase
 {

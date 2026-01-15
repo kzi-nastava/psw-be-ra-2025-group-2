@@ -44,21 +44,37 @@ namespace Explorer.API.Controllers.Author
         [HttpGet]
         public ActionResult<IEnumerable<TourDto>> GetByAuthor([FromQuery] long authorId)
         {
-            var tours = _tourService.GetByAuthor(authorId);
-            return Ok(tours);
+            try
+            {
+                var tours = _tourService.GetByAuthor(authorId);
+                return Ok(tours);
+            }
+            catch (Exception ex)
+            {
+                // Ovo će ti pokazati tačnu grešku
+                var innerMsg = ex.InnerException?.Message ?? "No inner exception";
+                var stackTrace = ex.StackTrace ?? "No stack trace";
+
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    innerError = innerMsg,
+                    type = ex.GetType().Name,
+                    stack = stackTrace
+                });
+            }
         }
 
-        
-        // GET: api/author/tours/{id}
+
         [HttpGet("{id}")]
-        public ActionResult<TourDto> GetById(long id)
+        public async Task<ActionResult<TourDto>> GetById(long id)
         {
             var authorIdClaim = User.FindFirst("id");
             if (authorIdClaim == null) return Unauthorized();
 
             long authorId = long.Parse(authorIdClaim.Value);
 
-            var tour = _tourService.GetById(id, authorId);
+            var tour = await _tourService.GetByIdAsync(id, authorId);
             if (tour == null) return NotFound();
 
             return Ok(tour);
@@ -74,8 +90,19 @@ namespace Explorer.API.Controllers.Author
             if (dto.Difficulty < 1 || dto.Difficulty > 5)
                 throw new ArgumentOutOfRangeException(nameof(dto.Difficulty), "Difficulty must be between 1 and 5.");
 
-            var updated = _tourService.Update(id, dto);
-            return Ok(updated);
+            try
+            {
+                var updated = _tourService.Update(id, dto);
+                return Ok(updated);
+            }
+            catch (InvalidOperationException ex) // npr. tura je arhivirana
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Došlo je do neočekivane greške prilikom ažuriranja ture." });
+            }
         }
 
         // DELETE: api/author/tours/{id}
@@ -88,26 +115,81 @@ namespace Explorer.API.Controllers.Author
 
         // POST: api/author/tours/{tourId}/keypoints
         [HttpPost("{tourId}/keypoints")]
-        public ActionResult AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
+        public async Task<ActionResult<KeyPointDto>> AddKeyPoint(long tourId, [FromBody] KeyPointDto dto)
         {
-            _tourService.AddKeyPoint(tourId, dto);
-            return Ok();
+            try
+            {
+                var authorIdClaim = User.FindFirst("id");
+                if (authorIdClaim == null) return Unauthorized();
+
+                dto.AuthorId = long.Parse(authorIdClaim.Value);
+
+                var result = await _tourService.AddKeyPoint(tourId, dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // PUT: api/author/tours/{tourId}/keypoints/{ordinalNo}
         [HttpPut("{tourId}/keypoints/{ordinalNo}")]
-        public ActionResult UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
+        public async Task<ActionResult<KeyPointDto>> UpdateKeyPoint(long tourId, int ordinalNo, [FromBody] KeyPointDto dto)
         {
-            _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
-            return Ok();
+            try
+            {
+                var authorIdClaim = User.FindFirst("id");
+                if (authorIdClaim == null) return Unauthorized();
+
+                dto.AuthorId = long.Parse(authorIdClaim.Value);
+
+                var result = await _tourService.UpdateKeyPoint(tourId, ordinalNo, dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An unexpected error occurred. Please try again." });
+            }
         }
 
         // DELETE: api/author/tours/{tourId}/keypoints/{ordinalNo}
         [HttpDelete("{tourId}/keypoints/{ordinalNo}")]
         public ActionResult RemoveKeyPoint(long tourId, int ordinalNo)
         {
-            _tourService.RemoveKeyPoint(tourId, ordinalNo);
-            return Ok();
+            try
+            {
+                _tourService.RemoveKeyPoint(tourId, ordinalNo);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = "An error occurred while deleting the keypoint." });
+            }
         }
 
         [HttpPut("{id}/publish")]
@@ -129,7 +211,7 @@ namespace Explorer.API.Controllers.Author
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (Exception ex)
             {
@@ -255,6 +337,27 @@ namespace Explorer.API.Controllers.Author
             var authorId = long.Parse(User.FindFirst("id")!.Value);
             var result = _tourService.GetAllEquipmentForAuthor(authorId);
             return Ok(result);
+        }
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [HttpPost("keypoints/upload-image")]
+        [RequestSizeLimit(10_000_000)] // 10MB
+        public async Task<ActionResult<string>> UploadKeyPointImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("File is required.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            if (!allowed.Contains(ext)) return BadRequest("Unsupported file type.");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "keypoints-images");
+            Directory.CreateDirectory(folder);
+
+            var fullPath = Path.Combine(folder, fileName);
+            await using var stream = System.IO.File.Create(fullPath);
+            await file.CopyToAsync(stream);
+
+            return Ok($"/keypoints-images/{fileName}");
         }
     }
 }

@@ -7,12 +7,7 @@ using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Tours.Core.Domain;
 
-public enum TourStatus
-{
-    Draft,
-    Published,
-    Archived
-}
+
 
 public class Tour : AggregateRoot
 {
@@ -24,15 +19,27 @@ public class Tour : AggregateRoot
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
 
-    public decimal? LengthKm { get; private set; }
+    public decimal? LengthKm { get;  set; }
 
     public List<TourDuration> Durations { get; private set; } = new();
     public DateTime? PublishedAt { get; private set; }
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
+
+    
    
+    public TourEnvironmentType? EnvironmentType { get; private set; }
+    public List<FoodType> FoodTypes { get; private set; } = new();
+    public AdventureLevel? AdventureLevel { get; private set; }
+    public List<ActivityType> ActivityTypes { get; private set; } = new();
+    public List<SuitableFor> SuitableForGroups { get; private set; } = new();
+   
+    
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
+
+    private readonly List<TourReview> _reviews = new();
+    public IReadOnlyList<TourReview> Reviews => _reviews.AsReadOnly();
 
 
     public Tour() { }
@@ -79,7 +86,44 @@ public class Tour : AggregateRoot
         Tags = tags != null ? tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList() : new List<string>();
     }
 
+  
+    public void SetEnvironmentType(TourEnvironmentType? environmentType)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        EnvironmentType = environmentType;
+    }
+
+    public void SetFoodTypes(IEnumerable<FoodType>? foodTypes)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        FoodTypes = foodTypes?.ToList() ?? new List<FoodType>();
+    }
+
+    public void SetAdventureLevel(AdventureLevel? adventureLevel)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        AdventureLevel = adventureLevel;
+    }
+
+    public void SetActivityTypes(IEnumerable<ActivityType>? activityTypes)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        ActivityTypes = activityTypes?.ToList() ?? new List<ActivityType>();
+    }
+
+    public void SetSuitableForGroups(IEnumerable<SuitableFor>? suitableFor)
+    {
+        if (Status == TourStatus.Archived)
+            throw new InvalidOperationException("Archived tours cannot be updated.");
+        SuitableForGroups = suitableFor?.ToList() ?? new List<SuitableFor>();
+    }
+   
     public void SetStatus(TourStatus status) => Status = status;
+
     public void Archive(DateTime now)
     {
         if (Status != TourStatus.Published)
@@ -104,6 +148,7 @@ public class Tour : AggregateRoot
         Status = TourStatus.Published;
         ArchivedAt = null;
     }
+
     public void SetPrice(decimal price)
     {
         if (price < 0) throw new ArgumentException("Price cannot be negative.", nameof(price));
@@ -212,10 +257,16 @@ public class Tour : AggregateRoot
         PublishedAt = DateTime.UtcNow;
     }
 
-    public void SetLength(decimal lengthKm)
+    public void SetLength(decimal? lengthKm)
     {
         if (Status == TourStatus.Archived)
             throw new InvalidOperationException("It is not possible to change the length of an archived tour.");
+
+        if (!lengthKm.HasValue)
+        {
+            LengthKm = null;
+            return;
+        }
 
         UpdateLengthForKeyPoints();
 
@@ -251,5 +302,40 @@ public class Tour : AggregateRoot
         }
 
         Durations.Add(new TourDuration(transportType, minutes));
+    }
+
+    public void AddReview(TourReview review)
+    {
+        if (review == null) throw new ArgumentNullException(nameof(review));
+
+        var existing = _reviews.FirstOrDefault(r => r.TouristId == review.TouristId);
+        if (existing != null)
+        {
+            throw new InvalidOperationException("Tourist has already reviewed this tour.");
+        }
+
+        _reviews.Add(review);
+    }
+
+    public void UpdateReview(long touristId, int rating, string comment, List<string> images)
+    {
+        var review = _reviews.FirstOrDefault(r => r.TouristId == touristId);
+        if (review == null) throw new InvalidOperationException("Review not found.");
+
+        review.Update(rating, comment, images);
+    }
+
+    public void DeleteReview(long touristId)
+    {
+        var review = _reviews.FirstOrDefault(r => r.TouristId == touristId);
+        if (review == null) throw new InvalidOperationException("Review not found.");
+
+        _reviews.Remove(review);
+    }
+
+    public double GetAverageRating()
+    {
+        if (_reviews.Count == 0) return 0;
+        return _reviews.Average(r => r.Rating);
     }
 }

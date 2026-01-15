@@ -1,6 +1,8 @@
-﻿using Explorer.Stakeholders.Infrastructure.Authentication;
+﻿using Explorer.Payments.API.Public;
+using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,9 +36,108 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpGet("published")]
-        public ActionResult<List<PublishedTourPreviewDto>> GetPublished()
+        public ActionResult<PagedResultDto<PublishedTourPreviewDto>> GetPublished(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 6,
+            [FromQuery] int? environmentType = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] String? suitableFor = null,
+            [FromQuery] String? foodTypes = null,
+            [FromQuery] String? adventureLevel = null,
+            [FromQuery] String? activityTypes = null)
         {
-            return Ok(_tourService.GetPublishedForTourist());
+            var filter = new TourFilterDto
+            {
+                Page = page,                    
+                PageSize = pageSize,          
+                EnvironmentType = environmentType,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SuitableFor = suitableFor,
+                FoodTypes = foodTypes,
+                AdventureLevel = adventureLevel,
+                ActivityTypes = activityTypes
+            };
+
+            return Ok(_tourService.GetFilteredTours(filter));
         }
+
+
+        [HttpPost("rate")]
+        public ActionResult<TourReviewDto> RateTour([FromBody] TourReviewDto reviewDto)
+        {
+            try
+            {
+                var result = _tourService.AddReview(
+                    reviewDto.TourId,
+                    User.UserId(),
+                    reviewDto.Rating,
+                    reviewDto.Comment,
+                    reviewDto.Images
+                );
+                return Ok(result);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpPut("rate")]
+        public ActionResult<TourReviewDto> UpdateReview([FromBody] TourReviewDto review)
+        {
+            var userId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            if (review.TouristId != userId)
+                return Forbid(); // Ili BadRequest("You can only edit your own reviews.");
+
+            try
+            {
+                var result = _tourService.UpdateReview(review);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpDelete("reviews/{tourId}")]
+        public ActionResult DeleteReview(long tourId)
+        {
+            var userId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            try
+            {
+                _tourService.DeleteReview(userId, tourId);
+                return Ok();
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // GET api/tourist/tours/mine
+        [HttpGet("mine")]
+        public ActionResult<IEnumerable<TourDto>> GetMyPurchasedTours()
+        {
+            return Ok(_tourService.GetAvailableForTourist(User.UserId()));
+        }
+
+
     }
 }

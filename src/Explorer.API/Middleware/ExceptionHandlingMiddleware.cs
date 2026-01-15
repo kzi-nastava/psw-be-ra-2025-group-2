@@ -39,6 +39,8 @@ public class ExceptionHandlingMiddleware
             ForbiddenException ex => (HttpStatusCode.Forbidden, ex.Message),
             NotFoundException ex => (HttpStatusCode.NotFound, ex.Message),
             EntityValidationException ex => (HttpStatusCode.UnprocessableEntity, ex.Message),
+            DomainException ex => (HttpStatusCode.Conflict, ex.Message),
+            InvalidOperationException ex => (HttpStatusCode.UnprocessableEntity, ex.Message),
             _ => (HttpStatusCode.InternalServerError, "An internal server error occurred.")
         };
 

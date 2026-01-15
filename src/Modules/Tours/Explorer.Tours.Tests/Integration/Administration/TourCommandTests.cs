@@ -130,7 +130,15 @@ public class TourCommandTests : BaseToursIntegrationTest
             Difficulty = 3
         };
 
-        Should.Throw<Exception>(() => controller.Update(-1000, updatedEntity));
+        // Act
+        var result = controller.Update(-1000, updatedEntity);
+
+        // Assert
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(500, objectResult.StatusCode);
+        Assert.NotNull(objectResult.Value);
+        var message = objectResult.Value.GetType().GetProperty("message")?.GetValue(objectResult.Value)?.ToString();
+        Assert.False(string.IsNullOrWhiteSpace(message));
     }
 
     [Fact]
@@ -180,7 +188,7 @@ public class TourCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope, "-11");
 
-        Should.Throw<Exception>(() => controller.Delete(-12)); 
+        Should.Throw<Exception>(() => controller.Delete(-1)); 
     }
 
     private static TourController CreateController(IServiceScope scope, string authorId = "-11")

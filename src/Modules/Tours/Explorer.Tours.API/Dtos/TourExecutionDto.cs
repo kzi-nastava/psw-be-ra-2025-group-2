@@ -12,5 +12,7 @@ namespace Explorer.Tours.API.Dtos
         public long TourId { get; set; }
         public long TouristId { get; set; }
         public List<KeyPointDto> KeyPointData { get; set; }
+        public double CompletedPercentage { get; set; }
+        public DateTime LastActivity { get; set; }
     }
 }

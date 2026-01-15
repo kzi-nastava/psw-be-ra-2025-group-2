@@ -73,7 +73,8 @@ public class ShoppingCartController : ControllerBase
                 tour.Id,
                 tour.Name,
                 (double)tour.Price, 
-                tour.Tags != null && tour.Tags.Count > 0 ? tour.Tags[0] : "General"
+                tour.Tags != null && tour.Tags.Count > 0 ? tour.Tags[0] : "General",
+                tour.AuthorId
             );
 
             return Ok(result);

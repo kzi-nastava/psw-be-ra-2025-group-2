@@ -54,7 +54,6 @@ namespace Explorer.Tours.Core.Domain.Execution
             Validate();
         }
 
-
         public void Start()
         {
             if (State != TourExecutionState.NotStarted)

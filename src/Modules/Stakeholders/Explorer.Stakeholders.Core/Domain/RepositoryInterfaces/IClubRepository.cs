@@ -9,5 +9,7 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
         Club Update(Club club);
         void Delete(long id);
         List<Club> GetAll();
+        List<long> GetMemberClubIds(long touristId);
+        List<long> GetMyJoinRequestClubIds(long touristId);
     }
 }
