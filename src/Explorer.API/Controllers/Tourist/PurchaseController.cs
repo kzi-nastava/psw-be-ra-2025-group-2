@@ -23,7 +23,7 @@ namespace Explorer.API.Controllers.Tourist
         {
             try
             {
-                var result = _purchaseService.CompletePurchase(User.PersonId(), dto?.CouponCode);
+                var result = _purchaseService.CompletePurchase(User.UserId(), dto?.CouponCode);
                 return Ok(result);
                 
             }
