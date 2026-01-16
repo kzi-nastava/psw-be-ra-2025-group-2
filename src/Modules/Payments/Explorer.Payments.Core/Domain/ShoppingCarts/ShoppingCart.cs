@@ -41,11 +41,11 @@ public class ShoppingCart : AggregateRoot
 
     public void AddBundleItem(long bundleId, string bundleName, Money price, List<long> tourIds, long authorId)
     {
-        if (bundleId <= 0) throw new ArgumentException("Invalid BundleId");
+        if (bundleId == 0) throw new ArgumentException("Invalid BundleId");
         if (string.IsNullOrWhiteSpace(bundleName)) throw new ArgumentException("Bundle name cannot be empty");
         if (price == null || price.Amount < 0) throw new ArgumentException("Invalid price");
-        if (authorId <= 0) throw new ArgumentException("Invalid AuthorId");
-        if (tourIds == null || tourIds.Count == 0 || tourIds.Any(id => id <= 0))
+        if (authorId == 0) throw new ArgumentException("Invalid AuthorId");
+        if (tourIds == null || tourIds.Count == 0 || tourIds.Any(id => id == 0))
             throw new ArgumentException("Bundle must contain valid tour ids");
 
         // bundle ne sme duplo u korpu

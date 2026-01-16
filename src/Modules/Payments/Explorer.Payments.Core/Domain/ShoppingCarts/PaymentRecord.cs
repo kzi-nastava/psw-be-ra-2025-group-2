@@ -20,6 +20,8 @@ namespace Explorer.Payments.Core.Domain.ShoppingCarts
 
         public PaymentRecord(long touristId, long tourId, decimal price, DateTime createdAt)
         {
+            if (touristId == 0) throw new ArgumentOutOfRangeException(nameof(touristId));
+            if (tourId == 0) throw new ArgumentOutOfRangeException(nameof(tourId));
             if (price < 0) throw new ArgumentOutOfRangeException(nameof(price));
 
             TouristId = touristId;
@@ -31,8 +33,8 @@ namespace Explorer.Payments.Core.Domain.ShoppingCarts
 
         public PaymentRecord(long touristId, decimal price, DateTime createdAt, long bundleId)
         {
-            if (touristId <= 0) throw new ArgumentOutOfRangeException(nameof(touristId));
-            if (bundleId <= 0) throw new ArgumentOutOfRangeException(nameof(bundleId));
+            if (touristId == 0) throw new ArgumentOutOfRangeException(nameof(touristId));
+            if (bundleId == 0) throw new ArgumentOutOfRangeException(nameof(bundleId));
             if (price < 0) throw new ArgumentOutOfRangeException(nameof(price));
 
             TouristId = touristId;

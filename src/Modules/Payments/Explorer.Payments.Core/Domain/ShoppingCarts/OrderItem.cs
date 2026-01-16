@@ -26,7 +26,7 @@ public class OrderItem : Entity
     {
         ValidateCommon(shoppingCartId, title, price, authorId);
 
-        if (tourId <= 0)
+        if (tourId == 0)
             throw new ArgumentException("Invalid TourId");
 
         ShoppingCartId = shoppingCartId;
@@ -50,10 +50,10 @@ public class OrderItem : Entity
     {
         ValidateCommon(shoppingCartId, bundleName, price, authorId);
 
-        if (bundleId <= 0)
+        if (bundleId == 0)
             throw new ArgumentException("Invalid BundleId");
 
-        if (tourIds == null || tourIds.Count == 0 || tourIds.Any(id => id <= 0))
+        if (tourIds == null || tourIds.Count == 0 || tourIds.Any(id => id == 0))
             throw new ArgumentException("Bundle must contain valid tour ids");
 
         return new OrderItem
@@ -71,7 +71,7 @@ public class OrderItem : Entity
 
     private static void ValidateCommon(long shoppingCartId, string title, Money price, long authorId)
     {
-        if (shoppingCartId <= 0)
+        if (shoppingCartId == 0)
             throw new ArgumentException("Invalid ShoppingCartId");
 
         if (string.IsNullOrWhiteSpace(title))
@@ -80,7 +80,7 @@ public class OrderItem : Entity
         if (price == null || price.Amount < 0)
             throw new ArgumentException("Invalid price");
 
-        if (authorId <= 0)
+        if (authorId == 0)
             throw new ArgumentException("Invalid AuthorId");
     }
 
