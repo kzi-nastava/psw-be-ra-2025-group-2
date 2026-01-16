@@ -1,22 +1,54 @@
-﻿using System;
+﻿using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Public;
+using Explorer.Payments.Infrastructure.Database;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Explorer.Payments.API.Dtos;
-using Explorer.Payments.API.Public;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
+using Xunit.Abstractions;
 
 namespace Explorer.Payments.Tests.Integration
 {
     [Collection("Sequential")]
     public class NotificationQueryTests : BaseStakeholdersIntegrationTest
     {
-        public NotificationQueryTests(PaymentsTestFactory factory) : base(factory) { }
+        private readonly ITestOutputHelper _output;
+        public NotificationQueryTests(PaymentsTestFactory factory, ITestOutputHelper output) : base(factory)
+        {
+            _output = output;
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
+
+                var scriptFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "TestData");
+                if (!Directory.Exists(scriptFolder)) scriptFolder = Path.Combine(".", "TestData");
+
+                var scriptFiles = Directory.GetFiles(scriptFolder, "*.sql");
+                Array.Sort(scriptFiles);
+
+                foreach (var file in scriptFiles)
+                {
+                    var script = File.ReadAllText(file);
+                    try
+                    {
+                        dbContext.Database.ExecuteSqlRaw(script);
+                    }
+                    catch (Exception ex)
+                    {
+                        _output.WriteLine($"[GREŠKA] {Path.GetFileName(file)}: {ex.Message}");
+                    }
+                }
+                dbContext.ChangeTracker.Clear();
+            }
+        }
 
         [Fact]
         public void Tourist_Gets_All_Notifications()

@@ -1,4 +1,5 @@
-﻿using Explorer.Stakeholders.Infrastructure.Authentication;
+﻿using Explorer.Payments.API.Public;
+using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
@@ -14,7 +15,6 @@ namespace Explorer.API.Controllers.Tourist
     public class TourController : ControllerBase
     {
         private readonly ITourService _tourService;
-        private readonly ITourExecutionService _tourExecutionService;
 
         public TourController(ITourService tourService)
         {
@@ -38,9 +38,29 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet("published")]
         public ActionResult<PagedResultDto<PublishedTourPreviewDto>> GetPublished(
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 6)
+            [FromQuery] int pageSize = 6,
+            [FromQuery] int? environmentType = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] String? suitableFor = null,
+            [FromQuery] String? foodTypes = null,
+            [FromQuery] String? adventureLevel = null,
+            [FromQuery] String? activityTypes = null)
         {
-            return Ok(_tourService.GetPublishedForTourist(page, pageSize));
+            var filter = new TourFilterDto
+            {
+                Page = page,                    
+                PageSize = pageSize,          
+                EnvironmentType = environmentType,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SuitableFor = suitableFor,
+                FoodTypes = foodTypes,
+                AdventureLevel = adventureLevel,
+                ActivityTypes = activityTypes
+            };
+
+            return Ok(_tourService.GetFilteredTours(filter));
         }
 
 
@@ -110,5 +130,14 @@ namespace Explorer.API.Controllers.Tourist
                 return BadRequest(e.Message);
             }
         }
+
+        // GET api/tourist/tours/mine
+        [HttpGet("mine")]
+        public ActionResult<IEnumerable<TourDto>> GetMyPurchasedTours()
+        {
+            return Ok(_tourService.GetAvailableForTourist(User.UserId()));
+        }
+
+
     }
 }

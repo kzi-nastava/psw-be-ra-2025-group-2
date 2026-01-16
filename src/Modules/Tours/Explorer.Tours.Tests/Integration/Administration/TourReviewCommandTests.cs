@@ -1,6 +1,8 @@
 ﻿using Explorer.API.Controllers.Tourist;
+using Explorer.Payments.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Execution;
 using Explorer.Tours.Core.Domain.Execution;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;

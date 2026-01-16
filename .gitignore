@@ -549,3 +549,7 @@ $RECYCLE.BIN/
 
 # Migrations
 src/**/Migrations/*
+
+# wwwroot
+
+src/Explorer.API/wwwroot/**

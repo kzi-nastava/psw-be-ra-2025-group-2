@@ -90,6 +90,73 @@ public class ToursContext : DbContext
             builder.HasMany(t => t.Equipment)
                    .WithMany()
                    .UsingEntity(j => { j.ToTable("TourEquipment"); });
+
+            
+            
+            // EnvironmentType - nullable enum stored as int
+            builder.Property(t => t.EnvironmentType)
+                   .HasConversion<int?>()
+                   .IsRequired(false);
+
+            // FoodTypes - List<FoodType> stored as comma-separated string
+            builder.Property(t => t.FoodTypes)
+                   .HasConversion(
+                       v => string.Join(',', v.Select(ft => (int)ft)),
+                       v => string.IsNullOrEmpty(v) 
+                           ? new List<FoodType>() 
+                           : v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                              .Select(x => (FoodType)int.Parse(x))
+                              .ToList()
+                   )
+                   .Metadata.SetValueComparer(
+                       new ValueComparer<List<FoodType>>(
+                           (c1, c2) => c1.SequenceEqual(c2),
+                           c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                           c => c.ToList()
+                       )
+                   );
+
+            // AdventureLevel - nullable enum stored as int
+            builder.Property(t => t.AdventureLevel)
+                   .HasConversion<int?>()
+                   .IsRequired(false);
+
+            // ActivityTypes - List<ActivityType> stored as comma-separated string
+            builder.Property(t => t.ActivityTypes)
+                   .HasConversion(
+                       v => string.Join(',', v.Select(at => (int)at)),
+                       v => string.IsNullOrEmpty(v) 
+                           ? new List<ActivityType>() 
+                           : v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                              .Select(x => (ActivityType)int.Parse(x))
+                              .ToList()
+                   )
+                   .Metadata.SetValueComparer(
+                       new ValueComparer<List<ActivityType>>(
+                           (c1, c2) => c1.SequenceEqual(c2),
+                           c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                           c => c.ToList()
+                       )
+                   );
+
+            // SuitableForGroups - List<SuitableFor> stored as comma-separated string
+            builder.Property(t => t.SuitableForGroups)
+                   .HasConversion(
+                       v => string.Join(',', v.Select(sf => (int)sf)),
+                       v => string.IsNullOrEmpty(v) 
+                           ? new List<SuitableFor>() 
+                           : v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                              .Select(x => (SuitableFor)int.Parse(x))
+                              .ToList()
+                   )
+                   .Metadata.SetValueComparer(
+                       new ValueComparer<List<SuitableFor>>(
+                           (c1, c2) => c1.SequenceEqual(c2),
+                           c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                           c => c.ToList()
+                       )
+                   );
+           
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>
