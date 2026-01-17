@@ -41,6 +41,8 @@ public class Tour : AggregateRoot
     private readonly List<TourReview> _reviews = new();
     public IReadOnlyList<TourReview> Reviews => _reviews.AsReadOnly();
 
+    public string CoverImageUrl { get; private set; } = string.Empty;
+
 
     public Tour() { }
 
@@ -186,17 +188,15 @@ public class Tour : AggregateRoot
         if (keyPoint == null)
             throw new InvalidOperationException($"KeyPoint with OrdinalNo {ordinalNo} does not exist.");
 
-        var updatedKeyPoint = new KeyPoint(
-            ordinalNo,
+        keyPoint.Update(
             update.Name ?? keyPoint.Name,
             update.Description ?? keyPoint.Description,
             update.SecretText ?? keyPoint.SecretText,
             update.ImageUrl ?? keyPoint.ImageUrl,
             update.Latitude,
-            update.Longitude
+            update.Longitude,
+            keyPoint.EncounterId
         );
-
-        _keyPoints[_keyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
     }
 
     public void ClearKeyPoints()
@@ -337,5 +337,18 @@ public class Tour : AggregateRoot
     {
         if (_reviews.Count == 0) return 0;
         return _reviews.Average(r => r.Rating);
+    }
+
+    public void SetCoverImage(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            throw new ArgumentException("Cover image url is required.", nameof(url));
+
+        CoverImageUrl = url;
+    }
+
+    public void ClearCoverImage()
+    {
+        CoverImageUrl = string.Empty;
     }
 }

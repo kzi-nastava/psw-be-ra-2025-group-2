@@ -18,4 +18,6 @@ public class KeyPointDto
 
     public long? EncounterId { get; set; }
 
+    public List<KeyPointImageDto> Images { get; set; } = new();
+
 }

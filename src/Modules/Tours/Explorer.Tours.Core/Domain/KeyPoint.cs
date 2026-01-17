@@ -9,6 +9,10 @@ namespace Explorer.Tours.Core.Domain
         public string Description { get; init; }
         public string SecretText { get; init; }
         public string ImageUrl { get; init; }
+
+        private readonly List<KeyPointImage> _images = new();
+        public IReadOnlyCollection<KeyPointImage> Images => _images.AsReadOnly();
+
         public double Latitude { get; init; }
         public double Longitude { get; init; }
         public long AuthorId { get; private set; }
@@ -27,13 +31,15 @@ namespace Explorer.Tours.Core.Domain
             double latitude,
             double longitude,
             long authorId,
-            long? encounterId = null) 
+            long? encounterId = null)
         {
             OrdinalNo = ordinalNo;
             Name = name;
             Description = description;
             SecretText = secretText ?? string.Empty;
+
             ImageUrl = imageUrl ?? string.Empty;
+
             Latitude = latitude;
             Longitude = longitude;
             AuthorId = authorId;
@@ -44,20 +50,79 @@ namespace Explorer.Tours.Core.Domain
         }
 
         public KeyPoint(
-             int ordinalNo,
-             string name,
-             string description,
-             string secretText,
-             string imageUrl,
-             double latitude,
-             double longitude)
-             : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null)
+            int ordinalNo,
+            string name,
+            string description,
+            string secretText,
+            string imageUrl,
+            double latitude,
+            double longitude)
+            : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null)
         {
         }
 
         public void MarkAsPublic()
         {
             IsPublic = true;
+        }
+
+        public KeyPointImage AddImage(string url, bool setAsCover = false)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("Url is required.", nameof(url));
+
+            var shouldBeCover = setAsCover || _images.All(i => !i.IsCover);
+
+            if (shouldBeCover)
+                foreach (var i in _images) i.UnmarkAsCover();
+
+            var nextOrder = _images.Count == 0 ? 0 : _images.Max(i => i.OrderIndex) + 1;
+
+            var image = new KeyPointImage(url, shouldBeCover, nextOrder);
+            _images.Add(image);
+
+            if (shouldBeCover)
+            {
+                typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, url);
+            }
+
+            return image;
+        }
+
+        public void SetCoverImage(long imageId)
+        {
+            var img = _images.FirstOrDefault(i => i.Id == imageId);
+            if (img == null)
+                throw new ArgumentException("Image not found.", nameof(imageId));
+
+            foreach (var i in _images) i.UnmarkAsCover();
+            img.MarkAsCover();
+
+            // sync legacy ImageUrl
+            typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, img.Url);
+        }
+
+        public void RemoveImage(long imageId)
+        {
+            var img = _images.FirstOrDefault(i => i.Id == imageId);
+            if (img == null) return;
+
+            var wasCover = img.IsCover;
+            _images.Remove(img);
+
+            if (!wasCover) return;
+
+            var newCover = _images.OrderBy(i => i.OrderIndex).FirstOrDefault();
+            if (newCover != null)
+            {
+                foreach (var i in _images) i.UnmarkAsCover();
+                newCover.MarkAsCover();
+                typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, newCover.Url);
+            }
+            else
+            {
+                typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, string.Empty);
+            }
         }
 
         private void Validate()
@@ -75,7 +140,14 @@ namespace Explorer.Tours.Core.Domain
                 throw new ArgumentOutOfRangeException(nameof(Longitude));
         }
 
-        public void Update(string name, string description, string secretText, string imageUrl, double latitude, double longitude, long? encounterId)
+        public void Update(
+            string name,
+            string description,
+            string secretText,
+            string imageUrl,
+            double latitude,
+            double longitude,
+            long? encounterId)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Name is required");
@@ -83,7 +155,9 @@ namespace Explorer.Tours.Core.Domain
             typeof(KeyPoint).GetProperty(nameof(Name))!.SetValue(this, name);
             typeof(KeyPoint).GetProperty(nameof(Description))!.SetValue(this, description);
             typeof(KeyPoint).GetProperty(nameof(SecretText))!.SetValue(this, secretText ?? string.Empty);
+
             typeof(KeyPoint).GetProperty(nameof(ImageUrl))!.SetValue(this, imageUrl ?? string.Empty);
+
             typeof(KeyPoint).GetProperty(nameof(Latitude))!.SetValue(this, latitude);
             typeof(KeyPoint).GetProperty(nameof(Longitude))!.SetValue(this, longitude);
             typeof(KeyPoint).GetProperty(nameof(EncounterId))!.SetValue(this, encounterId);

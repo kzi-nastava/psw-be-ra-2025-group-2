@@ -12,6 +12,7 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
 using Explorer.Payments.API.Internal;
 
+
 namespace Explorer.Tours.Core.UseCases.Administration
 {
     public class TourService : ITourService
@@ -242,6 +243,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.EncounterId
             );
 
+        
+
             await _tourRepository.UpdateAsync(tour);
 
             if (dto.SuggestForPublicUse && _publicKeyPointService != null)
@@ -260,6 +263,48 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return updatedKeyPoint;
         }
+
+        public async Task<KeyPointDto> AddKeyPointImages(long tourId, int ordinalNo, long authorId, List<string> urls)
+        {
+            var tour = await GetTourOrThrowAsync(tourId);
+            if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+            var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
+
+            foreach (var url in urls)
+                keyPoint.AddImage(url);
+
+            await _tourRepository.UpdateAsync(tour);
+
+            var result = _mapper.Map<KeyPointDto>(keyPoint);
+            result.PublicStatus = await GetKeyPointPublicStatusAsync(tourId, ordinalNo);
+
+            return result;
+        }
+
+        public async Task SetCoverImage(long tourId, long authorId, string url)
+        {
+            var tour = await GetTourOrThrowAsync(tourId);
+            if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+            tour.SetCoverImage(url);
+            await _tourRepository.UpdateAsync(tour);
+        }
+
+        public async Task RemoveKeyPointImage(long tourId, int ordinalNo, long authorId, long imageId)
+        {
+            var tour = await _tourRepository.GetTourWithKeyPointsAndImagesAsync(tourId);
+            if (tour == null) throw new KeyNotFoundException("Tour not found.");
+
+            if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+            var kp = GetKeyPointFromTourOrThrow(tour, ordinalNo);
+
+            kp.RemoveImage(imageId);
+
+            await _tourRepository.UpdateAsync(tour);
+        }
+
 
         private async Task<Tour> GetTourOrThrowAsync(long tourId)
         {
@@ -493,7 +538,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     KeyPointCount = orderedKeyPoints.Count,
                     TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
                     LengthKm = tour.LengthKm,
-                    PlaceName = firstKp?.Name
+                    PlaceName = firstKp?.Name,
+                    CoverImageUrl = tour.CoverImageUrl
                 };
 
                 // Use tour.GetAverageRating() method from domain
@@ -604,7 +650,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     KeyPointCount = orderedKeyPoints.Count,
                     TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
                     LengthKm = tour.LengthKm,
-                    PlaceName = firstKp?.Name
+                    PlaceName = firstKp?.Name,
+                    CoverImageUrl = tour.CoverImageUrl
                 };
 
                 dto.AverageRating = tour.GetAverageRating();
