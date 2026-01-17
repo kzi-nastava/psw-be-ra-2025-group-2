@@ -15,12 +15,10 @@ namespace Explorer.Tours.Core.UseCases
     public class InternalTourService : IInternalTourService
     {
         private readonly ITourRepository _tourRepository;
-        private readonly IMapper _mapper;
 
-        public InternalTourService(ITourRepository tourRepository, IMapper mapper)
+        public InternalTourService(ITourRepository tourRepository)
         {
             _tourRepository = tourRepository;
-            _mapper = mapper;
         }
 
         public IEnumerable<PartialTourInfoDto> GetPartialTourInfos(IEnumerable<long> tourIds)

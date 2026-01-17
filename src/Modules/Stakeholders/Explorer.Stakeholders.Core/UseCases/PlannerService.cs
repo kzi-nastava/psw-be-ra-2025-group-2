@@ -81,7 +81,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public void RemoveScheduleEntry(long id)
         {
-            throw new NotImplementedException();
+            
         }
 
         public DayEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule)
