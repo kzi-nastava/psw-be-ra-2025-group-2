@@ -161,5 +161,47 @@ namespace Explorer.Stakeholders.Tests.Unit
             var exception = Should.Throw<ArgumentException>(() => dayEntry.RemoveSchedule(nonExistentId));
             exception.Message.ShouldBe("Schedule not found.");
         }
+
+        [Fact]
+        public void EnsureUtc_converts_local_time_to_utc_correctly()
+        {
+            // Simulate a local time (e.g., Belgrade 10:00 AM)
+            var localStart = new DateTime(2026, 5, 20, 10, 0, 0, DateTimeKind.Local);
+            var localEnd = new DateTime(2026, 5, 20, 11, 0, 0, DateTimeKind.Local);
+
+            var interval = DateTimeInterval.Of(localStart, localEnd);
+
+            // It should be stored as UTC (Belgrade is UTC+2 in May 2026)
+            interval.Start.Kind.ShouldBe(DateTimeKind.Utc);
+            interval.Start.Hour.ShouldBe(8);
+        }
+
+        [Fact]
+        public void Validation_works_across_utc_day_boundaries()
+        {
+            // Local Belgrade time: May 21st, 01:00 AM (which is May 20th, 11:00 PM UTC)
+            // If our DayEntry is for May 20th, this SHOULD be allowed if using UTC consistently.
+            var dayEntry = new DateOnly(2026, 5, 20);
+            var planner = new DayEntry(1, dayEntry, null);
+
+            var start = new DateTime(2026, 5, 20, 22, 0, 0, DateTimeKind.Utc); // 22:00 UTC
+            var end = new DateTime(2026, 5, 20, 23, 0, 0, DateTimeKind.Utc);   // 23:00 UTC
+
+            // Act & Assert
+            Should.NotThrow(() => planner.AddSchedule(1, "Late Tour", DateTimeInterval.Of(start, end)));
+        }
+
+        [Fact]
+        public void Throws_when_utc_times_actually_cross_midnight()
+        {
+            var dayEntry = new DayEntry(1, new DateOnly(2026, 5, 20), null);
+
+            // This is 23:00 UTC on the 20th to 01:00 UTC on the 21st
+            var crossMidnight = DateTimeInterval.Of(
+                new DateTime(2026, 5, 20, 23, 0, 0, DateTimeKind.Utc),
+                new DateTime(2026, 5, 21, 1, 0, 0, DateTimeKind.Utc));
+
+            Should.Throw<ScheduleException>(() => dayEntry.AddSchedule(1, "Midnight Cross", crossMidnight));
+        }
     }
 }

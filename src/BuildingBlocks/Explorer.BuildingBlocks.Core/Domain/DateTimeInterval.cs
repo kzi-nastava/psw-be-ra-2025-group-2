@@ -18,8 +18,8 @@ namespace Explorer.BuildingBlocks.Core.Domain
             if (start >= end)
                 throw new ArgumentException("Start date must be strictly earlier than the end date.");
 
-            Start = start;
-            End = end;
+            Start = EnsureUtc(start);
+            End = EnsureUtc(end);
         }
 
         public static DateTimeInterval Of(DateTime start, DateTime end)
@@ -40,6 +40,17 @@ namespace Explorer.BuildingBlocks.Core.Domain
         public static bool AreDisjoint(DateTimeInterval first, DateTimeInterval second)
         {
             return !first.Intersects(second);
+        }
+
+        private static DateTime EnsureUtc(DateTime dateTime)
+        {
+            if (dateTime.Kind == DateTimeKind.Utc)
+                return dateTime;
+
+            if (dateTime.Kind == DateTimeKind.Unspecified)
+                return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+
+            return dateTime.ToUniversalTime();
         }
 
         protected override IEnumerable<object> GetEqualityComponents()
