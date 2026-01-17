@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Payments.API.Internal;
 using Explorer.Stakeholders.API.Dtos.Planner;
 using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.Core.Domain.Exceptions;
 using Explorer.Stakeholders.Core.Domain.Planner;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
-using Explorer.Stakeholders.Core.Domain.Services;
 using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Administration;
 using System;
@@ -20,20 +21,23 @@ namespace Explorer.Stakeholders.Core.UseCases
     {
         private readonly IInternalTourService _internalTourService;
         private readonly IPlannerRepository _plannerRepository;
-        private readonly ITourOwnershipChecker _ownershipChecker;
+        private readonly IInternalTokenService _tokenService;
         private readonly IMapper _mapper;
 
-        public PlannerService(IInternalTourService internalTourService, IPlannerRepository plannerRepository, ITourOwnershipChecker ownershipChecker, IMapper mapper)
+        public PlannerService(IInternalTourService internalTourService, IPlannerRepository plannerRepository, IInternalTokenService tokenService, IMapper mapper)
         {
             _internalTourService = internalTourService;
             _plannerRepository = plannerRepository;
-            _ownershipChecker = ownershipChecker;
+            _tokenService = tokenService;
             _mapper = mapper;
         }
 
         public DayEntryDto CreateScheduleEntry(long touristId, CreateScheduleDto newSchedule)
         {
-            _ownershipChecker.CheckOwnership(touristId, newSchedule.TourId);
+            var tokens = _tokenService.GetPurchasedTourIds(touristId);
+
+            if (!tokens.Contains(newSchedule.TourId))
+                throw new TourNotOwnedException($"Tourist does not own the tour with id {newSchedule.TourId}.");
 
             bool exists = _internalTourService.Exists(newSchedule.TourId);
 
@@ -100,7 +104,10 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public DayEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule)
         {
-            _ownershipChecker.CheckOwnership(touristId, newSchedule.TourId);
+            var tokens = _tokenService.GetPurchasedTourIds(touristId);
+
+            if (!tokens.Contains(newSchedule.TourId))
+                throw new TourNotOwnedException($"Tourist does not own the tour with id {newSchedule.TourId}.");
 
             bool exists = _internalTourService.Exists(newSchedule.TourId);
 
