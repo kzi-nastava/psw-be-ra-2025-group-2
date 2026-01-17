@@ -42,6 +42,7 @@ public static class StakeholdersStartup
         services.AddScoped<IDiaryService, DiaryService>();
         services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IPlannerService, PlannerService>();
 
         services.AddScoped<IQuizService, QuizService>();
 
