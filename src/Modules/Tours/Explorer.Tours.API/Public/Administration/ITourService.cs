@@ -36,6 +36,7 @@ namespace Explorer.Tours.API.Public.Administration
 
         /* Tourist's options */
         IEnumerable<TourDto> GetAvailableForTourist(long touristId);
+        IEnumerable<PartialTourInfoDto> GetAvailableForTouristPartials(long touristId);
 
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images);
 
@@ -43,7 +44,7 @@ namespace Explorer.Tours.API.Public.Administration
         void DeleteReview(long touristId, long tourId);
 
 
-        FullTourInfoDto GetFullTourInfo(long touristId);
+        FullTourInfoDto GetFullTourInfo(long tourId);
     }
 
 }

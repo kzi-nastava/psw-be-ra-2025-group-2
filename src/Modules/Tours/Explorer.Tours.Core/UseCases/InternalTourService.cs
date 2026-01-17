@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Explorer.Tours.API.Dtos;
-using Explorer.Tours.API.Dtos.Internal;
 using Explorer.Tours.API.Internal;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;

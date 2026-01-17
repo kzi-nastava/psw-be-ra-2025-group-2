@@ -437,6 +437,25 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return dtos;
         }
 
+        public IEnumerable<PartialTourInfoDto> GetAvailableForTouristPartials(long touristId)
+        {
+            var availableTourIds = _internalTokenService.GetPurchasedTourIds(touristId);
+            var tours = _tourRepository.GetByIds(availableTourIds);
+
+            var ret = new List<PartialTourInfoDto>();
+
+            foreach(var tour in tours)
+            {
+                ret.Add(new PartialTourInfoDto
+                {
+                    Id = tour.Id,
+                    Name = tour.Name
+                });
+            }
+
+            return ret;
+        }
+
         public TourDto? GetById(long id, long authorId)
         {
             return GetByIdAsync(id, authorId).Result;

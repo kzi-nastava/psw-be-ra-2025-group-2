@@ -138,6 +138,19 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
 
+        // GET api/tourist/tours/mine/partial
+        [HttpGet("mine/partial")]
+        public ActionResult<IEnumerable<PartialTourInfoDto>> GetMyPurchasedTourPartials()
+        {
+            return Ok(_tourService.GetAvailableForTouristPartials(User.UserId()));
+        }
+
+        // GET api/tourist/tours/{id}/planner-details
+        [HttpGet("{id}/planner-details")]
+        public ActionResult<FullTourInfoDto> GetTourInfo(long id)
+        {
+            return Ok(_tourService.GetFullTourInfo(id));
+        }
 
     }
 }
