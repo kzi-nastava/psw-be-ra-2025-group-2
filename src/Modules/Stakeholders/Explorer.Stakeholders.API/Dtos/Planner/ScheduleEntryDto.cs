@@ -11,7 +11,7 @@ namespace Explorer.Stakeholders.API.Dtos.Planner
     {
         public long Id { get; set; }
         public long TourId { get; set; }
-        public long TourName { get; set; }
+        public string? TourName { get; set; }
         public string? Notes { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }

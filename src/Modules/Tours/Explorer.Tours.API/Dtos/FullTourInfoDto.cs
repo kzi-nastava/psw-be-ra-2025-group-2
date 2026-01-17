@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Explorer.Tours.API.Dtos.Internal
+namespace Explorer.Tours.API.Dtos
 {
     public class FullTourInfoDto
     {

@@ -685,5 +685,28 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             return UpdateKeyPoint(tourId, ordinalNo, dto).Result;
         }
+
+        public FullTourInfoDto GetFullTourInfo(long tourId)
+        {
+            var tour = _tourRepository.GetByIdAsync(tourId).Result;
+            if (tour == null)
+                throw new ArgumentException("Invalid tour Id.");
+
+            return new FullTourInfoDto
+            {
+                Id = tour.Id,
+                Name = tour.Name,
+                Difficulty = tour.Difficulty,
+                LengthKm = tour.LengthKm,
+                WalkingMinutes = tour.Durations.Where(d => d.TransportType == TransportType.Walking).FirstOrDefault()?.Minutes ?? 0,
+                BicycleMinutes = tour.Durations.Where(d => d.TransportType == TransportType.Bicycle).FirstOrDefault()?.Minutes ?? 0,
+                CarMinutes = tour.Durations.Where(d => d.TransportType == TransportType.Car).FirstOrDefault()?.Minutes ?? 0,
+
+                Equipment = _mapper.Map<List<EquipmentDto>>(tour.Equipment),
+
+                FirstKeyPointLatitude = tour.KeyPoints.First().Latitude,
+                FirstKeyPointLongitude = tour.KeyPoints.First().Longitude
+            };
+        }
     }
 }

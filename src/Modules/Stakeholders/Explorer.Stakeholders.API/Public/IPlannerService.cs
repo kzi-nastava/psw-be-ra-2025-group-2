@@ -9,9 +9,8 @@ namespace Explorer.Stakeholders.API.Public
 {
     public interface IPlannerService
     {
-        ScheduleEntryDto CreateScheduleEntry(long touristId, CreateScheduleDto newSchedule);
-        ScheduleEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule);
-
+        DayEntryDto CreateScheduleEntry(long touristId, CreateScheduleDto newSchedule);
+        DayEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule);
         IEnumerable<DayEntryDto> GetMonthlySchedule(long touristId, int month, int year);
 
         void RemoveScheduleEntry(long id);
