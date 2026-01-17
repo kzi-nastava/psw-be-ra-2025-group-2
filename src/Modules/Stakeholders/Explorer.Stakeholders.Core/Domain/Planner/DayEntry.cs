@@ -55,6 +55,16 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             entry.SetScheduledTime(scheduledTime);
         }
 
+        public void RemoveSchedule(long scheduleId)
+        {
+            var entry = _entries.Where(e => e.Id == scheduleId).FirstOrDefault();
+
+            if (entry == null)
+                throw new ArgumentException("Schedule not found.");
+
+            _entries.Remove(entry);
+        }
+
         private void ValidateSchedule(DateTimeInterval scheduledTime)
         {
             if (scheduledTime.Start.Day != scheduledTime.End.Day)
