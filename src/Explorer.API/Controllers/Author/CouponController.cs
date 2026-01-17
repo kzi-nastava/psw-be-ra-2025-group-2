@@ -4,6 +4,8 @@ using Explorer.Payments.API.Public;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Explorer.API.Controllers.Author
 {
@@ -116,20 +118,17 @@ namespace Explorer.API.Controllers.Author
                         var tour = _tourService.Get(dto.TourId.Value);
 
                         if (tour == null)
-                        {
                             return NotFound($"Tour with ID {dto.TourId.Value} not found");
-                        }
 
                         if (tour.AuthorId != authorId)
-                        {
                             return Forbid();
-                        }
                     }
-                    catch (KeyNotFoundException)
+                    catch
                     {
                         return NotFound($"Tour with ID {dto.TourId.Value} not found");
                     }
                 }
+
 
                 return Ok(_couponService.Create(dto, authorId));
             }
@@ -145,6 +144,11 @@ namespace Explorer.API.Controllers.Author
             {
                 return BadRequest(ex.Message);
             }
+            catch (DbUpdateException) when (dto.TourId.HasValue)
+            {
+                return NotFound($"Tour with ID {dto.TourId.Value} not found");
+            }
+
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal Server Error: {ex.Message}");
@@ -194,6 +198,10 @@ namespace Explorer.API.Controllers.Author
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (DbUpdateException) when (dto.TourId.HasValue)
+            {
+                return NotFound($"Tour with ID {dto.TourId.Value} not found");
             }
             catch (Exception ex)
             {

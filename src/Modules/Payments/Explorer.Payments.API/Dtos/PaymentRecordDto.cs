@@ -10,7 +10,8 @@ namespace Explorer.Payments.API.Dtos
     {
         public long Id { get; set; }
         public long TouristId { get;  set; }
-        public long TourId { get; set; }
+        public long? TourId { get; set; }
+        public long? BundleId { get; set; }
         public decimal Price { get; set; }
         public DateTime CreatedAt { get; set; }
 

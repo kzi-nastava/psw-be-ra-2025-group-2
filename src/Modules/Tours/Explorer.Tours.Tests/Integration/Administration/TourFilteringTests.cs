@@ -1,5 +1,6 @@
 using Explorer.API.Controllers.Tourist;
 using Explorer.Payments.API.Public;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
@@ -599,10 +600,14 @@ public class TourFilteringTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>()
+            scope.ServiceProvider.GetRequiredService<ITourService>(),
+            scope.ServiceProvider.GetRequiredService<IPaymentRecordService>(),
+            scope.ServiceProvider.GetRequiredService<ITourExecutionService>(),
+            scope.ServiceProvider.GetRequiredService<ITourPurchaseTokenRepository>()
         )
         {
             ControllerContext = BuildContext("-21")
         };
     }
+
 }
