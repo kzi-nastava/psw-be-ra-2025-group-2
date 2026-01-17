@@ -14,9 +14,9 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
         public DateOnly Date { get; private set; }
         public string? Notes { get; private set; }
 
-        private List<TourEntry> _entries = new();
+        private List<ScheduleEntry> _entries = new();
 
-        public IReadOnlyList<TourEntry> Entries => _entries.OrderBy(e => e.ScheduledTime.Start).ToList().AsReadOnly();
+        public IReadOnlyList<ScheduleEntry> Entries => _entries.OrderBy(e => e.ScheduledTime.Start).ToList().AsReadOnly();
 
         private DayEntry() { }
 
@@ -32,19 +32,19 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             Notes = notes;
         }
 
-        public void AddSchedule(long tourId, string? notes, DateTimeInterval scheduledTime)
+        public void AddScheduleEntry(long tourId, string? notes, DateTimeInterval scheduledTime)
         {
             if(scheduledTime == null)
                 throw new ArgumentNullException(nameof(scheduledTime));
 
             ValidateSchedule(scheduledTime);
 
-            _entries.Add(new TourEntry(tourId, notes, scheduledTime));
+            _entries.Add(new ScheduleEntry(tourId, notes, scheduledTime));
         }
 
-        public void UpdateSchedule(long scheduleId, string? notes, DateTimeInterval scheduledTime)
+        public void UpdateScheduleEntry(long scheduleEntryId, string? notes, DateTimeInterval scheduledTime)
         {
-            var entry = _entries.Where(e => e.Id == scheduleId).FirstOrDefault();
+            var entry = _entries.Where(e => e.Id == scheduleEntryId).FirstOrDefault();
 
             if (entry == null)
                 throw new ArgumentException("Invalid schedule Id.");
@@ -55,9 +55,9 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             entry.SetScheduledTime(scheduledTime);
         }
 
-        public void RemoveSchedule(long scheduleId)
+        public void RemoveScheduleEntry(long scheduleEntryId)
         {
-            var entry = _entries.Where(e => e.Id == scheduleId).FirstOrDefault();
+            var entry = _entries.Where(e => e.Id == scheduleEntryId).FirstOrDefault();
 
             if (entry == null)
                 throw new ArgumentException("Schedule not found.");

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace Explorer.Stakeholders.Core.Domain.Planner
 {
-    public class TourEntry : Entity
+    public class ScheduleEntry : Entity
     {
         public long TourId { get; private set; }
         public string? Notes { get; private set; }
         public DateTimeInterval ScheduledTime { get; private set; }
 
-        private TourEntry() { }
+        private ScheduleEntry() { }
 
-        public TourEntry(long tourId, string? notes, DateTimeInterval scheduledTime)
+        public ScheduleEntry(long tourId, string? notes, DateTimeInterval scheduledTime)
         {
             TourId = tourId;
             Notes = notes;

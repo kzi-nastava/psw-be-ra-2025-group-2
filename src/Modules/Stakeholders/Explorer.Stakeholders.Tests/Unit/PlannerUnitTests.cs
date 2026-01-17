@@ -31,7 +31,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             var dayEntry = new DayEntry(1, new DateOnly(2026, 5, 20), null);
             var interval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 10, 0, 0), new DateTime(2026, 5, 20, 12, 0, 0));
 
-            dayEntry.AddSchedule(50, "Visit Kalemegdan", interval);
+            dayEntry.AddScheduleEntry(50, "Visit Kalemegdan", interval);
 
             dayEntry.Entries.Count.ShouldBe(1);
             dayEntry.Entries[0].TourId.ShouldBe(50);
@@ -48,7 +48,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             );
 
             var exception = Should.Throw<ScheduleException>(() =>
-                dayEntry.AddSchedule(1, "Late night tour", multiDayInterval));
+                dayEntry.AddScheduleEntry(1, "Late night tour", multiDayInterval));
 
             exception.Message.ShouldBe("The new schedule time must belong to the same day.");
         }
@@ -60,10 +60,10 @@ namespace Explorer.Stakeholders.Tests.Unit
             var firstInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 10, 0, 0), new DateTime(2026, 5, 20, 12, 0, 0));
             var overlappingInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 11, 0, 0), new DateTime(2026, 5, 20, 13, 0, 0));
 
-            dayEntry.AddSchedule(1, "Morning Tour", firstInterval);
+            dayEntry.AddScheduleEntry(1, "Morning Tour", firstInterval);
 
             var exception = Should.Throw<ScheduleException>(() =>
-                dayEntry.AddSchedule(2, "Overlapping Tour", overlappingInterval));
+                dayEntry.AddScheduleEntry(2, "Overlapping Tour", overlappingInterval));
 
             exception.Message.ShouldBe("The new schedule time overlaps with one or more existing schedules.");
         }
@@ -77,9 +77,9 @@ namespace Explorer.Stakeholders.Tests.Unit
             var noon = DateTimeInterval.Of(new DateTime(2026, 5, 20, 12, 0, 0), new DateTime(2026, 5, 20, 14, 0, 0));
 
             // Adding out of order
-            dayEntry.AddSchedule(1, "Evening", evening);
-            dayEntry.AddSchedule(2, "Morning", morning);
-            dayEntry.AddSchedule(3, "Noon", noon);
+            dayEntry.AddScheduleEntry(1, "Evening", evening);
+            dayEntry.AddScheduleEntry(2, "Morning", morning);
+            dayEntry.AddScheduleEntry(3, "Noon", noon);
 
             dayEntry.Entries[0].ScheduledTime.Start.Hour.ShouldBe(9);
             dayEntry.Entries[1].ScheduledTime.Start.Hour.ShouldBe(12);
@@ -91,12 +91,12 @@ namespace Explorer.Stakeholders.Tests.Unit
         {
             var dayEntry = new DayEntry(1, new DateOnly(2026, 5, 20), null);
             var interval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 10, 0, 0), new DateTime(2026, 5, 20, 12, 0, 0));
-            dayEntry.AddSchedule(1, "Tour to remove", interval);
+            dayEntry.AddScheduleEntry(1, "Tour to remove", interval);
 
             // Assuming ID is assigned by the system or during AddSchedule (simulating with 0 for unpersisted entity)
             var entryId = dayEntry.Entries[0].Id;
 
-            dayEntry.RemoveSchedule(entryId);
+            dayEntry.RemoveScheduleEntry(entryId);
 
             dayEntry.Entries.ShouldBeEmpty();
         }
@@ -117,14 +117,14 @@ namespace Explorer.Stakeholders.Tests.Unit
             // Arrange
             var dayEntry = new DayEntry(1, new DateOnly(2026, 5, 20), "Planning day");
             var originalInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 10, 0, 0), new DateTime(2026, 5, 20, 11, 0, 0));
-            dayEntry.AddSchedule(50, "Original Notes", originalInterval);
+            dayEntry.AddScheduleEntry(50, "Original Notes", originalInterval);
 
             var entryId = dayEntry.Entries[0].Id;
             var newInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 14, 0, 0), new DateTime(2026, 5, 20, 15, 0, 0));
             string newNotes = "Updated Notes";
 
             // Act
-            dayEntry.UpdateSchedule(entryId, newNotes, newInterval);
+            dayEntry.UpdateScheduleEntry(entryId, newNotes, newInterval);
 
             // Assert
             dayEntry.Entries[0].Notes.ShouldBe(newNotes);
@@ -139,15 +139,15 @@ namespace Explorer.Stakeholders.Tests.Unit
             var morning = DateTimeInterval.Of(new DateTime(2026, 5, 20, 09, 0, 0), new DateTime(2026, 5, 20, 10, 0, 0));
             var afternoon = DateTimeInterval.Of(new DateTime(2026, 5, 20, 14, 0, 0), new DateTime(2026, 5, 20, 15, 0, 0));
 
-            dayEntry.AddSchedule(1, "Morning Tour", morning);
-            dayEntry.AddSchedule(2, "Afternoon Tour", afternoon);
+            dayEntry.AddScheduleEntry(1, "Morning Tour", morning);
+            dayEntry.AddScheduleEntry(2, "Afternoon Tour", afternoon);
 
             var afternoonId = dayEntry.Entries.First(e => e.TourId == 2).Id;
             var overlappingInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 09, 30, 0), new DateTime(2026, 5, 20, 10, 30, 0));
 
             // Act & Assert
             Should.Throw<ScheduleException>(() =>
-                dayEntry.UpdateSchedule(afternoonId, "Trying to overlap", overlappingInterval));
+                dayEntry.UpdateScheduleEntry(afternoonId, "Trying to overlap", overlappingInterval));
         }
 
         [Fact]
@@ -158,7 +158,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             long nonExistentId = 999;
 
             // Act & Assert
-            var exception = Should.Throw<ArgumentException>(() => dayEntry.RemoveSchedule(nonExistentId));
+            var exception = Should.Throw<ArgumentException>(() => dayEntry.RemoveScheduleEntry(nonExistentId));
             exception.Message.ShouldBe("Schedule not found.");
         }
 
@@ -188,7 +188,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             var end = new DateTime(2026, 5, 20, 23, 0, 0, DateTimeKind.Utc);   // 23:00 UTC
 
             // Act & Assert
-            Should.NotThrow(() => planner.AddSchedule(1, "Late Tour", DateTimeInterval.Of(start, end)));
+            Should.NotThrow(() => planner.AddScheduleEntry(1, "Late Tour", DateTimeInterval.Of(start, end)));
         }
 
         [Fact]
@@ -201,7 +201,7 @@ namespace Explorer.Stakeholders.Tests.Unit
                 new DateTime(2026, 5, 20, 23, 0, 0, DateTimeKind.Utc),
                 new DateTime(2026, 5, 21, 1, 0, 0, DateTimeKind.Utc));
 
-            Should.Throw<ScheduleException>(() => dayEntry.AddSchedule(1, "Midnight Cross", crossMidnight));
+            Should.Throw<ScheduleException>(() => dayEntry.AddScheduleEntry(1, "Midnight Cross", crossMidnight));
         }
     }
 }
