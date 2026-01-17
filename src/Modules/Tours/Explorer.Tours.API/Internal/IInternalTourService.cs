@@ -10,5 +10,7 @@ namespace Explorer.Tours.API.Internal
     public interface IInternalTourService
     {
         IEnumerable<PartialTourInfoDto> GetPartialTourInfos(IEnumerable<long> tourIds);
+
+        bool Exists(long tourId);
     }
 }

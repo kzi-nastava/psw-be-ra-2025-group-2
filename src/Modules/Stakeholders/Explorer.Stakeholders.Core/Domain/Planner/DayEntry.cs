@@ -42,7 +42,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             _entries.Add(new ScheduleEntry(tourId, notes, scheduledTime));
         }
 
-        public void UpdateScheduleEntry(long scheduleEntryId, string? notes, DateTimeInterval scheduledTime)
+        public void UpdateScheduleEntry(long scheduleEntryId, string? notes, DateTimeInterval scheduledTime, long tourId)
         {
             var entry = _entries.Where(e => e.Id == scheduleEntryId).FirstOrDefault();
 
@@ -53,6 +53,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
             entry.SetNotes(notes);
             entry.SetScheduledTime(scheduledTime);
+            entry.SetTourId(tourId);
         }
 
         public void RemoveScheduleEntry(long scheduleEntryId)

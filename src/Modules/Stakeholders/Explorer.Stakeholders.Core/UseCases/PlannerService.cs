@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.Domain;
+using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Dtos.Planner;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain.Planner;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Domain.Services;
 using Explorer.Tours.API.Internal;
+using Explorer.Tours.API.Public.Administration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +34,11 @@ namespace Explorer.Stakeholders.Core.UseCases
         public DayEntryDto CreateScheduleEntry(long touristId, CreateScheduleDto newSchedule)
         {
             _ownershipChecker.CheckOwnership(touristId, newSchedule.TourId);
+
+            bool exists = _internalTourService.Exists(newSchedule.TourId);
+
+            if (!exists)
+                throw new NotFoundException("Tour not found.");
 
             var existingDayEntry = _plannerRepository.GetByDate(touristId, newSchedule.Date);
 
@@ -81,12 +88,37 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public void RemoveScheduleEntry(long id)
         {
-            
+            var dayEntry = _plannerRepository.GetByScheduleEntryId(id);
+
+            if (dayEntry == null)
+                throw new NotFoundException("Day entry not found.");
+
+            dayEntry.RemoveScheduleEntry(id);
+
+            _plannerRepository.Update(dayEntry);
         }
 
         public DayEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule)
         {
-            throw new NotImplementedException();
+            _ownershipChecker.CheckOwnership(touristId, newSchedule.TourId);
+
+            bool exists = _internalTourService.Exists(newSchedule.TourId);
+
+            if (!exists)
+                throw new NotFoundException("Tour not found.");
+
+            var dayEntry = _plannerRepository.GetByScheduleEntryId(touristId);
+
+            if (dayEntry == null)
+                throw new NotFoundException("Day entry not found.");
+
+            dayEntry.UpdateScheduleEntry(newSchedule.Id, newSchedule.Notes, DateTimeInterval.Of(newSchedule.Start, newSchedule.End), newSchedule.TourId);
+
+            var ret = _mapper.Map<DayEntryDto>(dayEntry);
+
+            EnrichWithTourNames(ret);
+
+            return ret;
         }
 
         private void EnrichWithTourNames(DayEntryDto dto)

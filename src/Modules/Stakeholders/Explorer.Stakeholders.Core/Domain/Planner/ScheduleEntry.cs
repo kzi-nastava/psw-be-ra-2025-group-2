@@ -34,5 +34,10 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
             ScheduledTime = scheduledTime;
         }
+
+        public void SetTourId(long tourId)
+        {
+            TourId = tourId;
+        }
     }
 }

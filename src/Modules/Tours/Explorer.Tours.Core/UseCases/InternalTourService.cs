@@ -38,5 +38,10 @@ namespace Explorer.Tours.Core.UseCases
 
             return ret;
         }
+
+        public bool Exists(long tourId)
+        {
+            return _tourRepository.GetByIdAsync(tourId) == null ? false : true;
+        }
     }
 }

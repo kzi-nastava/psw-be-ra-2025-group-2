@@ -124,11 +124,12 @@ namespace Explorer.Stakeholders.Tests.Unit
             string newNotes = "Updated Notes";
 
             // Act
-            dayEntry.UpdateScheduleEntry(entryId, newNotes, newInterval);
+            dayEntry.UpdateScheduleEntry(entryId, newNotes, newInterval, -10);
 
             // Assert
             dayEntry.Entries[0].Notes.ShouldBe(newNotes);
             dayEntry.Entries[0].ScheduledTime.ShouldBe(newInterval);
+            dayEntry.Entries[0].TourId.ShouldBe(-10);
         }
 
         [Fact]
@@ -147,7 +148,7 @@ namespace Explorer.Stakeholders.Tests.Unit
 
             // Act & Assert
             Should.Throw<ScheduleException>(() =>
-                dayEntry.UpdateScheduleEntry(afternoonId, "Trying to overlap", overlappingInterval));
+                dayEntry.UpdateScheduleEntry(afternoonId, "Trying to overlap", overlappingInterval, -50));
         }
 
         [Fact]
