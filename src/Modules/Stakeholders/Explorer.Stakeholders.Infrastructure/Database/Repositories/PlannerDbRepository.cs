@@ -19,6 +19,11 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
             _context = context;
         }
 
+        public DayEntry? GetById(long id)
+        {
+            return _context.PlannerDayEntries.Include(x => x.Entries).FirstOrDefault(e => e.Id == id);
+        }
+
         public DayEntry? GetByDate(long touristId, DateOnly date)
         {
             return _context.PlannerDayEntries

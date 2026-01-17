@@ -10,6 +10,7 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
     public interface IPlannerRepository
     {
         IEnumerable<DayEntry> GetByMonth(long touristId, int month, int year);
+        DayEntry? GetById(long id);
         DayEntry? GetByScheduleEntryId(long scheduleEntryId);
         DayEntry? GetByDate(long touristId, DateOnly date);
         DayEntry Create(DayEntry entry);

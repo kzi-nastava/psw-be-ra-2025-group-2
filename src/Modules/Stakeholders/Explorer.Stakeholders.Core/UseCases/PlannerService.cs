@@ -114,12 +114,34 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             dayEntry.UpdateScheduleEntry(newSchedule.Id, newSchedule.Notes, DateTimeInterval.Of(newSchedule.Start, newSchedule.End), newSchedule.TourId);
 
+            _plannerRepository.Update(dayEntry);
+
             var ret = _mapper.Map<DayEntryDto>(dayEntry);
 
             EnrichWithTourNames(ret);
 
             return ret;
         }
+
+        public DayEntryDto UpdateDayNotes(long touristId, UpdateDayNotesDto newNotes)
+        {
+            var dayEntry = _plannerRepository.GetById(newNotes.Id);
+
+            if (dayEntry == null)
+                throw new NotFoundException("Day entry not found.");
+
+            dayEntry.SetNotes(newNotes.Notes);
+
+            _plannerRepository.Update(dayEntry);
+
+            var ret = _mapper.Map<DayEntryDto>(dayEntry);
+
+            EnrichWithTourNames(ret);
+
+            return ret;
+        }
+
+
 
         private void EnrichWithTourNames(DayEntryDto dto)
         {

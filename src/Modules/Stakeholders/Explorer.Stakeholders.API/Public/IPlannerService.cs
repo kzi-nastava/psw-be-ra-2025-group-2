@@ -11,6 +11,7 @@ namespace Explorer.Stakeholders.API.Public
     {
         DayEntryDto CreateScheduleEntry(long touristId, CreateScheduleDto newSchedule);
         DayEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule);
+        DayEntryDto UpdateDayNotes(long touristId, UpdateDayNotesDto newNotes);
         IEnumerable<DayEntryDto> GetMonthlySchedule(long touristId, int month, int year);
 
         void RemoveScheduleEntry(long id);

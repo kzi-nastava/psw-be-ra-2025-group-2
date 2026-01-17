@@ -27,7 +27,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             Notes = notes;
         }
 
-        public void SetNotes(string notes)
+        public void SetNotes(string? notes)
         {
             Notes = notes;
         }
