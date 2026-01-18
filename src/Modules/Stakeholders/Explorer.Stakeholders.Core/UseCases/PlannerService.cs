@@ -99,7 +99,15 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             dayEntry.RemoveScheduleEntry(id);
 
-            _plannerRepository.Update(dayEntry);
+            if (!dayEntry.Entries.Any())
+            {
+                _plannerRepository.Delete(dayEntry.Id);
+            }
+
+            else
+            {
+                _plannerRepository.Update(dayEntry);
+            }
         }
 
         public DayEntryDto UpdateScheduleEntry(long touristId, UpdateScheduleDto newSchedule)

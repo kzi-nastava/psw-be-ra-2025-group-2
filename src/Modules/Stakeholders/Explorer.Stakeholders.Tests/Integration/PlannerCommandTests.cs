@@ -137,7 +137,7 @@ namespace Explorer.Stakeholders.Tests.Integration
                 var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
                 // Setup
-                var setup = controller.CreateScheduleEntry(new CreateScheduleDto
+                controller.CreateScheduleEntry(new CreateScheduleDto
                 {
                     Date = new DateOnly(2026, 7, 1),
                     TourId = -1,
@@ -145,15 +145,31 @@ namespace Explorer.Stakeholders.Tests.Integration
                     End = new DateTime(2026, 7, 1, 11, 0, 0, DateTimeKind.Utc)
                 }).Result.ShouldBeOfType<OkObjectResult>();
 
+                var setup = controller.CreateScheduleEntry(new CreateScheduleDto
+                {
+                    Date = new DateOnly(2026, 7, 1),
+                    TourId = -1,
+                    Start = new DateTime(2026, 7, 1, 15, 0, 0, DateTimeKind.Utc),
+                    End = new DateTime(2026, 7, 1, 17, 0, 0, DateTimeKind.Utc)
+                }).Result.ShouldBeOfType<OkObjectResult>();
+
                 var dayDto = setup.Value.ShouldBeOfType<DayEntryDto>();
                 var scheduleId = dayDto.Entries.First().Id;
+
+                var scheduleId2 = dayDto.Entries.Last().Id;
 
                 // Act
                 controller.RemoveScheduleEntry(scheduleId).ShouldBeOfType<OkResult>();
 
                 // Assert
                 var entity = dbContext.PlannerDayEntries.Include(x => x.Entries).First(x => x.Id == dayDto.Id);
-                entity.Entries.ShouldBeEmpty();
+                entity.Entries.Count.ShouldBe(1);
+
+                controller.RemoveScheduleEntry(scheduleId2).ShouldBeOfType<OkResult>();
+
+                var entity2 = dbContext.PlannerDayEntries.Include(x => x.Entries).FirstOrDefault(x => x.Id == dayDto.Id);
+
+                entity2.ShouldBeNull();
             }
         }
 
