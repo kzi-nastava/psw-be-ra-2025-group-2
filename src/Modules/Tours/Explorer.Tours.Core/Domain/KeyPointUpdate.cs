@@ -1,6 +1,5 @@
 ﻿namespace Explorer.Tours.Core.Domain
 {
-   
     public record KeyPointUpdate(
         string? Name,
         string? Description,
@@ -8,6 +7,7 @@
         string? ImageUrl,
         double Latitude,
         double Longitude,
-        long? EncounterId
+        long? EncounterId,
+        bool IsEncounterRequired
     );
 }

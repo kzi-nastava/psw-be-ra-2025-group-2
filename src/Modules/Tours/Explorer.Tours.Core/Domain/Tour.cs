@@ -195,7 +195,8 @@ public class Tour : AggregateRoot
             update.ImageUrl ?? keyPoint.ImageUrl,
             update.Latitude,
             update.Longitude,
-            keyPoint.EncounterId
+            update.EncounterId ?? keyPoint.EncounterId,
+            update.IsEncounterRequired
         );
     }
 

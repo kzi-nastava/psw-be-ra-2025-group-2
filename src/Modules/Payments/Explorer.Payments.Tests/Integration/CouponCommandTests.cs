@@ -196,10 +196,12 @@ namespace Explorer.Payments.Tests.Integration
             // Assert
             result.ShouldBeOfType<NoContentResult>();
 
+
             //dbContext.ChangeTracker.Clear();
             //dbContext.Coupons.Find(coupon.Id).ShouldBeNull();
             var deletedCoupon = dbContext.Coupons.FirstOrDefault(c => c.Code == couponToDelete.Code);
             deletedCoupon.ShouldBeNull();
+
         }
 
         [Fact]

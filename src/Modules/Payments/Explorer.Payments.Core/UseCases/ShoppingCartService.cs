@@ -49,6 +49,23 @@ public class ShoppingCartService : IShoppingCartService
         return _mapper.Map<ShoppingCartDto>(cart);
     }
 
+    public ShoppingCartDto AddBundleToCart(long touristId, long bundleId, string bundleName, double price, List<long> tourIds, long authorId)
+    {
+        var cart = _cartRepository.GetByTouristId(touristId);
+        if (cart == null)
+        {
+            cart = new ShoppingCart(touristId);
+            _cartRepository.Create(cart);
+        }
+
+        var moneyPrice = new Money((decimal)price, "AC");
+        cart.AddBundleItem(bundleId, bundleName, moneyPrice, tourIds, authorId);
+
+        _cartRepository.Update(cart);
+        return _mapper.Map<ShoppingCartDto>(cart);
+    }
+
+
     public ShoppingCartDto RemoveItemFromCart(long touristId, long itemId)
     {
         var cart = _cartRepository.GetByTouristId(touristId);

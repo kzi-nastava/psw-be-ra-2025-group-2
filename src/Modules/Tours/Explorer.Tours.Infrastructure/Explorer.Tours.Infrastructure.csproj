@@ -9,10 +9,12 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\BuildingBlocks\Explorer.BuildingBlocks.Infrastructure\Explorer.BuildingBlocks.Infrastructure.csproj" />
 		<ProjectReference Include="..\Explorer.Tours.Core\Explorer.Tours.Core.csproj" />
+		<ProjectReference Include="..\..\Encounters\Explorer.Encounters.Infrastructure\Explorer.Encounters.Infrastructure.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="Database\Scripts\" />
+		<Folder Include="Migrations\" />
 	</ItemGroup>
 
 </Project>
