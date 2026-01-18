@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace Explorer.Stakeholders.Tests.Integration
 {
+    [Collection("Sequential")]
     public class PlannerQueryTests : BaseStakeholdersIntegrationTest
     {
         public PlannerQueryTests(StakeholdersTestFactory factory) : base(factory) { }
