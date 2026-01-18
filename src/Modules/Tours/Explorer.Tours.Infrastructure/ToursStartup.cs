@@ -40,7 +40,6 @@ public static class ToursStartup
 
         services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
         services.AddScoped<INotificationService, NotificationService>();
-
         services.AddScoped<ITourExecutionService, TourExecutionService>();
         services.AddScoped<ITourReportService, TourReportService>();
         services.AddScoped<ITourReportAdministrationService, TourReportAdministrationService>();
@@ -62,7 +61,6 @@ public static class ToursStartup
 
         services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
-
         services.AddScoped<ITourExecutionRepository, TourExecutionDbRepository>();
         services.AddScoped<IBundleRepository, BundleDbRepository>();
 
