@@ -144,6 +144,35 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _bundleRepository.Delete(bundleId);
         }
 
+        public List<BundleDto> GetPublished()
+        {
+          
+            var bundles = _bundleRepository.GetPublished();
+            var result = new List<BundleDto>();
+
+            foreach (var bundle in bundles)
+            {
+                var tours = _tourRepository.GetByIds(bundle.TourIds);
+                result.Add(MapToDto(bundle, tours));
+            }
+
+            return result;
+        }
+
+        public BundleDto GetPublishedById(long id)
+        {
+            var bundle = _bundleRepository.GetById(id);
+            if (bundle == null)
+                throw new KeyNotFoundException($"Bundle sa ID {id} nije pronađen.");
+
+            if (bundle.Status != BundleStatus.Published)
+                throw new InvalidOperationException("Bundle nije dostupan za kupovinu.");
+
+            var tours = _tourRepository.GetByIds(bundle.TourIds);
+            return MapToDto(bundle, tours);
+        }
+
+
         private BundleDto MapToDto(Bundle bundle, List<Tour> tours)
         {
             var totalPrice = tours.Sum(t => t.Price);

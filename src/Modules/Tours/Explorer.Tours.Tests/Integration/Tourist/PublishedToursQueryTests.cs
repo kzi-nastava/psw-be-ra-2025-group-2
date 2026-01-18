@@ -1,11 +1,14 @@
 ﻿using Explorer.API.Controllers.Tourist;
 using Explorer.Payments.API.Public;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Explorer.Payments.Core.Domain.RepositoryInterfaces;
+
 
 namespace Explorer.Tours.Tests.Integration.Tourist;
 
@@ -41,6 +44,11 @@ public class PublishedToursOnlyPublishedTests : BaseToursIntegrationTest
     private static TourController CreateController(IServiceScope scope)
     {
         return new TourController(
-            scope.ServiceProvider.GetRequiredService<ITourService>());
+            scope.ServiceProvider.GetRequiredService<ITourService>(),
+            scope.ServiceProvider.GetRequiredService<IPaymentRecordService>(),
+            scope.ServiceProvider.GetRequiredService<ITourExecutionService>(),
+            scope.ServiceProvider.GetRequiredService<ITourPurchaseTokenRepository>()
+        );
+        
     }
 }
