@@ -50,7 +50,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             var exception = Should.Throw<ScheduleException>(() =>
                 dayEntry.AddScheduleEntry(1, "Late night tour", multiDayInterval));
 
-            exception.Message.ShouldBe("The new schedule time must belong to the same day.");
+            exception.Message.ShouldBe("The new schedule must be defined within the same day.");
         }
 
         [Fact]

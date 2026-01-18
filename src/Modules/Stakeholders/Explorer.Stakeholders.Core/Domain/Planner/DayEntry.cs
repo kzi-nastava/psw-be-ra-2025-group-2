@@ -68,8 +68,8 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
         private void ValidateSchedule(DateTimeInterval scheduledTime)
         {
-            if (scheduledTime.Start.Day != scheduledTime.End.Day)
-                throw new ScheduleException("The new schedule time must belong to the same day.");
+            if (Date != DateOnly.FromDateTime(scheduledTime.Start) || Date != DateOnly.FromDateTime(scheduledTime.End))
+                throw new ScheduleException("The new schedule must be defined within the same day.");
 
             foreach (var entry in _entries)
             {
