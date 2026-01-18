@@ -38,6 +38,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                 .Where(x => x.TouristId == touristId &&
                             x.Date.Month == month &&
                             x.Date.Year == year)
+                .OrderBy(x => x.Date)
                 .ToList();
         }
 
