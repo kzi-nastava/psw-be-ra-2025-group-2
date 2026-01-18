@@ -5,12 +5,18 @@ namespace Explorer.Tours.Core.Domain
     public class KeyPoint : Entity, IKeyPointInfo
     {
         public int OrdinalNo { get; private set; }
+
         public string Name { get; private set; }
         public string Description { get; private set; }
         public string SecretText { get; private set; }
         public string ImageUrl { get; private set; }
+
+        private readonly List<KeyPointImage> _images = new();
+        public IReadOnlyCollection<KeyPointImage> Images => _images.AsReadOnly();
+
         public double Latitude { get; private set; }
         public double Longitude { get; private set; }
+
         public long AuthorId { get; private set; }
         public bool IsPublic { get; private set; } = false;
 
@@ -23,8 +29,9 @@ namespace Explorer.Tours.Core.Domain
             Description = string.Empty;
             SecretText = string.Empty;
             ImageUrl = string.Empty;
-            IsEncounterRequired = false; 
+            IsEncounterRequired = false;
         }
+
         public KeyPoint(
             int ordinalNo,
             string name,
@@ -40,8 +47,8 @@ namespace Explorer.Tours.Core.Domain
             OrdinalNo = ordinalNo;
             Name = name;
             Description = description;
-            SecretText = secretText;
-            ImageUrl = imageUrl;
+            SecretText = secretText ?? string.Empty;
+            ImageUrl = imageUrl ?? string.Empty;
             Latitude = latitude;
             Longitude = longitude;
             AuthorId = authorId;
@@ -64,6 +71,62 @@ namespace Explorer.Tours.Core.Domain
         {
         }
 
+        public KeyPointImage AddImage(string url, bool setAsCover = false)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("Url is required.", nameof(url));
+
+            var shouldBeCover = setAsCover || _images.All(i => !i.IsCover);
+
+            if (shouldBeCover)
+                foreach (var i in _images) i.UnmarkAsCover();
+
+            var nextOrder = _images.Count == 0 ? 0 : _images.Max(i => i.OrderIndex) + 1;
+
+            var image = new KeyPointImage(url, shouldBeCover, nextOrder);
+            _images.Add(image);
+
+            if (shouldBeCover)
+                ImageUrl = url; // sync legacy ImageUrl
+
+            return image;
+        }
+
+        public void SetCoverImage(long imageId)
+        {
+            var img = _images.FirstOrDefault(i => i.Id == imageId);
+            if (img == null)
+                throw new ArgumentException("Image not found.", nameof(imageId));
+
+            foreach (var i in _images) i.UnmarkAsCover();
+            img.MarkAsCover();
+
+            ImageUrl = img.Url; // sync legacy ImageUrl
+        }
+
+        public void RemoveImage(long imageId)
+        {
+            var img = _images.FirstOrDefault(i => i.Id == imageId);
+            if (img == null) return;
+
+            var wasCover = img.IsCover;
+            _images.Remove(img);
+
+            if (!wasCover) return;
+
+            var newCover = _images.OrderBy(i => i.OrderIndex).FirstOrDefault();
+            if (newCover != null)
+            {
+                foreach (var i in _images) i.UnmarkAsCover();
+                newCover.MarkAsCover();
+                ImageUrl = newCover.Url;
+            }
+            else
+            {
+                ImageUrl = string.Empty;
+            }
+        }
+
         private void Validate()
         {
             if (string.IsNullOrWhiteSpace(Name))
@@ -79,8 +142,15 @@ namespace Explorer.Tours.Core.Domain
                 throw new ArgumentException("Cannot mark encounter as required when no encounter is assigned.");
         }
 
-        public void Update(string name, string description, string secretText, string imageUrl,
-                          double latitude, double longitude, long? encounterId, bool isEncounterRequired)
+        public void Update(
+            string name,
+            string description,
+            string secretText,
+            string imageUrl,
+            double latitude,
+            double longitude,
+            long? encounterId,
+            bool isEncounterRequired)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Name is required");
@@ -88,7 +158,7 @@ namespace Explorer.Tours.Core.Domain
             Name = name;
             Description = description;
             SecretText = secretText ?? string.Empty;
-            ImageUrl = imageUrl;
+            ImageUrl = imageUrl ?? string.Empty;
             Latitude = latitude;
             Longitude = longitude;
             EncounterId = encounterId;
@@ -111,6 +181,5 @@ namespace Explorer.Tours.Core.Domain
 
             OrdinalNo = ordinalNo;
         }
-
     }
 }

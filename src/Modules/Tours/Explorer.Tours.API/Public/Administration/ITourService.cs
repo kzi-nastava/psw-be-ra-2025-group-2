@@ -37,6 +37,11 @@ namespace Explorer.Tours.API.Public.Administration
         TourReviewDto UpdateReview(TourReviewDto reviewDto);
         void DeleteReview(long touristId, long tourId);
 
+        Task<KeyPointDto> AddKeyPointImages(long tourId, int ordinalNo, long authorId, List<string> urls);
+        Task SetCoverImage(long tourId, long authorId, string url);
+        Task RemoveKeyPointImage(long tourId, int ordinalNo, long authorId, long imageId);
+
+
         Task<KeyPointDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, KeyPointEncounterDto encounterDto, long authorId);
     }
 }

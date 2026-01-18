@@ -20,7 +20,9 @@ namespace Explorer.Tours.API.Dtos
         public int KeyPointCount { get; set; }                 
         public int TotalDurationMinutes { get; set; }          
         public decimal? LengthKm { get; set; }                
-        public string? PlaceName { get; set; }                
+        public string? PlaceName { get; set; }
+
+        public string? CoverImageUrl { get; set; }
 
         public bool HasAuthorAward { get; set; }              
         public string? AuthorAwardName { get; set; }           

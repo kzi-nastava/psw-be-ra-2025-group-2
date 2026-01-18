@@ -13,6 +13,10 @@
         public long AuthorId { get; set; }
         public bool SuggestForPublicUse { get; set; } = false;
 
+
+        public List<KeyPointImageDto> Images { get; set; } = new();
+
+
         public long? EncounterId { get; set; }
         public bool IsEncounterRequired { get; set; }
         public string? PublicStatus { get; set; }
