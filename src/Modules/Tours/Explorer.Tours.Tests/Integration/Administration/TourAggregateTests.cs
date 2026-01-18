@@ -68,7 +68,8 @@ namespace Explorer.Tours.Tests.Unit.Domain
                  "updated-img.png",
                  50,
                  20,
-                 null
+                 null,
+                 false
             );
 
             tour.UpdateKeyPoint(1, update);
@@ -93,7 +94,8 @@ namespace Explorer.Tours.Tests.Unit.Domain
                  "updated-img.png",
                  50,
                  20,
-                 null
+                 null,
+                 false
              );
             Should.Throw<InvalidOperationException>(() => tour.UpdateKeyPoint(1, update));
         }
