@@ -151,12 +151,26 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
 
+        // GET api/tourist/tours/mine/partial
+        [HttpGet("mine/partial")]
+        public ActionResult<IEnumerable<PartialTourInfoDto>> GetMyPurchasedTourPartials()
+        {
+            return Ok(_tourService.GetAvailableForTouristPartials(User.UserId()));
+        }
+
+        // GET api/tourist/tours/{id}/planner-details
+        [HttpGet("{id}/planner-details")]
+        public ActionResult<FullTourInfoDto> GetTourInfo(long id)
+        {
+            return Ok(_tourService.GetFullTourInfo(id));
+        }
+
         // GET api/tourist/tours/mine-tour
         [HttpGet("mine-tour")]
         public ActionResult<IEnumerable<TourDto>> GetMyTours()
         {
 
-            var touristId = User.UserId();
+            /*var touristId = User.UserId();
 
             var tokens = _tourPurchaseTokenRepository.GetByTouristId(touristId);
 
@@ -183,8 +197,9 @@ namespace Explorer.API.Controllers.Tourist
                 tour.KeyPoints = new List<KeyPointDto>();
             }
 
-            return Ok(tours);
+            return Ok(tours);*/
 
+            return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
 
     }

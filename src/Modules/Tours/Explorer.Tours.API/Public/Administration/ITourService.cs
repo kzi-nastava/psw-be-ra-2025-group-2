@@ -31,12 +31,19 @@ namespace Explorer.Tours.API.Public.Administration
 
         PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize);
         PagedResultDto<PublishedTourPreviewDto> GetFilteredTours(TourFilterDto filter);
+       
 
+        /* Tourist's options */
         IEnumerable<TourDto> GetAvailableForTourist(long touristId);
-        TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images);
-        TourReviewDto UpdateReview(TourReviewDto reviewDto);
+        IEnumerable<PartialTourInfoDto> GetAvailableForTouristPartials(long touristId);
+
+        public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images);
+
+        public TourReviewDto UpdateReview(TourReviewDto reviewDto);
         void DeleteReview(long touristId, long tourId);
 
+
+        FullTourInfoDto GetFullTourInfo(long tourId);
         Task<KeyPointDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, KeyPointEncounterDto encounterDto, long authorId);
     }
 }

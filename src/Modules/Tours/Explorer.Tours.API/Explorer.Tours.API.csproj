@@ -11,8 +11,4 @@
     <ProjectReference Include="..\..\Encounters\Explorer.Encounters.API\Explorer.Encounters.API.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Internal\" />
-  </ItemGroup>
-
 </Project>
