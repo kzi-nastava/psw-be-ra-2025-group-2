@@ -49,11 +49,15 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             if (entry == null)
                 throw new ArgumentException("Invalid schedule Id.");
 
-            ValidateSchedule(scheduledTime);
-
             entry.SetNotes(notes);
             entry.SetScheduledTime(scheduledTime);
             entry.SetTourId(tourId);
+
+            _entries.Remove(_entries.Where(x => x.Id == entry.Id).First());
+
+            ValidateSchedule(scheduledTime);
+
+            _entries.Add(entry);
         }
 
         public void RemoveScheduleEntry(long scheduleEntryId)

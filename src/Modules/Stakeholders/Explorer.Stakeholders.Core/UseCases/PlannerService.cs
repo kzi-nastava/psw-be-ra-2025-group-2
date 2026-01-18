@@ -122,7 +122,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             if (!exists)
                 throw new NotFoundException("Tour not found.");
 
-            var dayEntry = _plannerRepository.GetByScheduleEntryId(touristId);
+            var dayEntry = _plannerRepository.GetByScheduleEntryId(newSchedule.Id);
 
             if (dayEntry == null)
                 throw new NotFoundException("Day entry not found.");

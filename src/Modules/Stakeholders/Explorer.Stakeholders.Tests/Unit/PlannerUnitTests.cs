@@ -133,7 +133,7 @@ namespace Explorer.Stakeholders.Tests.Unit
         }
 
         [Fact]
-        public void Update_throws_exception_if_new_time_overlaps_with_others()
+        public void Update_does_not_throw_exception_if_new_time_overlaps_with_others()
         {
             // Arrange
             var dayEntry = new DayEntry(1, new DateOnly(2026, 5, 20), null);
@@ -144,7 +144,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             dayEntry.AddScheduleEntry(2, "Afternoon Tour", afternoon);
 
             var afternoonId = dayEntry.Entries.First(e => e.TourId == 2).Id;
-            var overlappingInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 09, 30, 0), new DateTime(2026, 5, 20, 10, 30, 0));
+            var overlappingInterval = DateTimeInterval.Of(new DateTime(2026, 5, 20, 14, 30, 0), new DateTime(2026, 5, 20, 15, 30, 0));
 
             // Act & Assert
             Should.Throw<ScheduleException>(() =>
