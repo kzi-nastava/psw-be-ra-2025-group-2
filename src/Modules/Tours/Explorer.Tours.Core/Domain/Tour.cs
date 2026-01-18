@@ -338,4 +338,10 @@ public class Tour : AggregateRoot
         if (_reviews.Count == 0) return 0;
         return _reviews.Average(r => r.Rating);
     }
+
+    public void ReplaceDurations(IEnumerable<TourDuration> durations)
+    {
+        Durations.Clear();
+        Durations.AddRange(durations);
+    }
 }
