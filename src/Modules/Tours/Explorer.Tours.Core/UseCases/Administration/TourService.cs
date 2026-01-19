@@ -48,6 +48,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public TourDto Create(CreateTourDto dto)
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
+            tour.SetPrice(dto.Price);
+
 
             if (dto.Durations != null)
             {
