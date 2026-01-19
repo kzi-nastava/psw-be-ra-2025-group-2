@@ -40,7 +40,8 @@ public class ToursProfile : Profile
              .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
              .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints))
              .ForMember(dest => dest.Durations, opt => opt.MapFrom(src => src.Durations))
-             .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt));
+             .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt))
+             .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl));
 
         CreateMap<CreateTourDto, Tour>()
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
@@ -51,7 +52,10 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints));
 
         CreateMap<MonumentDto, Monument>().ReverseMap();
-        CreateMap<KeyPoint, KeyPointDto>().ReverseMap();
+        CreateMap<KeyPointImage, KeyPointImageDto>().ReverseMap();
+        CreateMap<KeyPoint, KeyPointDto>()
+            .ForMember(d => d.Images, o => o.MapFrom(s => s.Images))
+            .ReverseMap();
 
         CreateMap<PublicKeyPoint, PublicKeyPointDto>();
 
