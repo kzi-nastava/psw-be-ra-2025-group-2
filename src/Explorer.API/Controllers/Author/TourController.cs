@@ -413,6 +413,79 @@ namespace Explorer.API.Controllers.Author
 
             return Ok($"/keypoints-images/{fileName}");
         }
+
+        [HttpPost("{tourId}/keypoints/{ordinalNo}/images")]
+        [RequestSizeLimit(30_000_000)]
+        public async Task<ActionResult<KeyPointDto>> UploadKeyPointImages(long tourId, int ordinalNo, [FromForm] List<IFormFile> files)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            if (files == null || files.Count == 0) return BadRequest("Files are required.");
+
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var urls = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0) return BadRequest("File is required.");
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowed.Contains(ext)) return BadRequest("Unsupported file type.");
+
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "keypoints-images");
+                Directory.CreateDirectory(folder);
+
+                var fullPath = Path.Combine(folder, fileName);
+                await using var stream = System.IO.File.Create(fullPath);
+                await file.CopyToAsync(stream);
+
+                urls.Add($"/keypoints-images/{fileName}");
+            }
+
+            var authorId = long.Parse(authorIdClaim.Value);
+            var result = await _tourService.AddKeyPointImages(tourId, ordinalNo, authorId, urls);
+            return Ok(result);
+        }
+
+        [HttpPut("{tourId}/cover-image")]
+        public async Task<IActionResult> SetTourCoverImage(long tourId, [FromBody] SetCoverImageDto dto)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            var authorId = long.Parse(authorIdClaim.Value);
+            await _tourService.SetCoverImage(tourId, authorId, dto.Url);
+            return NoContent();
+        }
+
+        [HttpDelete("{tourId}/keypoints/{ordinalNo}/images/{imageId:long}")]
+        public async Task<IActionResult> DeleteKeyPointImage(long tourId, int ordinalNo, long imageId)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            var authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                await _tourService.RemoveKeyPointImage(tourId, ordinalNo, authorId, imageId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while deleting the image." });
+            }
+        }
     }
 
 }

@@ -297,5 +297,88 @@ public class TourCommandTests : BaseToursIntegrationTest
         storedEntity.ArchivedAt.ShouldBeNull();
     }
 
+    [Fact]
+    public void Updates_durations()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-11");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        var tour = dbContext.Tours.First(t => t.Id == -11);
+
+        var oldCount = tour.Durations?.Count ?? 0;
+
+        var updatedEntity = new UpdateTourDto
+        {
+            Name = tour.Name,
+            Description = tour.Description,
+            Difficulty = tour.Difficulty,
+            Tags = tour.Tags,
+
+            Durations = new List<TourDurationDto>
+        {
+            new() { TransportType = TransportTypeDto.Walking, Minutes = 80 },
+            new() { TransportType = TransportTypeDto.Car, Minutes = 25 }
+        }
+        };
+
+        var result = ((ObjectResult)controller.Update(-11, updatedEntity).Result)?.Value as TourDto;
+
+        result.ShouldNotBeNull();
+        result.Durations.ShouldNotBeNull();
+        result.Durations.Count.ShouldBe(2);
+        result.Durations.First(d => d.TransportType == TransportTypeDto.Walking).Minutes.ShouldBe(80);
+        result.Durations.First(d => d.TransportType == TransportTypeDto.Car).Minutes.ShouldBe(25);
+
+        var stored = dbContext.Tours.First(t => t.Id == -11);
+        stored.Durations.Count.ShouldBe(2);
+        stored.Durations.Any(d => d.TransportType == TransportType.Walking && d.Minutes == 80).ShouldBeTrue();
+        stored.Durations.Any(d => d.TransportType == TransportType.Car && d.Minutes == 25).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Updates_durations_removes_missing_transport_type()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-11");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        var setupDto = new UpdateTourDto
+        {
+            Name = "Setup",
+            Description = "Setup",
+            Difficulty = 3,
+            Tags = new List<string> { "x" },
+            Durations = new List<TourDurationDto>
+        {
+            new() { TransportType = TransportTypeDto.Walking, Minutes = 60 },
+            new() { TransportType = TransportTypeDto.Car, Minutes = 20 }
+        }
+        };
+
+        controller.Update(-11, setupDto);
+
+        var before = dbContext.Tours.First(t => t.Id == -11);
+        before.Durations.Any(d => d.TransportType == TransportType.Car).ShouldBeTrue();
+
+        var removeCarDto = new UpdateTourDto
+        {
+            Name = before.Name,
+            Description = before.Description,
+            Difficulty = before.Difficulty,
+            Tags = before.Tags,
+            Durations = new List<TourDurationDto>
+        {
+            new() { TransportType = TransportTypeDto.Walking, Minutes = 65 }
+        }
+        };
+
+        controller.Update(-11, removeCarDto);
+
+        var after = dbContext.Tours.First(t => t.Id == -11);
+        after.Durations.Count.ShouldBe(1);
+        after.Durations.Any(d => d.TransportType == TransportType.Car).ShouldBeFalse();
+    }
+
 }
 

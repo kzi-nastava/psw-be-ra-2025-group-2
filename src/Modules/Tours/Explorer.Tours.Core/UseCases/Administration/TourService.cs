@@ -12,6 +12,7 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Public;
 using Explorer.Payments.API.Internal;
 
+
 namespace Explorer.Tours.Core.UseCases.Administration
 {
     public class TourService : ITourService
@@ -146,6 +147,15 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
             tour.SetLength(dto.LengthKm);
             tour.SetPrice(dto.Price);
+
+            if(dto.Durations != null)
+{
+                tour.ReplaceDurations(dto.Durations.Select(d =>
+                    new TourDuration((TransportType)d.TransportType, d.Minutes)
+                ));
+            }
+
+
             _tourRepository.UpdateAsync(tour).Wait();
 
             return _mapper.Map<TourDto>(tour);
@@ -241,6 +251,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.IsEncounterRequired
             );
 
+        
+
             await _tourRepository.UpdateAsync(tour);
 
             if (dto.SuggestForPublicUse && _publicKeyPointService != null)
@@ -256,6 +268,47 @@ namespace Explorer.Tours.Core.UseCases.Administration
             updatedKeyPoint.PublicStatus = await GetKeyPointPublicStatusAsync(tourId, ordinalNo);
 
             return updatedKeyPoint;
+        }
+
+        public async Task<KeyPointDto> AddKeyPointImages(long tourId, int ordinalNo, long authorId, List<string> urls)
+        {
+            var tour = await GetTourOrThrowAsync(tourId);
+            if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+            var keyPoint = GetKeyPointFromTourOrThrow(tour, ordinalNo);
+
+            foreach (var url in urls)
+                keyPoint.AddImage(url);
+
+            await _tourRepository.UpdateAsync(tour);
+
+            var result = _mapper.Map<KeyPointDto>(keyPoint);
+            result.PublicStatus = await GetKeyPointPublicStatusAsync(tourId, ordinalNo);
+
+            return result;
+        }
+
+        public async Task SetCoverImage(long tourId, long authorId, string url)
+        {
+            var tour = await GetTourOrThrowAsync(tourId);
+            if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+            tour.SetCoverImage(url);
+            await _tourRepository.UpdateAsync(tour);
+        }
+
+        public async Task RemoveKeyPointImage(long tourId, int ordinalNo, long authorId, long imageId)
+        {
+            var tour = await _tourRepository.GetTourWithKeyPointsAndImagesAsync(tourId);
+            if (tour == null) throw new KeyNotFoundException("Tour not found.");
+
+            if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+            var kp = GetKeyPointFromTourOrThrow(tour, ordinalNo);
+
+            kp.RemoveImage(imageId);
+
+            await _tourRepository.UpdateAsync(tour);
         }
 
         public async Task<KeyPointDto> CreateEncounterFromKeyPoint(long tourId, int ordinalNo, KeyPointEncounterDto dto, long authorId)
@@ -449,6 +502,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
                     LengthKm = tour.LengthKm,
                     PlaceName = firstKp?.Name,
+                    CoverImageUrl = tour.CoverImageUrl,
                     AverageRating = tour.GetAverageRating(),
                     Reviews = tour.Reviews.Select(r =>
                     {
@@ -526,6 +580,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
                     LengthKm = tour.LengthKm,
                     PlaceName = firstKp?.Name,
+                    CoverImageUrl = tour.CoverImageUrl,
                     AverageRating = tour.GetAverageRating(),
                     Reviews = tour.Reviews.Select(r =>
                     {

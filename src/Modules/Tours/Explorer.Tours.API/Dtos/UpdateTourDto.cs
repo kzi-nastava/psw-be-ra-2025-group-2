@@ -15,5 +15,6 @@ namespace Explorer.Tours.API.Dtos
         public decimal? LengthKm { get; set; }
         public decimal Price { get; set; }
         public List<KeyPointDto> KeyPoints { get; set; } = new();
+        public List<TourDurationDto> Durations { get; set; } = new();
     }
 }
