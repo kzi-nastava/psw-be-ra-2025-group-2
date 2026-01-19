@@ -33,7 +33,7 @@ namespace Explorer.Encounters.Core.UseCases
         IEncounterRepository repository,
         IEncounterExecutionRepository executionRepository,
         ITouristProgressRepository touristProgressRepository,
-        IEncounterPresenceRepository presenceRepository, 
+        IEncounterPresenceRepository presenceRepository,
         IMapper mapper)
         {
             _encounterRepository = repository;
@@ -159,35 +159,80 @@ namespace Explorer.Encounters.Core.UseCases
             if (encounter == null)
                 throw new NotFoundException($"Not found: {updateDto.Id}");
 
+            var newType = EncounterTypeParser.Parse(updateDto.Type);
+
+            if (encounter.Type != newType)
+            {
+                _encounterRepository.Delete(updateDto.Id);
+
+                Encounter newEncounter;
+                switch (newType)
+                {
+                    case EncounterType.Social:
+                        newEncounter = new SocialEncounter(
+                            updateDto.Name,
+                            updateDto.Description,
+                            new GeoLocation(updateDto.Latitude, updateDto.Longitude),
+                            new ExperiencePoints(updateDto.XP),
+                            updateDto.RequiredPeople ?? 5,
+                            updateDto.Range ?? 10
+                        );
+                        break;
+
+                    case EncounterType.Location:
+                        newEncounter = new HiddenLocationEncounter(
+                            updateDto.Name,
+                            updateDto.Description,
+                            new GeoLocation(updateDto.Latitude, updateDto.Longitude),
+                            new ExperiencePoints(updateDto.XP),
+                            updateDto.ImageUrl ?? string.Empty,
+                            new GeoLocation(updateDto.ImageLatitude ?? 0, updateDto.ImageLongitude ?? 0),
+                            updateDto.DistanceTreshold ?? 5
+                        );
+                        break;
+
+                    case EncounterType.Miscellaneous:
+                    default:
+                        newEncounter = new MiscEncounter(
+                            updateDto.Name,
+                            updateDto.Description,
+                            new GeoLocation(updateDto.Latitude, updateDto.Longitude),
+                            new ExperiencePoints(updateDto.XP)
+                        );
+                        break;
+                }
+                var created = _encounterRepository.Create(newEncounter);
+                return _mapper.Map<EncounterDto>(created);
+            }
+
             encounter.Update(
                 updateDto.Name,
                 updateDto.Description,
                 new GeoLocation(updateDto.Latitude, updateDto.Longitude),
                 new ExperiencePoints(updateDto.XP),
-                EncounterTypeParser.Parse(updateDto.Type)
+                newType
             );
 
-
-            if (encounter.Type == EncounterType.Location)
+            if (encounter is HiddenLocationEncounter hidden)
             {
-                var hidden = (HiddenLocationEncounter)encounter;
-
-
                 hidden.UpdateHiddenLocation(
                     updateDto.ImageUrl ?? hidden.ImageUrl,
                     new GeoLocation(updateDto.ImageLatitude ?? hidden.ImageLocation.Latitude,
-                        updateDto.ImageLongitude ?? hidden.ImageLocation.Longitude),
+                                    updateDto.ImageLongitude ?? hidden.ImageLocation.Longitude),
                     updateDto.DistanceTreshold ?? hidden.DistanceTreshold
+                );
+            }
+            else if (encounter is SocialEncounter social)
+            {
+                social.UpdateSocialEncounter(
+                    updateDto.RequiredPeople ?? social.RequiredPeople,
+                    updateDto.Range ?? social.Range
                 );
             }
 
             var updated = _encounterRepository.Update(encounter);
-
             return _mapper.Map<EncounterDto>(updated);
         }
-        /// <summary>
-        /// Creates an "in-progress" execution if not already completed and if none exists.
-        /// </summary>
         public void ActivateEncounter(
             long userId,
             long encounterId,
@@ -236,12 +281,6 @@ namespace Explorer.Encounters.Core.UseCases
                 new EncounterExecution(userId, encounterId)
             );
         }
-
-
-        /// <summary>
-        /// Called every ~10 seconds by the tourist app. Updates execution progress.
-        /// For HiddenLocation: must accumulate 30 seconds inside DistanceTreshold to complete.
-        /// </summary>
         public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) PingLocation(
             long userId,
             long encounterId,
@@ -263,7 +302,6 @@ namespace Explorer.Encounters.Core.UseCases
             if (hidden == null)
                 throw new InvalidOperationException("Encounter is not a HiddenLocationEncounter.");
 
-            // Ensure execution exists
             var execution = _executionRepository.Get(userId, encounterId);
             if (execution == null)
                 throw new InvalidOperationException("Encounter nije aktiviran.");
@@ -284,10 +322,8 @@ namespace Explorer.Encounters.Core.UseCases
 
             if (!execution.IsCompleted && execution.SecondsInsideZone >= HiddenRequiredSecondsInZone)
             {
-                // markira completed i upise XP u execution
                 execution.MarkCompleted(hidden.XP.Value);
 
-                // doda xp i level up ako treba
                 var progress = _touristProgressRepository.GetByUserId(userId)
                               ?? _touristProgressRepository.Create(new TouristProgress(userId));
 
@@ -301,7 +337,7 @@ namespace Explorer.Encounters.Core.UseCases
         }
         private static double CalculateDistanceMeters(double lat1, double lon1, double lat2, double lon2)
         {
-            const double R = 6371000; // Earth radius in meters
+            const double R = 6371000;
 
             static double ToRad(double deg) => deg * Math.PI / 180.0;
 
@@ -331,7 +367,7 @@ namespace Explorer.Encounters.Core.UseCases
             if (execution == null)
             {
                 execution = new EncounterExecution(userId, encounterId);
-                
+
                 execution.MarkCompleted(encounter.XP.Value);
 
                 _executionRepository.Add(execution);
@@ -344,7 +380,7 @@ namespace Explorer.Encounters.Core.UseCases
             }
 
             var progress = _touristProgressRepository.GetByUserId(userId)
-                          ?? _touristProgressRepository.Create(new TouristProgress(userId));
+                           ?? _touristProgressRepository.Create(new TouristProgress(userId));
 
             progress.AddXp(encounter.XP.Value);
             _touristProgressRepository.Update(progress);
@@ -352,15 +388,12 @@ namespace Explorer.Encounters.Core.UseCases
 
         public EncounterDto CreateByTourist(long userId, CreateEncounterDto createDto)
         {
-            // ako ne postoji nikakav progres kreira ga na level 1
             var progress = _touristProgressRepository.GetByUserId(userId)
                           ?? _touristProgressRepository.Create(new TouristProgress(userId));
 
-            // provera nivoa
             if (progress.Level < 10)
                 throw new UnauthorizedAccessException("You must reach level 10 to create challenges.");
 
-            // kreiranje encountera
             return Create(createDto);
         }
         public TouristProgressDto GetMyProgress(long userId)
@@ -439,7 +472,7 @@ namespace Explorer.Encounters.Core.UseCases
                     _executionRepository.Update(myExecution);
 
                     var progress = _touristProgressRepository.GetByUserId(userId)
-                                  ?? _touristProgressRepository.Create(new TouristProgress(userId));
+                                   ?? _touristProgressRepository.Create(new TouristProgress(userId));
 
                     progress.AddXp(socialEncounter.XP.Value);
                     _touristProgressRepository.Update(progress);
