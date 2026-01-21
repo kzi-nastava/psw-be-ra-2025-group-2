@@ -19,7 +19,8 @@ public class StakeholdersContext : DbContext
 
     public DbSet<Quiz> Quizzes { get; set; }
     public DbSet<Message> Messages { get; set; }
-
+    public DbSet<OnboardingSlide> OnboardingSlides { get; set; }
+    public DbSet<OnboardingProgress> OnboardingProgresses { get; set; }
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
