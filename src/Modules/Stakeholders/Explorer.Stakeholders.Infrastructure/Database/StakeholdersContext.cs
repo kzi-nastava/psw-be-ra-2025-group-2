@@ -1,4 +1,5 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.Help;
 using Explorer.Stakeholders.Core.Domain.Planner;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Explorer.Stakeholders.Infrastructure.Database.Configurations;
@@ -21,7 +22,13 @@ public class StakeholdersContext : DbContext
 
     public DbSet<Quiz> Quizzes { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<OnboardingSlide> OnboardingSlides { get; set; }
+    public DbSet<OnboardingProgress> OnboardingProgresses { get; set; }
+
     public DbSet<DayEntry> PlannerDayEntries { get; set; }
+
+    public DbSet<HelpSettings> HelpSettings { get; set; }
+    public DbSet<FaqItem> FaqItems { get; set; }
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
@@ -50,6 +57,7 @@ public class StakeholdersContext : DbContext
             builder.Property(m => m.IsDeleted).IsRequired().HasDefaultValue(false);
         });
 
+        modelBuilder.Entity<HelpSettings>().HasIndex(x => x.PersonId).IsUnique();
         modelBuilder.ApplyConfiguration(new DayEntryConfiguration());
 
         ConfigureStakeholder(modelBuilder);

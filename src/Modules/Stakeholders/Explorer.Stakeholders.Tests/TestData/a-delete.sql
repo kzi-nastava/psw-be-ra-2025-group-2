@@ -12,6 +12,12 @@ DELETE FROM stakeholders."TourPreferences";
 DELETE FROM stakeholders."Clubs";
 DELETE FROM stakeholders."Quizzes";
 DELETE FROM stakeholders."Messages";
+DELETE FROM stakeholders."OnboardingSlides";
+
+DELETE FROM stakeholders."FaqItems";
+DELETE FROM stakeholders."HelpSettings";
+
+
 DELETE FROM payments."TourPurchaseTokens";
 DELETE FROM tours."Tours";
 DELETE FROM tours."TourEquipment";
@@ -19,3 +25,4 @@ DELETE FROM tours."Equipment";
 
 DELETE FROM stakeholders."PlannerDayEntries";
 DELETE FROM stakeholders."PlannerScheduleEntries";
+
