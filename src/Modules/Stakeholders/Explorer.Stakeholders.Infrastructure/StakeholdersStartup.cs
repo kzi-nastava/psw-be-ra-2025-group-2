@@ -47,7 +47,7 @@ public static class StakeholdersStartup
         services.AddScoped<IQuizService, QuizService>();
 
         services.AddScoped<IMessageService, MessageService>();
-
+        services.AddScoped<IOnboardingService, OnboardingService>();
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
         services.AddScoped<ITouristPositionService, TouristPositionService>();
         
@@ -74,7 +74,7 @@ public static class StakeholdersStartup
         services.AddScoped<IQuizRepository, QuizDbRepository>();
 
         services.AddScoped<IMessageRepository, MessageDbRepository>();
-
+        services.AddScoped<IOnboardingRepository, OnboardingDbRepository>();
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 
         services.AddScoped<IFaqRepository, FaqRepository>();

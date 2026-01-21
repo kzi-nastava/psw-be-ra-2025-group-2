@@ -22,6 +22,9 @@ public class StakeholdersContext : DbContext
 
     public DbSet<Quiz> Quizzes { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<OnboardingSlide> OnboardingSlides { get; set; }
+    public DbSet<OnboardingProgress> OnboardingProgresses { get; set; }
+
     public DbSet<DayEntry> PlannerDayEntries { get; set; }
 
     public DbSet<HelpSettings> HelpSettings { get; set; }

@@ -36,7 +36,8 @@ public class StakeholderProfile : Profile
 
         CreateMap<QuizOption, QuizOptionDto>();
         CreateMap<Quiz, QuizDto>();
-
+        CreateMap<OnboardingSlide, OnboardingSlideDto>().ReverseMap();
+        CreateMap<OnboardingProgress, OnboardingProgressDto>().ReverseMap();
         CreateMap<Message, MessageDto>().ReverseMap();
         CreateMap<SendMessageDto, Message>()
             .ForMember(dest => dest.SenderId, opt => opt.Ignore())
