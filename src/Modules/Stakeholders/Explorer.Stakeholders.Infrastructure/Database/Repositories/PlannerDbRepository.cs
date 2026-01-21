@@ -21,13 +21,14 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 
         public DayEntry? GetById(long id)
         {
-            return _context.PlannerDayEntries.Include(x => x.Entries).FirstOrDefault(e => e.Id == id);
+            return _context.PlannerDayEntries.Include(x => x.Entries).ToList().FirstOrDefault(e => e.Id == id);
         }
 
         public DayEntry? GetByDate(long touristId, DateOnly date)
         {
             return _context.PlannerDayEntries
                 .Include(x => x.Entries)
+                .ToList()
                 .FirstOrDefault(x => x.TouristId == touristId && x.Date == date);
         }
 
@@ -46,6 +47,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
         {
             return _context.PlannerDayEntries
                 .Include(x => x.Entries)
+                .ToList()
                 .FirstOrDefault(x => x.Entries.Any(e => e.Id == scheduleEntryId));
         }
 

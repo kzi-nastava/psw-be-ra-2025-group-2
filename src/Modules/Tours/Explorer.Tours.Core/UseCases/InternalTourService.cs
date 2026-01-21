@@ -40,7 +40,7 @@ namespace Explorer.Tours.Core.UseCases
 
         public bool Exists(long tourId)
         {
-            return _tourRepository.GetByIdAsync(tourId) == null ? false : true;
+            return _tourRepository.GetByIdAsync(tourId).Result == null ? false : true;
         }
     }
 }
