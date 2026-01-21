@@ -1,0 +1,15 @@
+﻿INSERT INTO tours."Equipment" ("Id", "Name", "Description") VALUES
+(-1, 'Hiking Boots', 'Sturdy waterproof hiking boots suitable for mountain terrain'),
+(-2, 'Backpack 30L', 'Comfortable daypack with hydration system compatibility'),
+(-3, 'Camera', 'DSLR or mirrorless camera for photography enthusiasts'),
+(-4, 'Water Bottle', 'Reusable water bottle (at least 1L capacity)'),
+(-5, 'First Aid Kit', 'Basic first aid supplies for minor injuries'),
+(-6, 'GPS Device', 'Handheld GPS or smartphone with offline maps'),
+(-7, 'Rain Jacket', 'Waterproof and breathable rain protection'),
+(-8, 'Trekking Poles', 'Adjustable trekking poles for stability'),
+(-9, 'Sunscreen', 'SPF 50+ sun protection'),
+(-10, 'Headlamp', 'LED headlamp with extra batteries'),
+(-11, 'Bike Helmet', 'Safety helmet for cycling tours'),
+(-12, 'Bicycle', 'Mountain bike or road bike depending on tour type'),
+(-13, 'Tent', 'Lightweight camping tent for overnight stays'),
+(-14, 'Sleeping Bag', 'Season-appropriate sleeping bag');

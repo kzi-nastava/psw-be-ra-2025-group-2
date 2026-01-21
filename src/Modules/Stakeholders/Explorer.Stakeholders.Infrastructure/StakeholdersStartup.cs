@@ -42,6 +42,7 @@ public static class StakeholdersStartup
         services.AddScoped<IDiaryService, DiaryService>();
         services.AddScoped<IPeopleNameProvider, PeopleNameProvider>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IPlannerService, PlannerService>();
 
         services.AddScoped<IQuizService, QuizService>();
 
@@ -72,6 +73,8 @@ public static class StakeholdersStartup
         services.AddScoped<IMessageRepository, MessageDbRepository>();
         services.AddScoped<IOnboardingRepository, OnboardingDbRepository>();
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
+
+        services.AddScoped<IPlannerRepository, PlannerDbRepository>();
 
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));

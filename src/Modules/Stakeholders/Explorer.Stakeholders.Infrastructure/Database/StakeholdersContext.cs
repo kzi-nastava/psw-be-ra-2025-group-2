@@ -1,5 +1,7 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.Planner;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
+using Explorer.Stakeholders.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
 namespace Explorer.Stakeholders.Infrastructure.Database;
 
@@ -21,6 +23,9 @@ public class StakeholdersContext : DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<OnboardingSlide> OnboardingSlides { get; set; }
     public DbSet<OnboardingProgress> OnboardingProgresses { get; set; }
+
+    public DbSet<DayEntry> PlannerDayEntries { get; set; }
+
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,6 +52,8 @@ public class StakeholdersContext : DbContext
             builder.Property(m => m.UpdatedAt).IsRequired(false);
             builder.Property(m => m.IsDeleted).IsRequired().HasDefaultValue(false);
         });
+
+        modelBuilder.ApplyConfiguration(new DayEntryConfiguration());
 
         ConfigureStakeholder(modelBuilder);
     }
