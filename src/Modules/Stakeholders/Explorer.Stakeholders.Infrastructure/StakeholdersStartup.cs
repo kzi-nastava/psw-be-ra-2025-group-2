@@ -49,6 +49,9 @@ public static class StakeholdersStartup
 
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
         services.AddScoped<ITouristPositionService, TouristPositionService>();
+        
+        services.AddScoped<IFaqService, FaqService>();
+        services.AddScoped<IHelpSettingsService, HelpSettingsService>();
 
         /* Internal */
         services.AddScoped<IInternalUserService, InternalUserService>();
@@ -73,6 +76,8 @@ public static class StakeholdersStartup
 
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 
+        services.AddScoped<IFaqRepository, FaqRepository>();
+        services.AddScoped<IHelpSettingsRepository, HelpSettingsRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();

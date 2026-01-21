@@ -12,3 +12,6 @@ DELETE FROM stakeholders."TourPreferences";
 DELETE FROM stakeholders."Clubs";
 DELETE FROM stakeholders."Quizzes";
 DELETE FROM stakeholders."Messages";
+
+DELETE FROM stakeholders."FaqItems";
+DELETE FROM stakeholders."HelpSettings";
