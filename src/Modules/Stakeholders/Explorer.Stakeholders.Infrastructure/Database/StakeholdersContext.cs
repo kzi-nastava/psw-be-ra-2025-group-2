@@ -1,7 +1,9 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.Emergency;
 using Explorer.Stakeholders.Core.Domain.Planner;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Explorer.Stakeholders.Infrastructure.Database.Configurations;
+using Explorer.Stakeholders.Infrastructure.Database.Configurations.Emergency;
 using Microsoft.EntityFrameworkCore;
 namespace Explorer.Stakeholders.Infrastructure.Database;
 
@@ -14,6 +16,10 @@ public class StakeholdersContext : DbContext
     public DbSet<AuthorAwards> AuthorAwards { get; set; }
     public DbSet<AppRating> AppRatings { get; set; }
     public DbSet<Club> Clubs { get; set; }
+
+    public DbSet<EmergencyDirectory> EmergencyDirectories { get; set; }
+    public DbSet<EmergencyPlace> EmergencyPlaces { get; set; }
+
 
     public DbSet<Diary> Diaries { get; set; }
 
@@ -51,6 +57,9 @@ public class StakeholdersContext : DbContext
         });
 
         modelBuilder.ApplyConfiguration(new DayEntryConfiguration());
+
+        modelBuilder.ApplyConfiguration(new EmergencyDirectoryConfiguration());
+        modelBuilder.ApplyConfiguration(new EmergencyPlaceConfiguration());
 
         ConfigureStakeholder(modelBuilder);
     }
