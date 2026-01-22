@@ -24,7 +24,7 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly ITouristProgressRepository _touristProgressRepository;
         private readonly IMapper _mapper;
         private readonly IEncounterPresenceRepository _presenceRepository;
-
+        private readonly ProfileFrameRewardService _profileFrameRewardService;
 
         private const int HiddenRequiredSecondsInZone = 30;
         private const int DefaultPingDeltaSeconds = 10;
@@ -34,13 +34,15 @@ namespace Explorer.Encounters.Core.UseCases
         IEncounterExecutionRepository executionRepository,
         ITouristProgressRepository touristProgressRepository,
         IEncounterPresenceRepository presenceRepository,
-        IMapper mapper)
+        IMapper mapper,
+        ProfileFrameRewardService profileFrameRewardService)
         {
             _encounterRepository = repository;
             _executionRepository = executionRepository;
             _touristProgressRepository = touristProgressRepository;
             _mapper = mapper;
             _presenceRepository = presenceRepository;
+            _profileFrameRewardService = profileFrameRewardService;
         }
 
         public void Archive(long id)
@@ -326,9 +328,11 @@ namespace Explorer.Encounters.Core.UseCases
 
                 var progress = _touristProgressRepository.GetByUserId(userId)
                               ?? _touristProgressRepository.Create(new TouristProgress(userId));
-
+                var oldLevel = progress.Level;
                 progress.AddXp(hidden.XP.Value);
+                var newLevel = progress.Level;
                 _touristProgressRepository.Update(progress);
+                _profileFrameRewardService.AwardFramesIfNeeded(userId, oldLevel, newLevel);
             }
 
             _executionRepository.Update(execution);
@@ -381,9 +385,11 @@ namespace Explorer.Encounters.Core.UseCases
 
             var progress = _touristProgressRepository.GetByUserId(userId)
                            ?? _touristProgressRepository.Create(new TouristProgress(userId));
-
+            var oldLevel = progress.Level;
             progress.AddXp(encounter.XP.Value);
+            var newLevel = progress.Level;
             _touristProgressRepository.Update(progress);
+            _profileFrameRewardService.AwardFramesIfNeeded(userId, oldLevel, newLevel);
         }
 
         public EncounterDto CreateByTourist(long userId, CreateEncounterDto createDto)
