@@ -22,13 +22,7 @@ namespace Explorer.Encounters.API.Public
         EncounterDto CreateByTourist(long userId, CreateEncounterDto createDto);
         TouristProgressDto GetMyProgress(long userId);
         void ActivateEncounter(long userId, long encounterId, double latitude, double longitude);
-        (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) PingLocation(
-            long userId,
-            long encounterId,
-            double latitude,
-            double longitude,
-            int? deltaSeconds = null
-        );
+        (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime, bool IsInRange) PingLocation(long userId, long encounterId, double latitude, double longitude, int? deltaSeconds = null);
         (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) GetExecutionStatus(
             long userId,
             long encounterId

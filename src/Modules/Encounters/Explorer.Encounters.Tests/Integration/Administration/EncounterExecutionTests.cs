@@ -216,10 +216,11 @@ namespace Explorer.Encounters.Tests.Integration.Administration
 
             result.ShouldBeOfType<BadRequestObjectResult>();
         }
-          
+
         [Fact]
-        public void PingLocation_fails_when_not_activated()
+        public void PingLocation_returns_out_of_range_when_not_activated()
         {
+            // Arrange
             using var scope = Factory.Services.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IEncounterService>();
 
@@ -228,16 +229,22 @@ namespace Explorer.Encounters.Tests.Integration.Administration
 
             var dto = new EncounterLocationPingDto
             {
-                Latitude = 45.2525,
-                Longitude = 19.8625,
+                Latitude = 46.0000,
+                Longitude = 20.0000,
                 DeltaSeconds = 10
             };
 
+            // Act
             var action = controller.PingLocation(encounterId, dto);
 
-            action.Result.ShouldBeOfType<BadRequestObjectResult>();
+            // Assert
+            var result = action.Result.ShouldBeOfType<OkObjectResult>();
+            var status = result.Value.ShouldBeOfType<EncounterExecutionStatusDto>();
+
+            status.IsCompleted.ShouldBeFalse();
+            status.InRange.ShouldBeFalse();
         }
-  
+
         private static EncounterExecutionStatusDto ExecutePing(EncounterController controller, long encounterId, EncounterLocationPingDto dto)
         {
             var action = controller.PingLocation(encounterId, dto);
