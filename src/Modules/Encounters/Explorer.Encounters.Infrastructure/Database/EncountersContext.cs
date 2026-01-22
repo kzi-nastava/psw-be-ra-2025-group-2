@@ -11,6 +11,10 @@ namespace Explorer.Encounters.Infrastructure.Database
         public DbSet<TouristProgress> TouristProgresses { get; set; }
         public DbSet<EncounterPresence> EncounterPresences { get; set; }
         public EncountersContext(DbContextOptions<EncountersContext> options) : base(options) { }
+        public DbSet<ProfileFrame> ProfileFrames { get; set; }
+        public DbSet<TouristUnlockedFrame> TouristUnlockedFrames { get; set; }
+        public DbSet<TouristProfileFrameSettings> TouristProfileFrameSettings { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +53,29 @@ namespace Explorer.Encounters.Infrastructure.Database
 
             modelBuilder.Entity<TouristProgress>()
                 .ToTable("TouristProgresses");
+            
+            modelBuilder.Entity<ProfileFrame>(b =>
+            {
+                b.ToTable("ProfileFrames");
+                b.Property(x => x.Name).IsRequired().HasMaxLength(100);
+                b.Property(x => x.AssetKey).IsRequired().HasMaxLength(200);
+                b.HasIndex(x => x.LevelRequirement).IsUnique();
+            });
+
+            modelBuilder.Entity<TouristUnlockedFrame>(b =>
+            {
+                b.ToTable("TouristUnlockedFrames");
+                b.Property(x => x.UnlockedAt).IsRequired();
+                b.HasIndex(x => new { x.UserId, x.FrameId }).IsUnique();
+            });
+
+            modelBuilder.Entity<TouristProfileFrameSettings>(b =>
+            {
+                b.ToTable("TouristProfileFrameSettings");
+                b.Property(x => x.ShowFramesEnabled).IsRequired();
+                b.HasIndex(x => x.UserId).IsUnique();
+            });
+
         }
     }
 }
