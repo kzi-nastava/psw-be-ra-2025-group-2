@@ -37,6 +37,32 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Configurations
             builder.Metadata
                    .FindNavigation(nameof(EmergencyDirectory.Places))!
                    .SetField("_places");
+
+            builder.HasMany(x => x.Embassies)
+                   .WithOne()
+                   .HasForeignKey("DirectoryId")
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(x => x.Embassies)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Metadata
+                   .FindNavigation(nameof(EmergencyDirectory.Embassies))!
+                   .SetField("_embassies");
+
+            builder.HasMany(x => x.Phrases)
+               .WithOne()
+               .HasForeignKey("DirectoryId")
+               .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(x => x.Phrases)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Metadata
+                   .FindNavigation(nameof(EmergencyDirectory.Phrases))!
+                   .SetField("_phrases");
+
+
         }
     }
 }
