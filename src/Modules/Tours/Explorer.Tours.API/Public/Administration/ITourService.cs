@@ -48,5 +48,7 @@ namespace Explorer.Tours.API.Public.Administration
         Task RemoveKeyPointImage(long tourId, int ordinalNo, long authorId, long imageId);
 
         Task<KeyPointDto> CreateEncounterFromKeyPoint(long tourId, int keyPointOrdinalNo, KeyPointEncounterDto encounterDto, long authorId);
+
+        List<long> GetUsedEncounterIds();
     }
 }
