@@ -663,5 +663,19 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 FirstKeyPointLongitude = tour.KeyPoints.First().Longitude
             };
         }
+        public List<long> GetUsedEncounterIds()
+        {
+            var allTours = _tourRepository.GetAllAsync().Result;
+
+            if (allTours == null) return new List<long>();
+
+            return allTours
+                .Where(t => t != null && t.KeyPoints != null)
+                .SelectMany(t => t.KeyPoints)
+                .Where(kp => kp.EncounterId != null)
+                .Select(kp => kp.EncounterId.Value)
+                .Distinct()                                  
+                .ToList();
+        }
     }
 }
