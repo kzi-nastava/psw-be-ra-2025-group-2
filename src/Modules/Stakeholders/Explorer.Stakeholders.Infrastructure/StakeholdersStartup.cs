@@ -2,11 +2,13 @@ using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
+using Explorer.Stakeholders.API.Public.Emergency;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
 using Explorer.Stakeholders.Core.Services;
 using Explorer.Stakeholders.Core.UseCases;
 using Explorer.Stakeholders.Core.UseCases.Administration;
+using Explorer.Stakeholders.Core.UseCases.Emergency;
 using Explorer.Stakeholders.Core.UseCases.Internal;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Stakeholders.Infrastructure.Database;
@@ -56,6 +58,10 @@ public static class StakeholdersStartup
 
         /* Internal */
         services.AddScoped<IInternalUserService, InternalUserService>();
+
+       
+        services.AddScoped<IEmergencyOverviewService, EmergencyOverviewService>();
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -81,6 +87,7 @@ public static class StakeholdersStartup
         services.AddScoped<IHelpSettingsRepository, HelpSettingsRepository>();
         services.AddScoped<IPlannerRepository, PlannerDbRepository>();
 
+        services.AddScoped<IEmergencyDirectoryRepository, EmergencyDirectoryRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();

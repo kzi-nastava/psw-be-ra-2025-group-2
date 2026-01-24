@@ -52,6 +52,9 @@
     <None Update="TestData\f-people-test-data.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\j-emergencies.sql">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Explorer.Stakeholders.Core\Explorer.Stakeholders.Core.csproj" />
