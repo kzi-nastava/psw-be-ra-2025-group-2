@@ -42,6 +42,11 @@ namespace Explorer.BuildingBlocks.Core.Domain
             return !first.Intersects(second);
         }
 
+        public TimeSpan getLength()
+        {
+            return End - Start;
+        }
+
         private static DateTime EnsureUtc(DateTime dateTime)
         {
             if (dateTime.Kind == DateTimeKind.Utc)

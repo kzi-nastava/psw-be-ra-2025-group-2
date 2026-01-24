@@ -192,5 +192,10 @@ namespace Explorer.Stakeholders.Core.UseCases
                 }
             }
         }
+
+        public IEnumerable<SuggestionsDto> EvaluatePlan(long touristId, int month, int? day, int year)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

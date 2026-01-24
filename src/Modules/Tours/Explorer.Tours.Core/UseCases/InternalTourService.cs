@@ -42,5 +42,10 @@ namespace Explorer.Tours.Core.UseCases
         {
             return _tourRepository.GetByIdAsync(tourId).Result == null ? false : true;
         }
+
+        public IEnumerable<PlanerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
