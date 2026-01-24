@@ -233,55 +233,33 @@ namespace Explorer.Encounters.Core.UseCases
             var updated = _encounterRepository.Update(encounter);
             return _mapper.Map<EncounterDto>(updated);
         }
-        public void ActivateEncounter(
-            long userId,
-            long encounterId,
-            double latitude,
-            double longitude)
+        public void ActivateEncounter(long userId, long encounterId, double latitude, double longitude)
         {
             var encounter = _encounterRepository.GetById(encounterId);
-            if (encounter == null)
-                throw new NotFoundException("Encounter not found.");
+            if (encounter == null) throw new NotFoundException("Encounter not found.");
 
-            if (!encounter.IsActive())
-                throw new InvalidOperationException("Encounter is not active.");
+            if (!encounter.IsActive()) throw new InvalidOperationException("Encounter is not active.");
 
-
-            if (_executionRepository.IsCompleted(userId, encounterId))
-                return;
-
+            if (_executionRepository.IsCompleted(userId, encounterId)) return;
 
             var existing = _executionRepository.Get(userId, encounterId);
-            if (existing != null && !existing.IsCompleted)
-                return;
-
+            if (existing != null && !existing.IsCompleted) return;
 
             if (encounter.Type == EncounterType.Location)
             {
                 var hidden = (HiddenLocationEncounter)encounter;
+                var distanceToEncounter = CalculateDistanceMeters(latitude, longitude, hidden.Location.Latitude, hidden.Location.Longitude);
 
-                var distanceToEncounter = CalculateDistanceMeters(
-                    latitude,
-                    longitude,
-                    hidden.Location.Latitude,
-                    hidden.Location.Longitude
-                );
-
-
-                if (distanceToEncounter > hidden.DistanceTreshold)
+                // STROGA PROVERA: Moraš biti na 20m da bi kliknuo dugme "Activate"
+                if (distanceToEncounter > 20)
                 {
-                    throw new InvalidOperationException(
-                        $"You cannot activate this challenge until you are within {hidden.DistanceTreshold:0}m of the location."
-                    );
+                    throw new InvalidOperationException("Previše ste daleko. Priđite na 20m da biste aktivirali izazov.");
                 }
             }
 
-
-            _executionRepository.Add(
-                new EncounterExecution(userId, encounterId)
-            );
+            _executionRepository.Add(new EncounterExecution(userId, encounterId));
         }
-        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime) PingLocation(
+        public (bool IsCompleted, int SecondsInsideZone, int RequiredSeconds, DateTime? CompletionTime, bool IsInRange) PingLocation(
             long userId,
             long encounterId,
             double latitude,
@@ -289,51 +267,62 @@ namespace Explorer.Encounters.Core.UseCases
             int? deltaSeconds = null)
         {
             var encounter = _encounterRepository.GetById(encounterId);
-            if (encounter == null)
-                throw new NotFoundException("Encounter not found");
+            if (encounter == null) throw new NotFoundException("Encounter not found");
 
             if (encounter.Type != EncounterType.Location)
                 throw new InvalidOperationException("Location ping is only supported for Hidden Location encounters.");
 
-            if (!encounter.IsActive())
-                throw new InvalidOperationException("Encounter is not active.");
-
             var hidden = encounter as HiddenLocationEncounter;
-            if (hidden == null)
-                throw new InvalidOperationException("Encounter is not a HiddenLocationEncounter.");
+            if (hidden == null) throw new InvalidOperationException("Not a hidden encounter.");
 
             var execution = _executionRepository.Get(userId, encounterId);
-            if (execution == null)
-                throw new InvalidOperationException("Encounter nije aktiviran.");
 
-            if (execution.IsCompleted)
-                return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
-
-            var ds = deltaSeconds ?? DefaultPingDeltaSeconds;
-
-            var distanceMeters = CalculateDistanceMeters(
+            // 1. IZRAČUNAJ DISTANCU DO SLIKE
+            var distanceToImage = CalculateDistanceMeters(
                 latitude, longitude,
                 hidden.ImageLocation.Latitude, hidden.ImageLocation.Longitude);
 
+            // Radijus za sliku (20m ili onaj iz baze)
+            double completionRange = hidden.DistanceTreshold > 5 ? hidden.DistanceTreshold : 20;
+            bool isInside = distanceToImage <= completionRange;
 
-            var isInside = distanceMeters <= hidden.DistanceTreshold;
+            // === PAMETNA PROVERA (AUTO-ACTIVATE) ===
+            if (execution == null)
+            {
+                // Ako korisnik nije uspeo da aktivira (jer je bio daleko), a sada je PRIŠAO na 20m -> Aktiviraj mu automatski!
+                if (isInside)
+                {
+                    execution = new EncounterExecution(userId, encounterId);
+                    _executionRepository.Add(execution);
+                    // Nastavljamo dalje da mu odmah upišemo i prvi sekund...
+                }
+                else
+                {
+                    // Ako je još uvek daleko, NE BACAJ GREŠKU 400! 
+                    // Vrati "Lažni" status da bi Frontend nastavio da radi (pokazivaće crveno).
+                    return (false, 0, HiddenRequiredSecondsInZone, null, false);
+                }
+            }
+
+            // === OSTATAK JE ISTI ===
+            if (execution.IsCompleted)
+                return (true, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime, true);
+
+            var ds = deltaSeconds ?? DefaultPingDeltaSeconds;
 
             execution.RegisterPing(isInside, ds);
 
             if (!execution.IsCompleted && execution.SecondsInsideZone >= HiddenRequiredSecondsInZone)
             {
                 execution.MarkCompleted(hidden.XP.Value);
-
-                var progress = _touristProgressRepository.GetByUserId(userId)
-                              ?? _touristProgressRepository.Create(new TouristProgress(userId));
-
+                var progress = _touristProgressRepository.GetByUserId(userId) ?? _touristProgressRepository.Create(new TouristProgress(userId));
                 progress.AddXp(hidden.XP.Value);
                 _touristProgressRepository.Update(progress);
             }
 
             _executionRepository.Update(execution);
 
-            return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime);
+            return (execution.IsCompleted, execution.SecondsInsideZone, HiddenRequiredSecondsInZone, execution.CompletionTime, isInside);
         }
         private static double CalculateDistanceMeters(double lat1, double lon1, double lat2, double lon2)
         {
@@ -445,7 +434,7 @@ namespace Explorer.Encounters.Core.UseCases
 
             var allExecutions = _executionRepository.GetActiveByEncounter(encounterId);
 
-            var validUsersCount = 0;
+            var validExecutions = new List<EncounterExecution>();
 
             foreach (var exec in allExecutions)
             {
@@ -460,32 +449,37 @@ namespace Explorer.Encounters.Core.UseCases
 
                 if (distanceToCenter <= range)
                 {
-                    validUsersCount++;
+                    validExecutions.Add(exec);
                 }
             }
 
-            if (validUsersCount >= requiredPeople)
+            if (validExecutions.Count >= requiredPeople)
             {
-                if (!myExecution.IsCompleted)
+                foreach (var validExec in validExecutions)
                 {
-                    myExecution.MarkCompleted(socialEncounter.XP.Value);
-                    _executionRepository.Update(myExecution);
+                    if (!validExec.IsCompleted)
+                    {
+                        validExec.MarkCompleted(socialEncounter.XP.Value);
+                        _executionRepository.Update(validExec);
 
-                    var progress = _touristProgressRepository.GetByUserId(userId)
-                                   ?? _touristProgressRepository.Create(new TouristProgress(userId));
+                        var progress = _touristProgressRepository.GetByUserId(validExec.UserId)
+                                        ?? _touristProgressRepository.Create(new TouristProgress(validExec.UserId));
 
-                    progress.AddXp(socialEncounter.XP.Value);
-                    _touristProgressRepository.Update(progress);
+                        progress.AddXp(socialEncounter.XP.Value);
+                        _touristProgressRepository.Update(progress);
+                    }
                 }
             }
+
+            var updatedMyExecution = _executionRepository.Get(userId, encounterId);
 
             return new EncounterExecutionStatusDto
             {
-                IsCompleted = myExecution.IsCompleted,
+                IsCompleted = updatedMyExecution.IsCompleted,
                 SecondsInsideZone = 0,
                 RequiredSeconds = 0,
-                CompletionTime = myExecution.CompletionTime?.ToString("O"),
-                ActiveTourists = validUsersCount,
+                CompletionTime = updatedMyExecution.CompletionTime?.ToString("O"),
+                ActiveTourists = validExecutions.Count,
                 InRange = true
             };
         }

@@ -486,6 +486,13 @@ namespace Explorer.API.Controllers.Author
                 return StatusCode(500, new { error = "An error occurred while deleting the image." });
             }
         }
+
+        [HttpGet("used-encounters")]
+        public ActionResult<List<long>> GetUsedEncounterIds()
+        {
+            var result = _tourService.GetUsedEncounterIds();
+            return Ok(result);
+        }
     }
 
 }

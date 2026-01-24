@@ -162,7 +162,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
             }
         }
 
-        
+
         [Authorize(Policy = "touristPolicy")]
         [HttpPost("location/{id:long}")]
         public ActionResult<EncounterExecutionStatusDto> PingLocation(long id, [FromBody] EncounterLocationPingDto dto)
@@ -185,21 +185,14 @@ namespace Explorer.API.Controllers.Administrator.Administration
                     IsCompleted = result.IsCompleted,
                     SecondsInsideZone = result.SecondsInsideZone,
                     RequiredSeconds = result.RequiredSeconds,
-                    CompletionTime = result.CompletionTime?.ToString("O")
+                    CompletionTime = result.CompletionTime?.ToString("O"),
+
+                    InRange = result.IsInRange
                 });
             }
-            catch (NotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (InvalidOperationException e)
-            {
-                return BadRequest(e.Message);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            catch (NotFoundException e) { return NotFound(e.Message); }
+            catch (InvalidOperationException e) { return BadRequest(e.Message); }
+            catch (Exception e) { return BadRequest(e.Message); }
         }
 
 
@@ -282,7 +275,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
             catch (InvalidOperationException e) { return BadRequest(e.Message); }
         }
         [ApiExplorerSettings(IgnoreApi = true)]
-        [Authorize(Policy = "administratorPolicy")]
+        [Authorize(Roles = "administrator, author, tourist")]
         [HttpPost("upload-image")]
         [RequestSizeLimit(10_000_000)] // 10MB
         public async Task<ActionResult<string>> UploadImage([FromForm] IFormFile file)
