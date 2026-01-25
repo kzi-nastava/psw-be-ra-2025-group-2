@@ -30,7 +30,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
         public static PlanEvaluationResult WithSmallTimeSlotIssue(DateOnly date, string tourName, Minutes minTourDurationMinutes, DateTimeInterval reservedSlot)
         {
             EvaluationKind kind = EvaluationKind.SmallTimeSlot;
-            string message = $"Date: {date} - The tour \"{tourName}\" has a set duration of {minTourDurationMinutes}. You reserved a slot of {reservedSlot.getLength().TotalMinutes} minutes. Consider extending the slot.";
+            string message = $"Date: {date} - The tour \"{tourName}\" has a set duration of {minTourDurationMinutes}. You reserved a slot of {reservedSlot.Duration.Minutes} minutes. Consider extending the slot.";
 
             return new PlanEvaluationResult(kind, date, message);
         }

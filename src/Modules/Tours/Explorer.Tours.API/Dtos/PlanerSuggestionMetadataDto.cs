@@ -13,5 +13,7 @@ namespace Explorer.Tours.API.Dtos
         int TotalDurationMinutes { get; set; }
         double FirstKeyPointLatitude { get; set; }
         double FirstKeyPointLongitude { get; set; }
+        double LastKeyPointLatitude { get; set; }
+        double LastKeyPointLongitude { get; set; }
     }
 }
