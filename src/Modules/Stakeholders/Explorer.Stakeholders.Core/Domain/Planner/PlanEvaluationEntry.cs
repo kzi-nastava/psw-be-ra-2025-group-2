@@ -42,6 +42,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             yield return Slot;
             yield return Minutes;
             yield return FirstKeyPointCoordinates;
+            yield return LastKeyPointCoordinates;
         }
     }
 }

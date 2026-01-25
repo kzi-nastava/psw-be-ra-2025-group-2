@@ -38,7 +38,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
         public static PlanEvaluationResult WithDistanceIssue(DateOnly date, string firstTourName, string secondTourName, Distance distance)
         {
             EvaluationKind kind = EvaluationKind.Distance;
-            string message = $"Date: {date} - The distance between the first key points of \"{firstTourName}\" and \"{secondTourName}\" is {distance.ToKilometers()} km. Consider a larger time gap between the two.";
+            string message = $"Date: {date} - The distance between the last key point of \"{firstTourName}\" and the first key point of \"{secondTourName}\" is {distance.ToKilometers():0.00} km. Consider a larger time gap between the two.";
 
             return new PlanEvaluationResult(kind, date, message);
         }
@@ -53,7 +53,9 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
         protected override IEnumerable<object> GetEqualityComponents()
         {
-            throw new NotImplementedException();
+            yield return Kind;
+            yield return Date;
+            yield return Message ?? string.Empty;
         }
     }
 }

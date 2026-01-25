@@ -31,7 +31,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
             List<PlanEvaluationResult> result = new List<PlanEvaluationResult>();
 
-            entries = (scope == EvaluationTimeScope.Day) ? entries.Where(e => e.Slot.Start.Date.Equals(date)).ToList() : entries;
+            entries = (scope == EvaluationTimeScope.Day) ? entries.Where(e => DateOnly.FromDateTime(e.Slot.Start) == date).ToList() : entries;
 
             Dictionary<DateOnly, List<PlanEvaluationEntry>> entriesByDate = SegmentByDate(entries);
 
@@ -39,7 +39,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
             foreach (var entry in entries)
             {
-                if (entry.Slot.Duration.Minutes < 0.8 * entry.Minutes)
+                if (entry.Slot.Duration.TotalMinutes < 0.8 * entry.Minutes)
                 {
                     result.Add(PlanEvaluationResult.WithSmallTimeSlotIssue(DateOnly.FromDateTime(entry.Slot.Start), entry.TourName, entry.Minutes, entry.Slot));
                 }
@@ -50,22 +50,30 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
             if (entries.Count > 1)
             {
-                DateTime lastConflictStart = default;
+                DateTime lastConflictFirstTourEnd = default;
 
                 for (int i = 0; i < entries.Count - 1; i++)
                 {
-                    Distance distance = Haversine.CalculateDistance(entries[i].FirstKeyPointCoordinates, entries[i + 1].FirstKeyPointCoordinates);
-                    int minutesBetweenStarts = (entries[i + 1].Slot.Start - entries[i].Slot.Start).Minutes;
+                    Distance distance = Haversine.CalculateDistance(entries[i].LastKeyPointCoordinates, entries[i + 1].FirstKeyPointCoordinates);
+                    int minutesBetweenStarts = (int)(entries[i + 1].Slot.Start - entries[i].Slot.End).TotalMinutes;
                     
-                    double requiredVelocity = distance.ToKilometers() / minutesBetweenStarts;
+                    double requiredVelocity = (minutesBetweenStarts == 0) ? -1 : distance.ToKilometers() / minutesBetweenStarts;
                     
                     if (requiredVelocity > MaxTouristAirLineVelocity)
                     {
-                        if (entries[i].Slot.Start - lastConflictStart >= MinDistanceConflictInterval)
+                        if (entries[i].Slot.End - lastConflictFirstTourEnd >= MinDistanceConflictInterval)
                         {
                             result.Add(PlanEvaluationResult.WithDistanceIssue(DateOnly.FromDateTime(entries[i].Slot.Start), entries[i].TourName, entries[i + 1].TourName, distance));
                         }
-                        lastConflictStart = entries[i].Slot.Start;
+                        lastConflictFirstTourEnd = entries[i].Slot.End;
+                    }
+                    else if (requiredVelocity == -1)
+                    {
+                        if (entries[i].Slot.End - lastConflictFirstTourEnd >= MinDistanceConflictInterval && distance > Distance.FromMeters(500))
+                        {
+                            result.Add(PlanEvaluationResult.WithDistanceIssue(DateOnly.FromDateTime(entries[i].Slot.Start), entries[i].TourName, entries[i + 1].TourName, distance));
+                        }
+                        lastConflictFirstTourEnd = entries[i].Slot.End;
                     }
                 }
             }
@@ -80,7 +88,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
                 }
             }
 
-            return result.OrderBy(r => r.Date).ToList();
+            return result.OrderBy(r => r.Date).ThenBy(r => r.Kind).ToList();
         }
 
 
@@ -91,7 +99,12 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
             foreach(var entry in entries)
             {
                 var date = DateOnly.FromDateTime(entry.Slot.Start);
-                ret[date] ??= new List<PlanEvaluationEntry>();
+                
+                if(!ret.TryGetValue(date, out var _))
+                {
+                    ret[date] = new List<PlanEvaluationEntry>();
+                }
+
                 ret[date].Add(entry);
             }
 

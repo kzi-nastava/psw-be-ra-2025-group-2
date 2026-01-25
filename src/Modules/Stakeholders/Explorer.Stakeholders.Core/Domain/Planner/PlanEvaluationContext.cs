@@ -49,7 +49,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
         private bool IsDayEqual(DateTimeInterval interval, DateOnly date)
         {
-            return interval.Start.Date.Equals(date) && interval.End.Date.Equals(date);
+            return DateOnly.FromDateTime(interval.Start) == date && DateOnly.FromDateTime(interval.End) == date;
         }
 
         private bool AreMonthsEqual(DateTimeInterval interval, DateOnly date)

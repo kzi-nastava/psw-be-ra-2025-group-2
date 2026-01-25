@@ -47,7 +47,7 @@ namespace Explorer.BuildingBlocks.Core.Domain
 
         protected override IEnumerable<object> GetEqualityComponents()
         {
-            throw new NotImplementedException();
+            yield return Amount;
         }
     }
 }
