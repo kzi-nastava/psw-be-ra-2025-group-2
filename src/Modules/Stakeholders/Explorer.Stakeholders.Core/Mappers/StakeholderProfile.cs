@@ -4,6 +4,8 @@ using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Explorer.Stakeholders.API.Dtos.Quizzes;
 using Explorer.Stakeholders.API.Dtos.Messages;
+using Explorer.Stakeholders.Core.Domain.Emergency;
+using Explorer.Stakeholders.API.Dtos.Emergency;
 
 
 
@@ -36,6 +38,11 @@ public class StakeholderProfile : Profile
 
         CreateMap<QuizOption, QuizOptionDto>();
         CreateMap<Quiz, QuizDto>();
+
+
+        CreateMap<EmergencyPlace, EmergencyPlaceDto>();
+
+
         CreateMap<OnboardingSlide, OnboardingSlideDto>().ReverseMap();
         CreateMap<OnboardingProgress, OnboardingProgressDto>().ReverseMap();
         CreateMap<Message, MessageDto>().ReverseMap();
