@@ -17,14 +17,16 @@ namespace Explorer.Tours.Core.UseCases.Execution
         private readonly ITourExecutionRepository _executionRepository;
         private readonly ITourRepository _tourRepository;
         private readonly IInternalEncounterExecutionService _encounterInternalService;
+        private readonly ITourStatisticsRepository _tourStats;
 
         public TourExecutionService(IInternalUserService userService, ITourExecutionRepository executionRepository, ITourRepository tourRepository,
-            IInternalEncounterExecutionService encounterInternalService)
+            IInternalEncounterExecutionService encounterInternalService, ITourStatisticsRepository tourStats)
         {
             _userService = userService;
             _executionRepository = executionRepository;
             _tourRepository = tourRepository;
-            _encounterInternalService = encounterInternalService; 
+            _encounterInternalService = encounterInternalService;
+            _tourStats = tourStats;
         }
 
         public TourExecutionDto GetExecution(long touristId, long tourId)
@@ -79,6 +81,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
 
                     _userService.SetActiveTourIdByUserId(touristId, tourId);
                     execution = _executionRepository.Create(execution);
+                    _tourStats.IncrementStarts(tourId);
 
                     return GetExecutionData(touristId, execution.Id);
                 }

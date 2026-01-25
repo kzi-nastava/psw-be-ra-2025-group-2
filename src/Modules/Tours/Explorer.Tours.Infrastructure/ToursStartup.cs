@@ -58,6 +58,7 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<ITourRepository, TourDbRepository>();
         services.AddScoped<ITourReportRepository, TourReportDbRepository>();
+        services.AddScoped<ITourStatisticsRepository, TourStatisticsRepository>();
 
         services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();

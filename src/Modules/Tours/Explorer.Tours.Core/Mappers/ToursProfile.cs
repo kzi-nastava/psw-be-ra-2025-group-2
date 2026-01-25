@@ -41,7 +41,9 @@ public class ToursProfile : Profile
              .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints))
              .ForMember(dest => dest.Durations, opt => opt.MapFrom(src => src.Durations))
              .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt))
-             .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl));
+             .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl))
+             .ForMember(dest => dest.PurchasesCount, opt => opt.MapFrom(src => src.PurchasesCount))
+             .ForMember(dest => dest.StartsCount, opt => opt.MapFrom(src => src.StartsCount));
 
         CreateMap<CreateTourDto, Tour>()
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
