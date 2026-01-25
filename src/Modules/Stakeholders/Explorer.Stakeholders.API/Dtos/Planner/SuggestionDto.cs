@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Explorer.Stakeholders.API.Dtos.Planner
 {
-    public class SuggestionsDto
+    public class SuggestionDto
     {
-        public int Month { get; set; }
-        public int? Day { get; set; }
-        List<string> Suggestions { get; set; } = new();
+        public DateOnly Date { get; set; }
+        public string Kind { get; set; }
+        public string Message { get; set; }
     }
 }

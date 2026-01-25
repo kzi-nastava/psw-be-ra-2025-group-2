@@ -6,14 +6,18 @@ using Explorer.Stakeholders.API.Dtos.Planner;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain.Exceptions;
 using Explorer.Stakeholders.Core.Domain.Planner;
+using Explorer.Stakeholders.Core.Domain.Planner.Services;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Administration;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Explorer.Stakeholders.Core.Domain.Planner.PlanEvaluationContext;
 
 namespace Explorer.Stakeholders.Core.UseCases
 {
@@ -22,13 +26,15 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IInternalTourService _internalTourService;
         private readonly IPlannerRepository _plannerRepository;
         private readonly IInternalTokenService _tokenService;
+        private readonly IPlanEvaluator _planEvaluator;
         private readonly IMapper _mapper;
 
-        public PlannerService(IInternalTourService internalTourService, IPlannerRepository plannerRepository, IInternalTokenService tokenService, IMapper mapper)
+        public PlannerService(IInternalTourService internalTourService, IPlannerRepository plannerRepository, IInternalTokenService tokenService, IPlanEvaluator planEvaluator, IMapper mapper)
         {
             _internalTourService = internalTourService;
             _plannerRepository = plannerRepository;
             _tokenService = tokenService;
+            _planEvaluator = planEvaluator;
             _mapper = mapper;
         }
 
@@ -156,7 +162,83 @@ namespace Explorer.Stakeholders.Core.UseCases
             return ret;
         }
 
+        public IEnumerable<SuggestionDto> EvaluatePlan(long touristId, int month, int? day, int year)
+        {
+            List<ScheduleEntry> scheduleEntries;
 
+            if(day != null)
+            {
+                scheduleEntries = _plannerRepository.GetDailyScheduleEntries(touristId, day.Value, month, year);
+            }
+            else
+            {
+                scheduleEntries = _plannerRepository.GetMonthlyScheduleEntries(touristId, month, year);
+            }
+
+            var tourIds = scheduleEntries.Select(e => e.TourId).Distinct().ToList();
+
+            var tourMetadata = GetMetadataDictionary(_internalTourService.GetMetadataByIds(tourIds));
+
+            var evaluationEntries = GetEvaluationEntries(scheduleEntries, tourMetadata);
+
+            var context = GetContext(evaluationEntries, day, month, year);
+
+            var evaluationResults = _planEvaluator.Evaluate(context);
+
+            var suggestions = evaluationResults.Select(r => new SuggestionDto
+            {
+                Date = r.Date,
+                Kind = r.Kind.ToString(),
+                Message = r.Message
+            });
+
+            return suggestions;
+        }
+
+        private PlanEvaluationContext GetContext(List<PlanEvaluationEntry> entries, int? day, int month, int year)
+        {
+            var builder = new PlanEvaluationContextBuilder();
+
+            builder.ForDate(new DateOnly(year, month, day ?? 1))
+                .WithTimeScope(day == null ? EvaluationTimeScope.Month : EvaluationTimeScope.Day);
+
+            foreach(var entry in entries)
+            {
+                builder.AddEntry(entry);
+            }
+
+            return builder.Build();
+        }
+
+        private Dictionary<long, PlannerSuggestionMetadataDto> GetMetadataDictionary(IEnumerable<PlannerSuggestionMetadataDto> suggestions)
+        {
+            var ret = new Dictionary<long, PlannerSuggestionMetadataDto>();
+
+            foreach (var suggestion in suggestions)
+            {
+                ret.Add(suggestion.TourId, suggestion);
+            }
+
+            return ret;
+        }
+
+        private List<PlanEvaluationEntry> GetEvaluationEntries(List<ScheduleEntry> scheduleEntries, Dictionary<long, PlannerSuggestionMetadataDto> metadata)
+        {
+            var ret = new List<PlanEvaluationEntry>();
+
+            foreach(var entry in scheduleEntries)
+            {
+                ret.Add(new PlanEvaluationEntry(
+                    metadata[entry.TourId].TourName,
+                    entry.ScheduledTime,
+                    Minutes.Of(metadata[entry.TourId].TotalDurationMinutes),
+                    new GeoLocation(metadata[entry.TourId].FirstKeyPointLatitude, metadata[entry.TourId].FirstKeyPointLongitude),
+                    new GeoLocation(metadata[entry.TourId].LastKeyPointLatitude, metadata[entry.TourId].LastKeyPointLongitude)
+                    ));
+            }
+
+            return ret;
+        }
 
         private void EnrichWithTourNames(DayEntryDto dto)
         {
@@ -164,9 +246,9 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             var tourInfos = _internalTourService.GetPartialTourInfos(tourIds).ToDictionary(t => t.Id, t => t.Name);
 
-            foreach(var entry in dto.Entries)
+            foreach (var entry in dto.Entries)
             {
-                if(tourInfos.TryGetValue(entry.TourId, out var name))
+                if (tourInfos.TryGetValue(entry.TourId, out var name))
                 {
                     entry.TourName = name;
                 }
@@ -181,21 +263,16 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             var tourInfos = _internalTourService.GetPartialTourInfos(tourIds).ToDictionary(t => t.Id, t => t.Name);
 
-            foreach(var dayEntry in entries)
+            foreach (var dayEntry in entries)
             {
-                foreach(var scheduleEntry in dayEntry.Entries)
+                foreach (var scheduleEntry in dayEntry.Entries)
                 {
-                    if(tourInfos.TryGetValue(scheduleEntry.TourId, out var name))
+                    if (tourInfos.TryGetValue(scheduleEntry.TourId, out var name))
                     {
                         scheduleEntry.TourName = name;
                     }
                 }
             }
-        }
-
-        public IEnumerable<SuggestionsDto> EvaluatePlan(long touristId, int month, int? day, int year)
-        {
-            throw new NotImplementedException();
         }
     }
 }

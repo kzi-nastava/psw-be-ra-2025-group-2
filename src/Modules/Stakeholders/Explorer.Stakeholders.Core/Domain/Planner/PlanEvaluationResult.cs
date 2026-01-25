@@ -18,7 +18,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
     {
         public EvaluationKind Kind { get; private set; }
         public DateOnly Date { get; private set; }
-        public string? Message { get; private set; }
+        public string Message { get; private set; }
 
         private PlanEvaluationResult(EvaluationKind kind, DateOnly date, string message)
         {

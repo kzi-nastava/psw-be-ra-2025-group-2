@@ -11,7 +11,7 @@ namespace Explorer.Tours.API.Internal
     {
         IEnumerable<PartialTourInfoDto> GetPartialTourInfos(IEnumerable<long> tourIds);
 
-        IEnumerable<PlanerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds);
+        IEnumerable<PlannerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds);
         bool Exists(long tourId);
     }
 }

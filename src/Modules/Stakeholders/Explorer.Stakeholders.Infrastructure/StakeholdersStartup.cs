@@ -2,6 +2,8 @@ using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Public.Administration;
+using Explorer.Stakeholders.Core.Domain.Planner;
+using Explorer.Stakeholders.Core.Domain.Planner.Services;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Core.Mappers;
 using Explorer.Stakeholders.Core.Services;
@@ -53,6 +55,8 @@ public static class StakeholdersStartup
         
         services.AddScoped<IFaqService, FaqService>();
         services.AddScoped<IHelpSettingsService, HelpSettingsService>();
+
+        services.AddScoped<IPlanEvaluator, PlanEvaluator>();
 
         /* Internal */
         services.AddScoped<IInternalUserService, InternalUserService>();

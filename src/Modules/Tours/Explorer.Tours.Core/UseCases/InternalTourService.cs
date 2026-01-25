@@ -43,9 +43,27 @@ namespace Explorer.Tours.Core.UseCases
             return _tourRepository.GetByIdAsync(tourId).Result == null ? false : true;
         }
 
-        public IEnumerable<PlanerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds)
+        public IEnumerable<PlannerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds)
         {
-            throw new NotImplementedException();
+            var tours = _tourRepository.GetByIds(tourIds);
+
+            var ret = new List<PlannerSuggestionMetadataDto>();
+
+            foreach(var tour in tours)
+            {
+                ret.Add(new PlannerSuggestionMetadataDto
+                {
+                    TourId = tour.Id,
+                    TourName = tour.Name,
+                    TotalDurationMinutes = tour.Durations.Select(d => d.Minutes).Sum(),
+                    FirstKeyPointLatitude = tour.KeyPoints.First().Latitude,
+                    FirstKeyPointLongitude = tour.KeyPoints.First().Longitude,
+                    LastKeyPointLatitude = tour.KeyPoints.Last().Latitude,
+                    LastKeyPointLongitude = tour.KeyPoints.Last().Longitude,
+                });
+            }
+
+            return ret;
         }
     }
 }

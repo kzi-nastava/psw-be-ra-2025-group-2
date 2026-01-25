@@ -16,6 +16,6 @@ namespace Explorer.Stakeholders.API.Public
 
         void RemoveScheduleEntry(long id);
 
-        IEnumerable<SuggestionsDto> EvaluatePlan(long touristId, int month, int? day, int year);
+        IEnumerable<SuggestionDto> EvaluatePlan(long touristId, int month, int? day, int year);
     }
 }
