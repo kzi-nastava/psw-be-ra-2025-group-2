@@ -26,3 +26,6 @@ DELETE FROM tours."Equipment";
 
 DELETE FROM stakeholders."PlannerScheduleEntries";
 DELETE FROM stakeholders."PlannerDayEntries";
+
+DELETE FROM stakeholders."EmergencyPlaces";
+DELETE FROM stakeholders."EmergencyDirectories";
