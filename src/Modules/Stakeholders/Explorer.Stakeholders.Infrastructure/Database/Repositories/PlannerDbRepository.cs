@@ -85,6 +85,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
         public List<ScheduleEntry> GetMonthlyScheduleEntries(long touristId, int month, int year)
         {
             return _context.PlannerDayEntries
+                .AsNoTracking()
                 .Include(x => x.Entries)
                 .Where(x => x.TouristId == touristId &&
                             x.Date.Month == month &&
@@ -97,6 +98,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
         public List<ScheduleEntry> GetDailyScheduleEntries(long touristId, int day, int month, int year)
         {
             return _context.PlannerDayEntries
+                .AsNoTracking()
                 .Include(x => x.Entries)
                 .Where(x => x.TouristId == touristId &&
                             x.Date.Month == month &&

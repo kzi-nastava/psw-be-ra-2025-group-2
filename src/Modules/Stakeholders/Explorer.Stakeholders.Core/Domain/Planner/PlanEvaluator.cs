@@ -88,7 +88,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
                 }
             }
 
-            return result.OrderBy(r => r.Date).ThenBy(r => r.Kind).ToList();
+            return result.OrderBy(r => r.Date).ToList();
         }
 
 

@@ -94,6 +94,7 @@ namespace Explorer.Stakeholders.Core.Domain.Planner
 
             public PlanEvaluationContext Build()
             {
+                _entries = _entries.OrderBy(e => e.Slot.Start).ToList();
                 return new PlanEvaluationContext(_scope, _date, _entries);
             }
         }

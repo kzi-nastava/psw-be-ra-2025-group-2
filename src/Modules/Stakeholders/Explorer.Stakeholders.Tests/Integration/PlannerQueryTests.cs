@@ -71,6 +71,76 @@ namespace Explorer.Stakeholders.Tests.Integration
             }
         }
 
+        [Fact]
+        public void Gets_monthly_schedule_for_tourist()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var controller = CreateControllerWithRole(scope, "-21", "tourist");
+
+                // Tourist -21 has 2 DayEntries in February 2026
+                var result = controller.GetMonthlySchedule(2026, 2).Result.ShouldBeOfType<OkObjectResult>();
+                var schedule = result.Value.ShouldBeOfType<List<DayEntryDto>>();
+
+                schedule.Count.ShouldBe(2);
+                schedule.Any(d => d.Date == new DateOnly(2026, 2, 13)).ShouldBeTrue();
+
+                // Check enrichment: Tour -1 name should be "Belgrade Historical Walk"
+                var day13 = schedule.First(d => d.Date == new DateOnly(2026, 2, 13));
+                day13.Entries.Any(e => e.TourName == "Belgrade Historical Walk").ShouldBeTrue();
+            }
+        }
+
+        [Fact]
+        public void Gets_suggestions_for_overbooked_day()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var controller = CreateControllerWithRole(scope, "-21", "tourist");
+
+                // Tourist -21 has 4 tours on Feb 13th
+                var result = controller.GetSuggestions(2026, 2, 13).Result.ShouldBeOfType<OkObjectResult>();
+                var suggestions = result.Value.ShouldBeOfType<List<SuggestionDto>>();
+
+                suggestions.ShouldNotBeEmpty();
+                suggestions.Any(s => s.Kind == "OverbookedSchedule").ShouldBeTrue();
+                suggestions.Any(s => s.Kind == "SmallTimeSlot").ShouldBeTrue();
+                suggestions.Select(s => s.Date).ShouldBeInOrder();
+            }
+        }
+
+        [Fact]
+        public void Gets_suggestions_for_valid_day()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var controller = CreateControllerWithRole(scope, "-22", "tourist");
+
+                // Tourist -22 has a standard 2-tour day on Feb 13th
+                var result = controller.GetSuggestions(2026, 2, 13).Result.ShouldBeOfType<OkObjectResult>();
+                var suggestions = result.Value.ShouldBeOfType<List<SuggestionDto>>();
+
+                suggestions.ShouldBeEmpty();
+            }
+        }
+
+        [Fact]
+        public void Gets_suggestions_for_entire_month()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var controller = CreateControllerWithRole(scope, "-21", "tourist");
+
+                // day is null -> Monthly scope
+                var result = controller.GetSuggestions(2026, 2, null).Result.ShouldBeOfType<OkObjectResult>();
+                var suggestions = result.Value.ShouldBeOfType<List<SuggestionDto>>();
+
+                // Should aggregate issues across the month
+                suggestions.ShouldNotBeEmpty();
+                suggestions.Count(s => s.Kind == "OverbookedSchedule").ShouldBe(1);
+            }
+        }
+
         private static PlannerController CreateControllerWithRole(IServiceScope scope, string userId, string role)
         {
             return new PlannerController(scope.ServiceProvider.GetRequiredService<IPlannerService>())

@@ -59,7 +59,7 @@ namespace Explorer.Tours.Core.UseCases
                     FirstKeyPointLatitude = tour.KeyPoints.First().Latitude,
                     FirstKeyPointLongitude = tour.KeyPoints.First().Longitude,
                     LastKeyPointLatitude = tour.KeyPoints.Last().Latitude,
-                    LastKeyPointLongitude = tour.KeyPoints.Last().Longitude,
+                    LastKeyPointLongitude = tour.KeyPoints.Last().Longitude
                 });
             }
 

@@ -192,7 +192,7 @@ namespace Explorer.Stakeholders.Core.UseCases
                 Message = r.Message
             });
 
-            return suggestions;
+            return suggestions.ToList();
         }
 
         private PlanEvaluationContext GetContext(List<PlanEvaluationEntry> entries, int? day, int month, int year)
