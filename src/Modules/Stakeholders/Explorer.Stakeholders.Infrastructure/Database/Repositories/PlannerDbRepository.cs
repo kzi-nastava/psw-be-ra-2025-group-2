@@ -1,4 +1,5 @@
 ﻿using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Stakeholders.API.Dtos.Planner;
 using Explorer.Stakeholders.Core.Domain.Planner;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
@@ -79,6 +80,33 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 
             _context.PlannerDayEntries.Remove(entry);
             _context.SaveChanges();
+        }
+
+        public List<ScheduleEntry> GetMonthlyScheduleEntries(long touristId, int month, int year)
+        {
+            return _context.PlannerDayEntries
+                .AsNoTracking()
+                .Include(x => x.Entries)
+                .Where(x => x.TouristId == touristId &&
+                            x.Date.Month == month &&
+                            x.Date.Year == year)
+                .SelectMany(x => x.Entries)
+                .OrderBy(x => x.ScheduledTime.Start)
+                .ToList();
+        }
+
+        public List<ScheduleEntry> GetDailyScheduleEntries(long touristId, int day, int month, int year)
+        {
+            return _context.PlannerDayEntries
+                .AsNoTracking()
+                .Include(x => x.Entries)
+                .Where(x => x.TouristId == touristId &&
+                            x.Date.Month == month &&
+                            x.Date.Year == year &&
+                            x.Date.Day == day)
+                .SelectMany(x => x.Entries)
+                .OrderBy(x => x.ScheduledTime.Start)
+                .ToList();
         }
     }
 }
