@@ -37,6 +37,23 @@ namespace Explorer.Stakeholders.Tests.Integration
             dto.CountryCode.ShouldBe("RS");
             dto.Hospitals.Count.ShouldBeGreaterThan(0);
             dto.PoliceStations.Count.ShouldBeGreaterThan(0);
+
+            dto.Embassies.ShouldNotBeNull();
+            dto.Embassies.Count.ShouldBeGreaterThan(0);
+
+            dto.PhraseCategories.ShouldNotBeNull();
+            dto.PhraseCategories.Count.ShouldBe(2);
+
+            // Medicina category exists and has data
+            dto.PhraseCategories.Any(c => c.Category == "Medicina").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.ShouldNotBeNull();
+            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.Count.ShouldBeGreaterThan(0);
+
+            // Police category exists and has data
+            dto.PhraseCategories.Any(c => c.Category == "Policija").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.ShouldNotBeNull();
+            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.Count.ShouldBeGreaterThan(0);
+
         }
 
         [Fact]
@@ -56,6 +73,19 @@ namespace Explorer.Stakeholders.Tests.Integration
             dto.PoliceStations.Count.ShouldBe(0);
             dto.Instructions.ShouldNotBeNullOrWhiteSpace();
             dto.Disclaimer.ShouldNotBeNullOrWhiteSpace();
+
+            dto.Embassies.ShouldNotBeNull();
+            dto.Embassies.Count.ShouldBe(0);
+
+            dto.PhraseCategories.ShouldNotBeNull();
+            dto.PhraseCategories.Count.ShouldBe(2);
+
+            dto.PhraseCategories.Any(c => c.Category == "Medicina").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.Count.ShouldBe(0);
+
+            dto.PhraseCategories.Any(c => c.Category == "Policija").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.Count.ShouldBe(0);
+
         }
 
         private static EmergencyOverviewController CreateControllerWithRole(IServiceScope scope, string userId, string role)
