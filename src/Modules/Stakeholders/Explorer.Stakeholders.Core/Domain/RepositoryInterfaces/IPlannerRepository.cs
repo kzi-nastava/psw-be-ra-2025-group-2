@@ -1,4 +1,5 @@
-﻿using Explorer.Stakeholders.Core.Domain.Planner;
+﻿using Explorer.Stakeholders.API.Dtos.Planner;
+using Explorer.Stakeholders.Core.Domain.Planner;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
 {
     public interface IPlannerRepository
     {
+        List<ScheduleEntry> GetMonthlyScheduleEntries(long touristId, int month, int year);
+        List<ScheduleEntry> GetDailyScheduleEntries(long touristId, int day, int month, int year);
+
         IEnumerable<DayEntry> GetByMonth(long touristId, int month, int year);
         DayEntry? GetById(long id);
         DayEntry? GetByScheduleEntryId(long scheduleEntryId);

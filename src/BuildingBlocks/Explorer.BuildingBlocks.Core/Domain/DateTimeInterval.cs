@@ -11,6 +11,8 @@ namespace Explorer.BuildingBlocks.Core.Domain
         public DateTime Start { get; private set; }
         public DateTime End { get; private set; }
 
+        public TimeSpan Duration => End - Start;
+
         private DateTimeInterval() { }
 
         private DateTimeInterval(DateTime start, DateTime end)
@@ -40,6 +42,11 @@ namespace Explorer.BuildingBlocks.Core.Domain
         public static bool AreDisjoint(DateTimeInterval first, DateTimeInterval second)
         {
             return !first.Intersects(second);
+        }
+
+        public DateTimeInterval Offset(TimeSpan span)
+        {
+            return new DateTimeInterval(Start + span, End + span);
         }
 
         private static DateTime EnsureUtc(DateTime dateTime)
