@@ -22,6 +22,8 @@ public class StakeholdersContext : DbContext
     public DbSet<EmergencyDirectory> EmergencyDirectories { get; set; }
     public DbSet<EmergencyPlace> EmergencyPlaces { get; set; }
 
+    public DbSet<Embassy> Embassies { get; set; }
+    public DbSet<EmergencyPhrase> EmergencyPhrases { get; set; }
 
     public DbSet<Diary> Diaries { get; set; }
 
@@ -69,6 +71,10 @@ public class StakeholdersContext : DbContext
 
         modelBuilder.ApplyConfiguration(new EmergencyDirectoryConfiguration());
         modelBuilder.ApplyConfiguration(new EmergencyPlaceConfiguration());
+        modelBuilder.ApplyConfiguration(new EmbassyConfiguration());
+        modelBuilder.ApplyConfiguration(new EmergencyPhraseConfiguration());
+
+
 
         ConfigureStakeholder(modelBuilder);
     }

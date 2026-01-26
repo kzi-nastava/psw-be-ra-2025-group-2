@@ -29,3 +29,5 @@ DELETE FROM stakeholders."PlannerDayEntries";
 
 DELETE FROM stakeholders."EmergencyPlaces";
 DELETE FROM stakeholders."EmergencyDirectories";
+DELETE FROM stakeholders."EmergencyPhrases";
+DELETE FROM stakeholders."Embassies";

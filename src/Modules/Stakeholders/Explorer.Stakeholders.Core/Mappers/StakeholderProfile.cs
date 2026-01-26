@@ -41,6 +41,10 @@ public class StakeholderProfile : Profile
 
 
         CreateMap<EmergencyPlace, EmergencyPlaceDto>();
+        CreateMap<Embassy, EmbassyDto>();
+        CreateMap<EmergencyPhrase, PhraseDto>()
+            .ForMember(d => d.MyText, o => o.MapFrom(s => s.MyText))
+            .ForMember(d => d.LocalText, o => o.MapFrom(s => s.LocalText));
 
 
         CreateMap<OnboardingSlide, OnboardingSlideDto>().ReverseMap();
