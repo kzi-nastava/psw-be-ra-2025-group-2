@@ -50,6 +50,20 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tour = new Tour(dto.Name, dto.Description, dto.Difficulty, dto.AuthorId, dto.Tags);
             tour.SetPrice(dto.Price);
+            tour.SetEnvironmentType(dto.EnvironmentType.HasValue
+                ? (TourEnvironmentType)dto.EnvironmentType.Value
+                : null);
+
+            tour.SetAdventureLevel(dto.AdventureLevel.HasValue
+                ? (AdventureLevel)dto.AdventureLevel.Value
+                : null);
+
+            tour.SetSuitableForGroups(dto.SuitableFor?.Select(x => (SuitableFor)x));
+
+            tour.SetFoodTypes(dto.FoodTypes?.Select(x => (FoodType)x));
+
+            tour.SetActivityTypes(dto.ActivityTypes?.Select(x => (ActivityType)x));
+
 
 
             if (dto.Durations != null)
@@ -149,8 +163,24 @@ namespace Explorer.Tours.Core.UseCases.Administration
             tour.Update(dto.Name, dto.Description, dto.Difficulty, dto.Tags);
             tour.SetLength(dto.LengthKm);
             tour.SetPrice(dto.Price);
+            tour.SetEnvironmentType(dto.EnvironmentType.HasValue
+                ? (TourEnvironmentType)dto.EnvironmentType.Value
+                : null);
 
-            if(dto.Durations != null)
+            tour.SetAdventureLevel(dto.AdventureLevel.HasValue
+                ? (AdventureLevel)dto.AdventureLevel.Value
+                : null);
+
+            tour.SetSuitableForGroups(dto.SuitableFor?.Select(x => (SuitableFor)x));
+
+            tour.SetFoodTypes(dto.FoodTypes?.Select(x => (FoodType)x));
+
+            tour.SetActivityTypes(dto.ActivityTypes?.Select(x => (ActivityType)x));
+
+
+
+
+            if (dto.Durations != null)
 {
                 tour.ReplaceDurations(dto.Durations.Select(d =>
                     new TourDuration((TransportType)d.TransportType, d.Minutes)

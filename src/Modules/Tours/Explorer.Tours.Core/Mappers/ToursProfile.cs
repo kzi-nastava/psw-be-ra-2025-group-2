@@ -37,11 +37,24 @@ public class ToursProfile : Profile
                 opt => opt.MapFrom(src => Enum.Parse<TouristObjectCategory>(src.Category))
             );
         CreateMap<Tour, TourDto>()
-             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-             .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints))
-             .ForMember(dest => dest.Durations, opt => opt.MapFrom(src => src.Durations))
-             .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt))
-             .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl));
+    .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+    .ForMember(dest => dest.KeyPoints, opt => opt.MapFrom(src => src.KeyPoints))
+    .ForMember(dest => dest.Durations, opt => opt.MapFrom(src => src.Durations))
+    .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt))
+    .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl))
+
+    
+    .ForMember(dest => dest.EnvironmentType,
+        opt => opt.MapFrom(src => src.EnvironmentType.HasValue ? (int)src.EnvironmentType.Value : (int?)null))
+    .ForMember(dest => dest.AdventureLevel,
+        opt => opt.MapFrom(src => src.AdventureLevel.HasValue ? (int)src.AdventureLevel.Value : (int?)null))
+    .ForMember(dest => dest.SuitableFor,
+        opt => opt.MapFrom(src => src.SuitableForGroups.Select(x => (int)x).ToList()))
+    .ForMember(dest => dest.FoodTypes,
+        opt => opt.MapFrom(src => src.FoodTypes.Select(x => (int)x).ToList()))
+    .ForMember(dest => dest.ActivityTypes,
+        opt => opt.MapFrom(src => src.ActivityTypes.Select(x => (int)x).ToList()));
+
 
         CreateMap<CreateTourDto, Tour>()
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
