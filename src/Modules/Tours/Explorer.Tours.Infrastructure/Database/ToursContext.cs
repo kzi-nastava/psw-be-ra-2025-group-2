@@ -80,6 +80,14 @@ public class ToursContext : DbContext
                 kp.Navigation(k => k.Images)
                     .HasField("_images")
                     .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+                builder.Property(t => t.PurchasesCount)
+                       .HasColumnName("purchases_count")
+                       .IsRequired();
+
+                builder.Property(t => t.StartsCount)
+                       .HasColumnName("starts_count")
+                       .IsRequired();
             });
 
 

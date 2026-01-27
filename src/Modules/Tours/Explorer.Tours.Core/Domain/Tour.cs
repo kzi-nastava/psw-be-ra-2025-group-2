@@ -43,6 +43,21 @@ public class Tour : AggregateRoot
 
     public string CoverImageUrl { get; private set; } = string.Empty;
 
+    public int PurchasesCount { get; private set; } = 0;
+    public int StartsCount { get; private set; } = 0;
+
+    public void IncrementPurchases(int delta = 1)
+    {
+        if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        PurchasesCount += delta;
+    }
+
+    public void IncrementStarts(int delta = 1)
+    {
+        if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        StartsCount += delta;
+    }
+
 
     public Tour() { }
 
