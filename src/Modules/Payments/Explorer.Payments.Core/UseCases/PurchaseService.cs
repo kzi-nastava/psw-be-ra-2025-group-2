@@ -10,7 +10,7 @@ using Explorer.Stakeholders.Core.Domain.ShoppingCarts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Internal;
 
 namespace Explorer.Payments.Core.UseCases
 {
@@ -19,7 +19,7 @@ namespace Explorer.Payments.Core.UseCases
         private readonly IShoppingCartService _shoppingCartService;
         private readonly IWalletRepository _walletRepository;
         private readonly ICouponService _couponService;
-        private readonly ITourStatisticsRepository _tourStats;
+        private readonly ITourStatisticsService _tourStats;
 
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly ITourPurchaseTokenRepository _tourPurchaseTokenRepository;
@@ -33,7 +33,7 @@ namespace Explorer.Payments.Core.UseCases
             IPaymentRecordRepository paymentRecordRepository,
             ITourPurchaseTokenRepository tourPurchaseTokenRepository,
             IMapper mapper,
-            ITourStatisticsRepository tourStats)
+            ITourStatisticsService tourStats)
         {
             _shoppingCartService = shoppingCartService;
             _walletRepository = walletRepository;

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Internal;
 
 namespace Explorer.Payments.Core.UseCases
 {
@@ -17,12 +17,12 @@ namespace Explorer.Payments.Core.UseCases
     {
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly IShoppingCartRepository _cartRepository;
-        private readonly ITourStatisticsRepository _tourStats;
+        private readonly ITourStatisticsService _tourStats;
 
         public PaymentRecordService(
             IPaymentRecordRepository paymentRecordRepository,
             IShoppingCartRepository cartRepository,
-            ITourStatisticsRepository tourStats)
+            ITourStatisticsService tourStats)
         {
             _paymentRecordRepository = paymentRecordRepository;
             _cartRepository = cartRepository;
