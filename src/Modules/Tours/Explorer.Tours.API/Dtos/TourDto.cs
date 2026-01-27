@@ -28,5 +28,13 @@ namespace Explorer.Tours.API.Dtos
         public int PurchasesCount { get; set; }
         public int StartsCount { get; set; }
         public string? CoverImageUrl { get; set; }
+
+        public int? EnvironmentType { get; set; }
+        public int? AdventureLevel { get; set; }
+
+        public List<int> SuitableFor { get; set; } = new();
+        public List<int> FoodTypes { get; set; } = new();
+        public List<int> ActivityTypes { get; set; } = new();
+
     }
 }

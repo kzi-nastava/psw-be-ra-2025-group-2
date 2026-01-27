@@ -43,7 +43,19 @@ public class ToursProfile : Profile
              .ForMember(dest => dest.PublishedAt, opt => opt.MapFrom(src => src.PublishedAt))
              .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl))
              .ForMember(dest => dest.PurchasesCount, opt => opt.MapFrom(src => src.PurchasesCount))
-             .ForMember(dest => dest.StartsCount, opt => opt.MapFrom(src => src.StartsCount));
+             .ForMember(dest => dest.StartsCount, opt => opt.MapFrom(src => src.StartsCount))
+
+    .ForMember(dest => dest.EnvironmentType,
+        opt => opt.MapFrom(src => src.EnvironmentType.HasValue ? (int)src.EnvironmentType.Value : (int?)null))
+    .ForMember(dest => dest.AdventureLevel,
+        opt => opt.MapFrom(src => src.AdventureLevel.HasValue ? (int)src.AdventureLevel.Value : (int?)null))
+    .ForMember(dest => dest.SuitableFor,
+        opt => opt.MapFrom(src => src.SuitableForGroups.Select(x => (int)x).ToList()))
+    .ForMember(dest => dest.FoodTypes,
+        opt => opt.MapFrom(src => src.FoodTypes.Select(x => (int)x).ToList()))
+    .ForMember(dest => dest.ActivityTypes,
+        opt => opt.MapFrom(src => src.ActivityTypes.Select(x => (int)x).ToList()));
+
 
         CreateMap<CreateTourDto, Tour>()
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))

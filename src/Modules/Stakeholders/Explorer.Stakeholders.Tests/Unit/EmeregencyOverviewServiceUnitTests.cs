@@ -34,6 +34,19 @@ namespace Explorer.Stakeholders.Tests.Unit
             dto.PoliceStations.Count.ShouldBe(0);
             dto.Disclaimer.ShouldNotBeNullOrWhiteSpace();
             dto.Instructions.ShouldNotBeNullOrWhiteSpace();
+
+            dto.Embassies.ShouldNotBeNull();
+            dto.Embassies.Count.ShouldBe(0);
+
+            dto.PhraseCategories.ShouldNotBeNull();
+            dto.PhraseCategories.Count.ShouldBe(2);
+
+            dto.PhraseCategories.Any(c => c.Category == "Medicina").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.Count.ShouldBe(0);
+
+            dto.PhraseCategories.Any(c => c.Category == "Policija").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.Count.ShouldBe(0);
+
         }
     }
 }

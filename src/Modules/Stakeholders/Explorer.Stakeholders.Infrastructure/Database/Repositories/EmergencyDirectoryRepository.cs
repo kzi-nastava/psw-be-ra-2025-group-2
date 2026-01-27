@@ -11,8 +11,11 @@ public class EmergencyDirectoryRepository : IEmergencyDirectoryRepository
 
     public EmergencyDirectory? GetByCountry(CountryCode code)
     {
-        return _context.EmergencyDirectories
-            .Include(d => d.Places)
-            .SingleOrDefault(d => d.Country.Value == code.Value);
+       return _context.EmergencyDirectories
+        .Include(d => d.Places)
+        .Include(d => d.Embassies)
+        .Include(d => d.Phrases)
+        .SingleOrDefault(d => d.Country.Value == code.Value);
+
     }
 }

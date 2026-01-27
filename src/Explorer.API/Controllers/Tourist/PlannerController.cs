@@ -57,5 +57,11 @@ namespace Explorer.API.Controllers.Tourist
             _plannerService.RemoveScheduleEntry(id);
             return Ok();
         }
+
+        [HttpGet("suggestions")]
+        public ActionResult<IEnumerable<SuggestionDto>> GetSuggestions([FromQuery] int year, [FromQuery] int month, [FromQuery] int? day)
+        {
+            return Ok(_plannerService.EvaluatePlan(User.UserId(), month, day, year));
+        }
     }
 }

@@ -15,5 +15,7 @@ namespace Explorer.Stakeholders.API.Public
         IEnumerable<DayEntryDto> GetMonthlySchedule(long touristId, int month, int year);
 
         void RemoveScheduleEntry(long id);
+
+        IEnumerable<SuggestionDto> EvaluatePlan(long touristId, int month, int? day, int year);
     }
 }
