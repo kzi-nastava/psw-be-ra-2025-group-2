@@ -65,6 +65,7 @@ public static class StakeholdersStartup
 
        
         services.AddScoped<IEmergencyOverviewService, EmergencyOverviewService>();
+        services.AddScoped<IEmergencyTranslationService, EmergencyTranslationService>();
 
     }
 
