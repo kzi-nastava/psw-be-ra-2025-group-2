@@ -24,7 +24,7 @@ namespace Explorer.Tours.Core.UseCases.Execution
             _userService = userService;
             _executionRepository = executionRepository;
             _tourRepository = tourRepository;
-            _encounterInternalService = encounterInternalService; 
+            _encounterInternalService = encounterInternalService;
         }
 
         public TourExecutionDto GetExecution(long touristId, long tourId)

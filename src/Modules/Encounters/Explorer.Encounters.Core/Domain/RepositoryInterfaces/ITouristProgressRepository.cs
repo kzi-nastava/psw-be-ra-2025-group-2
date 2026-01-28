@@ -11,6 +11,8 @@ namespace Explorer.Encounters.Core.Domain.RepositoryInterfaces
         TouristProgress GetByUserId(long userId);
         TouristProgress Create(TouristProgress progress);
         TouristProgress Update(TouristProgress progress);
+        List<TouristProgress> GetByUserIds(IEnumerable<long> userIds);
+
     }
 
 }
