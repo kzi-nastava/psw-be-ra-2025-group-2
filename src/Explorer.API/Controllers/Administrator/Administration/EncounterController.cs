@@ -323,5 +323,15 @@ namespace Explorer.API.Controllers.Administrator.Administration
                 return BadRequest(e.Message);
             }
         }
+
+        [HttpDelete("execution/{encounterId}")]
+        public ActionResult CancelExecution(long encounterId)
+        {
+            var identityId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            _encounterService.CancelExecution(identityId, encounterId);
+
+            return Ok();
+        }
     }
 }

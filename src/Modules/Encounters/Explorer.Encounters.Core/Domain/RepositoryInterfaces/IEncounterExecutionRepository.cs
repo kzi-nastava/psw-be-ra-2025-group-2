@@ -14,5 +14,7 @@ namespace Explorer.Encounters.Core.Domain.RepositoryInterfaces
         EncounterExecution Update(EncounterExecution execution);
 
         List<EncounterExecution> GetActiveByEncounter(long encounterId);
+
+        void Delete(long id);
     }
 }
