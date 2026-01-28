@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Explorer.Payments.API.Dtos;
 using Explorer.Payments.API.Public;
+using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,9 +33,6 @@ namespace Explorer.API.Controllers.Author
             return authorId;
         }
 
-        // ============================================
-        // PUBLIC ROUTE - Za validaciju kupona
-        // ============================================
         [AllowAnonymous]
         [HttpGet("api/tourist/coupons/validate/{code}")]
         public ActionResult<CouponDto> ValidateCoupon(string code)
@@ -43,7 +41,6 @@ namespace Explorer.API.Controllers.Author
             {
                 var coupon = _couponService.GetByCode(code);
 
-                // Popuni tour name ako postoji
                 if (coupon.TourId.HasValue)
                 {
                     try
@@ -53,7 +50,6 @@ namespace Explorer.API.Controllers.Author
                     }
                     catch
                     {
-                        // Ako tour ne postoji, nastavi bez imena
                     }
                 }
 
@@ -69,9 +65,6 @@ namespace Explorer.API.Controllers.Author
             }
         }
 
-        // ============================================
-        // AUTHOR ROUTES - Zaštićene sa authorPolicy
-        // ============================================
         [Authorize(Policy = "authorPolicy")]
         [HttpGet("api/author/coupons")]
         public ActionResult<List<CouponDto>> GetAll([FromQuery] long? tourId = null)
@@ -113,20 +106,18 @@ namespace Explorer.API.Controllers.Author
 
                 if (dto.TourId.HasValue)
                 {
+                    TourDto tour;
                     try
                     {
-                        var tour = _tourService.Get(dto.TourId.Value);
-
-                        if (tour == null)
-                            return NotFound($"Tour with ID {dto.TourId.Value} not found");
-
-                        if (tour.AuthorId != authorId)
-                            return Forbid();
+                        tour = _tourService.Get(dto.TourId.Value);
                     }
-                    catch
+                    catch (KeyNotFoundException)
                     {
                         return NotFound($"Tour with ID {dto.TourId.Value} not found");
                     }
+
+                    if (tour.AuthorId != authorId)
+                        return Forbid();
                 }
 
 
@@ -165,23 +156,19 @@ namespace Explorer.API.Controllers.Author
 
                 if (dto.TourId.HasValue)
                 {
+                    TourDto tour;
                     try
                     {
-                        var tour = _tourService.Get(dto.TourId.Value);
-
-                        if (tour == null)
-                        {
-                            return NotFound($"Tour with ID {dto.TourId.Value} not found");
-                        }
-
-                        if (tour.AuthorId != authorId)
-                        {
-                            return Forbid();
-                        }
+                        tour = _tourService.Get(dto.TourId.Value);
                     }
                     catch (KeyNotFoundException)
                     {
                         return NotFound($"Tour with ID {dto.TourId.Value} not found");
+                    }
+
+                    if (tour.AuthorId != authorId)
+                    {
+                        return Forbid();
                     }
                 }
 

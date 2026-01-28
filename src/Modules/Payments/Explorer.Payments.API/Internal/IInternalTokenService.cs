@@ -9,5 +9,6 @@ namespace Explorer.Payments.API.Internal
     public interface IInternalTokenService
     {
         IEnumerable<long> GetPurchasedTourIds(long touristId);
+        IEnumerable<long> GetTouristIdsByTourId(long tourId);
     }
 }

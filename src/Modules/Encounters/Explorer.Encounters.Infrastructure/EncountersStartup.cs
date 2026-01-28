@@ -42,6 +42,7 @@ namespace Explorer.Encounters.Infrastructure
             services.AddScoped<IEncounterPresenceRepository, EncounterPresenceRepository>();
             services.AddScoped<IInternalEncounterExecutionService, EncounterService>();
             services.AddScoped<IUserRewardRepository, UserRewardRepository>();
+            services.AddScoped<IInternalTouristProgressService, EncounterService>();
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("encounters"));
             dataSourceBuilder.EnableDynamicJson();

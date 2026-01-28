@@ -75,5 +75,21 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
 
             return execution;
         }
+
+        public List<TourExecution> GetByTourId(long tourId)
+        {
+            return _dbContext.TourExecutions
+                .Include(e => e.KeyPointVisits)
+                .Where(e => e.TourId == tourId)
+                .ToList();
+        }
+
+        public List<TourExecution> GetByTourIds(IEnumerable<long> tourIds)
+        {
+            return _dbContext.TourExecutions
+                .Include(e => e.KeyPointVisits)
+                .Where(e => tourIds.Contains(e.TourId))
+                .ToList();
+        }
     }
 }
