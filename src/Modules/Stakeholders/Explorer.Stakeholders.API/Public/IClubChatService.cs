@@ -12,6 +12,8 @@ namespace Explorer.Stakeholders.API.Public
     {
         ClubMessageDto Send(long clubId, long senderId, string content);
         List<ClubMessageDto> GetMessages(long clubId, long userId);
+        ClubMessageDto Edit(long clubId, long userId, long messageId, string content);
+        void Delete(long clubId, long userId, long messageId);
 
     }
 }

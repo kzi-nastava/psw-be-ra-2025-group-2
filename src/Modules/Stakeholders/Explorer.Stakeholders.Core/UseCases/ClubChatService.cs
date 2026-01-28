@@ -65,6 +65,43 @@ namespace Explorer.Stakeholders.Core.UseCases
                 .Select(_mapper.Map<ClubMessageDto>)
                 .ToList();
         }
+        public ClubMessageDto Edit(long clubId, long userId, long messageId, string content)
+        {
+            var club = _clubRepository.Get(clubId);
+            bool isOwner = club.OwnerId == userId;
+            bool isMember = club.Members.Any(m => m.TouristId == userId);
+
+            if (!isOwner && !isMember)
+                throw new UnauthorizedAccessException("Not a club member");
+
+            var message = _messageRepository.GetById(messageId);
+            if (message == null || message.ChatId != _chatRepository.GetByClubId(clubId)?.Id)
+                throw new Exception("Message not found in this club chat");
+
+            message.Edit(userId, content);
+
+            _messageRepository.Update(message);
+
+            return _mapper.Map<ClubMessageDto>(message);
+        }
+
+        public void Delete(long clubId, long userId, long messageId)
+        {
+            var club = _clubRepository.Get(clubId);
+            bool isOwner = club.OwnerId == userId;
+            bool isMember = club.Members.Any(m => m.TouristId == userId);
+
+            if (!isOwner && !isMember)
+                throw new UnauthorizedAccessException("Not a club member");
+
+            var message = _messageRepository.GetById(messageId);
+            if (message == null || message.ChatId != _chatRepository.GetByClubId(clubId)?.Id)
+                throw new Exception("Message not found in this club chat");
+
+            message.Delete(userId);
+
+            _messageRepository.Update(message);
+        }
 
     }
 }
