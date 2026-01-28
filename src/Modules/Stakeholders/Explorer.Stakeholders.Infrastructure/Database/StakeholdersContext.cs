@@ -31,6 +31,7 @@ public class StakeholdersContext : DbContext
 
     public DbSet<Quiz> Quizzes { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<Chat> Chats {  get; set; }
     public DbSet<OnboardingSlide> OnboardingSlides { get; set; }
     public DbSet<OnboardingProgress> OnboardingProgresses { get; set; }
 
@@ -59,11 +60,19 @@ public class StakeholdersContext : DbContext
             builder.HasKey(m => m.Id);
             builder.Property(m => m.Id).ValueGeneratedOnAdd();
             builder.Property(m => m.SenderId).IsRequired();
-            builder.Property(m => m.ReceiverId).IsRequired();
+            //builder.Property(m => m.ReceiverId).IsRequired();
             builder.Property(m => m.Content).IsRequired().HasMaxLength(2000);
             builder.Property(m => m.CreatedAt).IsRequired();
             builder.Property(m => m.UpdatedAt).IsRequired(false);
             builder.Property(m => m.IsDeleted).IsRequired().HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<Chat>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.Id).ValueGeneratedOnAdd();
+            builder.Property(c => c.ChatType).IsRequired();
+            builder.Property(c => c.ClubId).IsRequired(false);
         });
 
         modelBuilder.Entity<HelpSettings>().HasIndex(x => x.PersonId).IsUnique();

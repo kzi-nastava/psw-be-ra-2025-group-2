@@ -9,8 +9,9 @@ namespace Explorer.Stakeholders.Core.Domain
 {
     public class Message : AggregateRoot
     {
+        public long? ChatId {  get; private set; }
         public long SenderId { get; private set; }
-        public long ReceiverId { get; private set; }
+        public long? ReceiverId { get; private set; } //nema potrebe vise za ovim jer sve ide preko Chata
         public string Content { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
@@ -18,16 +19,33 @@ namespace Explorer.Stakeholders.Core.Domain
 
         private Message() { }
 
-        public Message(long senderId, long receiverId, string content)
+        //private message
+        public Message(long senderId, string content)
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentException("Message content cannot be empty.");
-
             SenderId = senderId;
-            ReceiverId = receiverId;
             Content = content;
             CreatedAt = DateTime.UtcNow;
             IsDeleted = false;
+        }
+
+        // PRIVATE CHAT
+        public static Message CreatePrivate(long senderId, long receiverId, string content)
+        {
+            var message = new Message(senderId, content);
+            message.ReceiverId = receiverId;
+            message.ChatId = null;
+            return message;
+        }
+
+        // CLUB / GROUP CHAT
+        public static Message CreateChat(long chatId, long senderId, string content)
+        {
+            var message = new Message(senderId, content);
+            message.ChatId = chatId;
+            message.ReceiverId = null;
+            return message;
         }
 
         public void Edit(long userId, string newContent)

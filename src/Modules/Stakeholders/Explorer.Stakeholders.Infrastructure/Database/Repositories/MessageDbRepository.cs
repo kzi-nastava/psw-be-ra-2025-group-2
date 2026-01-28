@@ -57,6 +57,13 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                 .OrderBy(m => m.CreatedAt)
                 .ToList();
         }
+        public List<Message> GetByChat(long chatId)
+        {
+            return _dbContext.Messages
+                .Where(m => m.ChatId == chatId && !m.IsDeleted)
+                .OrderBy(m => m.CreatedAt)
+                .ToList();
+        }
 
     }
 }
