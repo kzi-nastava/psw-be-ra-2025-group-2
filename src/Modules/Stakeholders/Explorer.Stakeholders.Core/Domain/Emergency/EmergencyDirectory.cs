@@ -13,6 +13,15 @@ namespace Explorer.Stakeholders.Core.Domain.Emergency
 
         private readonly List<EmergencyPlace> _places = new();
         public IReadOnlyCollection<EmergencyPlace> Places => _places.AsReadOnly();
+        
+        private readonly List<Embassy> _embassies = new();
+        public IReadOnlyCollection<Embassy> Embassies => _embassies.AsReadOnly();
+
+        private readonly List<EmergencyPhrase> _phrases = new();
+        public IReadOnlyCollection<EmergencyPhrase> Phrases => _phrases.AsReadOnly();
+
+        
+
 
         private EmergencyDirectory() { } // EF
 
@@ -75,5 +84,45 @@ namespace Explorer.Stakeholders.Core.Domain.Emergency
             if (!Country.Equals(code))
                 throw new InvalidOperationException("Country code mismatch.");
         }
+
+
+        public List<EmergencyPhrase> GetPhrases(EmergencyPhraseCategory category)
+            => _phrases.Where(p => p.Category == category).ToList();
+
+        public void AddEmbassy(string name, string address, string? phone, string? email, string? website)
+        {
+            var exists = _embassies.Any(e =>
+                e.Name.Equals(name?.Trim() ?? "", StringComparison.OrdinalIgnoreCase) &&
+                e.Address.Equals(address?.Trim() ?? "", StringComparison.OrdinalIgnoreCase));
+            if (exists) throw new InvalidOperationException("Embassy already exists.");
+
+            _embassies.Add(new Embassy(name, address, phone, email, website));
+        }
+
+        public void AddPhrase(EmergencyPhraseCategory category, string myText, string localText)
+        {
+            var exists = _phrases.Any(p =>
+                p.Category == category &&
+                p.MyText.Equals(myText?.Trim() ?? "", StringComparison.OrdinalIgnoreCase) &&
+                p.LocalText.Equals(localText?.Trim() ?? "", StringComparison.OrdinalIgnoreCase));
+            if (exists) throw new InvalidOperationException("Phrase already exists.");
+
+            _phrases.Add(new EmergencyPhrase(category, myText, localText));
+        }
+
+        public void RemoveEmbassy(long embassyId)
+        {
+            var e = _embassies.FirstOrDefault(x => x.Id == embassyId);
+            if (e == null) throw new KeyNotFoundException("Embassy not found.");
+            _embassies.Remove(e);
+        }
+
+        public void RemovePhrase(long phraseId)
+        {
+            var p = _phrases.FirstOrDefault(x => x.Id == phraseId);
+            if (p == null) throw new KeyNotFoundException("Phrase not found.");
+            _phrases.Remove(p);
+        }
+
     }
 }

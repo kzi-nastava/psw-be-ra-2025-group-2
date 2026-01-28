@@ -31,5 +31,31 @@ namespace Explorer.Stakeholders.Tests.Unit
             Should.Throw<InvalidOperationException>(() =>
                 dir.AddPlace(EmergencyPlaceType.Hospital, "Bolnica 1", "Adresa 1", null));
         }
+
+
+        [Fact]
+        public void Adds_embassy_and_blocks_duplicates()
+        {
+            var dir = new EmergencyDirectory(new CountryCode("RS"), "instr", "disc");
+
+            dir.AddEmbassy("Embassy 1", "Addr 1", "123", "a@b.com", "site");
+            dir.Embassies.Count.ShouldBe(1);
+
+            Should.Throw<InvalidOperationException>(() =>
+                dir.AddEmbassy("Embassy 1", "Addr 1", "456", null, null));
+        }
+
+        [Fact]
+        public void Adds_phrases_and_filters_by_category()
+        {
+            var dir = new EmergencyDirectory(new CountryCode("RS"), "instr", "disc");
+
+            dir.AddPhrase(EmergencyPhraseCategory.Medicine, "Moje 1", "Local 1");
+            dir.AddPhrase(EmergencyPhraseCategory.Police, "Moje 2", "Local 2");
+
+            dir.GetPhrases(EmergencyPhraseCategory.Medicine).Count.ShouldBe(1);
+            dir.GetPhrases(EmergencyPhraseCategory.Police).Count.ShouldBe(1);
+        }
+
     }
 }
