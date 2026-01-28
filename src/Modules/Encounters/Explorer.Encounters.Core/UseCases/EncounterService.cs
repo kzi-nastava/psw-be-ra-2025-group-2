@@ -17,7 +17,7 @@ using Explorer.Encounters.API.Internal;
 
 namespace Explorer.Encounters.Core.UseCases
 {
-    public class EncounterService : IEncounterService, IInternalEncounterExecutionService
+    public class EncounterService : IEncounterService, IInternalEncounterExecutionService, IInternalTouristProgressService
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
@@ -486,6 +486,26 @@ namespace Explorer.Encounters.Core.UseCases
         public bool IsEncounterCompleted(long userId, long encounterId)
         {
             return _executionRepository.IsCompleted(userId, encounterId);
+        }
+
+        public List<UserXpDto> GetXpForUsers(IEnumerable<long> userIds)
+        {
+            var ids = userIds?.Distinct().ToList() ?? new List<long>();
+            if (ids.Count == 0) return new List<UserXpDto>();
+
+            // Potrebno: batch metoda u repo (najbolje), ili fallback: loop (ok za mali broj)
+            var progresses = _touristProgressRepository.GetByUserIds(ids); // DODATI u repo
+
+            // Ako neko nema TouristProgress, tretiraj kao 0 XP (da svi članovi budu u listi)
+            var dict = progresses.ToDictionary(p => p.UserId, p => p);
+
+            return ids.Select(id =>
+            {
+                if (!dict.TryGetValue(id, out var p))
+                    return new UserXpDto { UserId = id, TotalXp = 0, Level = 1 };
+
+                return new UserXpDto { UserId = p.UserId, TotalXp = p.TotalXp, Level = p.Level };
+            }).ToList();
         }
     }
 }

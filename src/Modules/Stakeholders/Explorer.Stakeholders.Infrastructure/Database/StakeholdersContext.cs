@@ -76,6 +76,80 @@ public class StakeholdersContext : DbContext
 
 
 
+        modelBuilder.Entity<Club>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+
+            builder.HasMany(c => c.Members)
+                   .WithOne()
+                   .HasForeignKey(nameof(ClubMember.ClubId))
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(c => c.Members)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(c => c.JoinRequests)
+                   .WithOne()
+                   .HasForeignKey(nameof(ClubJoinRequest.ClubId))
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(c => c.JoinRequests)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(c => c.Invitations)
+                   .WithOne()
+                   .HasForeignKey(nameof(ClubInvitation.ClubId))
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(c => c.Invitations)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
+
+
+        modelBuilder.Entity<ClubMember>(builder =>
+        {
+            builder.ToTable("ClubMembers");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.ClubId).IsRequired();
+            builder.Property(x => x.TouristId).IsRequired();
+            builder.Property(x => x.JoinedAt).IsRequired();
+
+            builder.HasIndex(x => new { x.ClubId, x.TouristId })
+                   .IsUnique();
+        });
+
+        modelBuilder.Entity<ClubInvitation>(builder =>
+        {
+            builder.ToTable("ClubInvitations");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.ClubId).IsRequired();
+            builder.Property(x => x.TouristId).IsRequired();
+            builder.Property(x => x.SentAt).IsRequired();
+
+            builder.HasIndex(x => new { x.ClubId, x.TouristId })
+                   .IsUnique();
+        });
+
+        modelBuilder.Entity<ClubJoinRequest>(builder =>
+        {
+            builder.ToTable("ClubJoinRequests");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.ClubId).IsRequired();
+            builder.Property(x => x.TouristId).IsRequired();
+            builder.Property(x => x.RequestedAt).IsRequired();
+
+            builder.HasIndex(x => new { x.ClubId, x.TouristId })
+                   .IsUnique();
+        });
+
+
+
         ConfigureStakeholder(modelBuilder);
     }
 
