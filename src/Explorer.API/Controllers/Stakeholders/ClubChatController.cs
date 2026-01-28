@@ -20,10 +20,10 @@ namespace Explorer.API.Controllers.Stakeholders
         }
 
         [HttpPost("{clubId:long}/messages")]
-        public ActionResult<ClubMessageDto> SendMessage(long clubId, [FromBody] string content)
+        public ActionResult<ClubMessageDto> SendMessage(long clubId, [FromBody] SendClubMessageDto dto)
         {
-            var userId = User.PersonId(); 
-            var message = _clubChatService.Send(clubId, userId, content);
+            var userId = User.PersonId();
+            var message = _clubChatService.Send(clubId, userId, dto.Content);
             return Ok(message);
         }
 

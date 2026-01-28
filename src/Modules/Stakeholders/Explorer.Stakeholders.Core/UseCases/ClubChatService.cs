@@ -34,7 +34,10 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var club = _clubRepository.Get(clubId);
 
-            if (!club.Members.Any(m => m.TouristId == senderId))
+            bool isOwner = club.OwnerId == senderId;
+            bool isMember = club.Members.Any(m => m.TouristId == senderId);
+
+            if (!isOwner && !isMember)
                 throw new UnauthorizedAccessException("Not a club member");
 
             var chat = _chatRepository.GetByClubId(clubId)
@@ -48,7 +51,10 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var club = _clubRepository.Get(clubId);
 
-            if (!club.Members.Any(m => m.TouristId == userId))
+            bool isOwner = club.OwnerId == userId;
+            bool isMember = club.Members.Any(m => m.TouristId == userId);
+
+            if (!isOwner && !isMember)
                 throw new UnauthorizedAccessException("Not a club member");
 
             var chat = _chatRepository.GetByClubId(clubId);
