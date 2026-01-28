@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Encounters.API.Internal;
 using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
@@ -42,6 +43,7 @@ namespace Explorer.Payments.Infrastructure
             // Internal
 
             services.AddScoped<IInternalTokenService, InternalTokenService>();
+            services.AddScoped<IInternalRewardService, InternalRewardService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)

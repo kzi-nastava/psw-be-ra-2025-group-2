@@ -31,6 +31,7 @@ namespace Explorer.Encounters.Infrastructure
         private static void SetupCore(IServiceCollection services)
         {
             services.AddScoped<IEncounterService, EncounterService>();
+            services.AddScoped<IRewardService, RewardService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
@@ -40,6 +41,7 @@ namespace Explorer.Encounters.Infrastructure
             services.AddScoped<ITouristProgressRepository, TouristProgressRepository>();
             services.AddScoped<IEncounterPresenceRepository, EncounterPresenceRepository>();
             services.AddScoped<IInternalEncounterExecutionService, EncounterService>();
+            services.AddScoped<IUserRewardRepository, UserRewardRepository>();
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("encounters"));
             dataSourceBuilder.EnableDynamicJson();

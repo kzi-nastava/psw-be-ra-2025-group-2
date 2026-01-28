@@ -10,6 +10,7 @@ namespace Explorer.Payments.API.Public
     public interface INotificationService
     {
         void NotifyWalletDeposit(long touristId, int amount);
+        void NotifyUserMessage(long touristId, string message);
         List<NotificationDto> GetTouristNotifications(long touristId);
         List<NotificationDto> GetUnreadNotifications(long touristId);
         void MarkAsRead(long notificationId);

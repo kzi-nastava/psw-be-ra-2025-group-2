@@ -63,6 +63,15 @@ namespace Explorer.Payments.Core.UseCases
                 Type = n.Type.ToString()
             }).ToList();
         }
+
+        public void NotifyUserMessage(long touristId, string message)
+        {
+            var notification = new Notification(touristId, message, NotificationType.General);
+            _notificationRepository.Create(notification);
+            
+            Console.WriteLine($"[NOTIFICATION] Tourist {touristId}: {message}");
+        }
+
     }
 
 }
