@@ -92,7 +92,6 @@ public class UserDbRepository : IUserRepository
 
         return usersQuery
             .OrderBy(u => u.Username)
-            .Take(3)
             .ToList();
     }
 
