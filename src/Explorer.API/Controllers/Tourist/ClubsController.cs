@@ -213,5 +213,8 @@ namespace Explorer.API.Controllers.Tourist
 
             return Ok($"/clubs-images/{fileName}");
         }
+        
+       
+
     }
 }

@@ -34,6 +34,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                 .Include(c => c.Members)
                 .Include(c => c.JoinRequests)
                 .Include(c => c.Invitations)
+                .Include(c => c.Badges)
                 .SingleOrDefault(c => c.Id == id);
 
             if (entity == null)
@@ -83,6 +84,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                 .Include(c => c.Members)
                 .Include(c => c.JoinRequests)
                 .Include(c => c.Invitations)
+                .Include(c => c.Badges)
                 .ToList();
         }
 
@@ -109,5 +111,12 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                 .Select(c => c.Id)
                 .ToList();
         }
+        public void AddBadges(IEnumerable<ClubBadge> badges)
+        {
+            DbContext.Set<ClubBadge>().AddRange(badges);
+            DbContext.SaveChanges();
+        }
+
+
     }
 }
