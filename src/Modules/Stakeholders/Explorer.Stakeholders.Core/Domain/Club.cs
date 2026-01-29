@@ -21,7 +21,8 @@ namespace Explorer.Stakeholders.Core.Domain
 
         private readonly List<ClubInvitation> _invitations = new();
         public IReadOnlyCollection<ClubInvitation> Invitations => _invitations;
-
+        private readonly List<ClubBadge> _badges = new();
+        public IReadOnlyCollection<ClubBadge> Badges => _badges;
         public Club(string name, string description, long ownerId, List<string> imageUrls)
         {
             Name = name;
@@ -147,5 +148,29 @@ namespace Explorer.Stakeholders.Core.Domain
 
             _members.Remove(member);
         }
+        
+        public List<ClubBadge> AwardMissingBadges(int totalXp, int stepXp = 500)
+        {
+            if (stepXp <= 0) throw new ArgumentException("Invalid stepXp.");
+
+            var maxMilestone = (totalXp / stepXp) * stepXp;
+            if (maxMilestone < stepXp) return new();
+
+            var existing = _badges.Select(b => b.MilestoneXp).ToHashSet();
+            var created = new List<ClubBadge>();
+
+            for (int milestone = stepXp; milestone <= maxMilestone; milestone += stepXp)
+            {
+                if (existing.Contains(milestone)) continue;
+
+                var badge = new ClubBadge(Id, milestone);
+                _badges.Add(badge);
+                created.Add(badge);
+            }
+
+            return created;
+        }
+
+
     }
 }
