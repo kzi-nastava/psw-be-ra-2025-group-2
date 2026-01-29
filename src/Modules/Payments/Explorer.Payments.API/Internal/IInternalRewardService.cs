@@ -8,7 +8,7 @@ namespace Explorer.Encounters.API.Internal
 {
     public interface IInternalRewardService
     {
-        void GrantCoupon(long userId, int discountPercentage, DateTime? validUntil, string description);
+        string GrantCoupon(long userId, int discountPercentage, DateTime? validUntil, string description);
         void NotifyUser(long userId, string message);
     }
 }

@@ -70,11 +70,22 @@ namespace Explorer.Payments.Core.UseCases
                 }
                 else
                 {
-                    // Kupon vezan za autora: diskontuj NAJSKUPLJU TURU tog autora
-                    itemToDiscount = cart.Items
-                        .Where(i => i.TourId.HasValue && i.AuthorId == coupon.AuthorId)
-                        .OrderByDescending(i => i.Price.Amount)
-                        .FirstOrDefault();
+                    if (coupon.AuthorId == null)
+                    {
+                        // GLOBALNI KUPON – najskuplja tura u celoj korpi
+                        itemToDiscount = cart.Items
+                            .Where(i => i.TourId.HasValue)
+                            .OrderByDescending(i => i.Price.Amount)
+                            .FirstOrDefault();
+                    }
+                    else
+                    {
+                        // KUPON ZA AUTORA
+                        itemToDiscount = cart.Items
+                            .Where(i => i.TourId.HasValue && i.AuthorId == coupon.AuthorId)
+                            .OrderByDescending(i => i.Price.Amount)
+                            .FirstOrDefault();
+                    }
 
                     if (itemToDiscount == null)
                         throw new InvalidOperationException("No applicable tour items for coupon");

@@ -73,9 +73,5 @@ namespace Explorer.Encounters.Core.Domain
             return null;
         }
 
-        public string GenerateCouponCode(long userId)
-        {
-            return $"LEVEL{Level}_USER{userId}_{DateTime.UtcNow.Ticks}";
-        }
     }
 }

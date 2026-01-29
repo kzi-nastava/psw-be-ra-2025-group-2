@@ -20,19 +20,28 @@ namespace Explorer.Payments.Core.UseCases.Internal
             _notificationService = notificationService;
         }
 
-        public void GrantCoupon(long userId, int discountPercentage, DateTime? validUntil, string description)
+        public string GrantCoupon(long userId, int discountPercentage, DateTime? validUntil, string description)
         {
-            var couponDto = new CouponCreateDto
+            try
             {
-                DiscountPercentage = discountPercentage,
-                TourId = null, 
-                ValidUntil = validUntil
-            };
+                // pravimo globalni kupon
+                var coupon = _couponService.CreateRewardCoupon(
+                discountPercentage,
+                tourId: null,
+                authorId: null,
+                validUntil: validUntil
+                );
 
-            var coupon = _couponService.Create(couponDto, userId);
-
-            var message = $"🎉 {description}\nYou received a {discountPercentage}% discount coupon!\nCode: {coupon.Code}\nValid until: {validUntil?.ToString("dd.MM.yyyy") ?? "no expiration"}";
-            NotifyUser(userId, message);
+                var message = $"🎉 {description}\nYou received a {discountPercentage}% discount coupon!\nCode: {coupon.Code}\nValid until: {validUntil?.ToString("dd.MM.yyyy") ?? "no expiration"}";
+                NotifyUser(userId, message);
+                return coupon.Code;
+            }
+            catch (Exception ex)
+            {
+                // Ovde stavi Breakpoint da vidiš zašto Coupon ne prolazi
+                Console.WriteLine(ex.Message);
+                throw;
+            }
         }
 
         public void NotifyUser(long userId, string message)

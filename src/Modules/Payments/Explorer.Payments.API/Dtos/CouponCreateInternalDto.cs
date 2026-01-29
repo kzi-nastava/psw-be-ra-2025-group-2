@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace Explorer.Payments.API.Dtos
 {
-    public class CouponDto
+    public class CouponCreateInternalDto
     {
-        public string Code { get; set; }
         public int DiscountPercentage { get; set; }
         public long? TourId { get; set; }
-        public string TourName { get; set; }
         public long? AuthorId { get; set; }
         public DateTime? ValidUntil { get; set; }
     }

@@ -16,7 +16,7 @@ namespace Explorer.Encounters.Core.UseCases
         private readonly IUserRewardRepository _rewardRepository;
         private readonly IInternalRewardService _internalRewardService;
 
-        public RewardService( IUserRewardRepository rewardRepository, IInternalRewardService internalRewardService = null)
+        public RewardService( IUserRewardRepository rewardRepository, IInternalRewardService internalRewardService )
         {
             _rewardRepository = rewardRepository;
             _internalRewardService = internalRewardService;
@@ -42,7 +42,12 @@ namespace Explorer.Encounters.Core.UseCases
             if (rewardInfo == null)
                 return;
 
-            var couponCode = rewardInfo.GenerateCouponCode(userId);
+            var couponCode = _internalRewardService.GrantCoupon(
+                userId,
+                rewardInfo.DiscountPercentage,
+                DateTime.UtcNow.AddDays(rewardInfo.CouponValidityDays),
+                rewardInfo.Description
+            );
 
             var userReward = new UserReward(
                 userId,
@@ -54,18 +59,6 @@ namespace Explorer.Encounters.Core.UseCases
             );
 
             _rewardRepository.Create(userReward);
-
-            if (_internalRewardService != null)
-            {
-                _internalRewardService.GrantCoupon(
-                    userId,
-                    rewardInfo.DiscountPercentage,
-                    DateTime.UtcNow.AddDays(rewardInfo.CouponValidityDays),
-                    rewardInfo.Description
-                );
-            }
-
-
         }
 
         public List<UserRewardDto> GetUserRewards(long userId)
