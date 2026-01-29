@@ -34,5 +34,13 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                 .Select(t => t.TourId)
                 .ToList();
         }
+
+        public IEnumerable<long> GetTouristIdsByTourId(long tourId)
+        {
+            return _dbContext.TourPurchaseTokens
+                .Where(x => x.TourId == tourId)
+                .Select(t => t.TouristId)
+                .ToList();
+        }
     }
 }

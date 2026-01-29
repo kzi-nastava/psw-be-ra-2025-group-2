@@ -28,5 +28,7 @@ namespace Explorer.Encounters.API.Public
             long encounterId
         );
         EncounterExecutionStatusDto PingSocialPresence(long userId, long encounterId, double latitude, double longitude);
+
+        void CancelExecution(long userId, long encounterId);
     }
 }

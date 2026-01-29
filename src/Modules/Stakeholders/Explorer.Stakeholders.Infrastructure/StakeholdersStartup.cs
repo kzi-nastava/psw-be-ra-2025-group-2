@@ -40,6 +40,7 @@ public static class StakeholdersStartup
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<ITourPreferencesService, TourPreferencesService>();
         services.AddScoped<IClubService, ClubService>();
+        services.AddScoped<IClubLeaderboardService, ClubLeaderboardService>();
         services.AddScoped<IAppRatingService, AppRatingService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IUserService, UserService>();
@@ -51,6 +52,7 @@ public static class StakeholdersStartup
         services.AddScoped<IQuizService, QuizService>();
 
         services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<IClubChatService, ClubChatService>();
         services.AddScoped<IOnboardingService, OnboardingService>();
         services.AddScoped<IUsernameProvider, UsernameProviderService>();
         services.AddScoped<ITouristPositionService, TouristPositionService>();
@@ -84,6 +86,7 @@ public static class StakeholdersStartup
         services.AddScoped<IQuizRepository, QuizDbRepository>();
 
         services.AddScoped<IMessageRepository, MessageDbRepository>();
+        services.AddScoped<IChatRepository, ChatDbRepository>();
         services.AddScoped<IOnboardingRepository, OnboardingDbRepository>();
         services.AddScoped<ITouristPositionRepository, TouristPositionDbRepository>();
 

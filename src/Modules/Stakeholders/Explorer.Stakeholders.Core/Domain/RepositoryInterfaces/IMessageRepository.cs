@@ -14,5 +14,7 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
         Message Update(Message message);
 
         List<Message> GetConversation(long user1, long user2);
+
+        List<Message>GetByChat(long chatId);
     }
 }

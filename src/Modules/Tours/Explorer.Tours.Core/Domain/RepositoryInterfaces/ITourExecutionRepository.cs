@@ -15,5 +15,7 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         public void Delete(long id);
         public TourExecution? GetActiveByTouristId(long touristId);
         public TourExecution? GetExactExecution(long touristId, long tourId);
+        public List<TourExecution> GetByTourId(long tourId);
+        public List<TourExecution> GetByTourIds(IEnumerable<long> tourIds);
     }
 }

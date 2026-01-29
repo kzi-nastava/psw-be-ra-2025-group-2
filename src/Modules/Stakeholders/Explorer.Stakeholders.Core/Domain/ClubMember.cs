@@ -9,13 +9,15 @@ namespace Explorer.Stakeholders.Core.Domain
 {
     public class ClubMember : Entity
     {
+        public long ClubId { get; private set; }
         public long TouristId { get; private set; }
         public DateTime JoinedAt { get; private set; }
 
-        private ClubMember() { } 
+        private ClubMember() { }
 
-        public ClubMember(long touristId)
+        public ClubMember(long clubId, long touristId)
         {
+            ClubId = clubId;
             TouristId = touristId;
             JoinedAt = DateTime.UtcNow;
         }
