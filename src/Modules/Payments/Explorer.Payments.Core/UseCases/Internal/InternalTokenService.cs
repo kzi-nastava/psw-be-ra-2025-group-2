@@ -22,5 +22,10 @@ namespace Explorer.Payments.Core.UseCases.Internal
         {
             return _tokenRepository.GetTourIdsByTouristId(touristId);
         }
+
+        public IEnumerable<long> GetTouristIdsByTourId(long tourId)
+        {
+            return _tokenRepository.GetTouristIdsByTourId(tourId);
+        }
     }
 }
