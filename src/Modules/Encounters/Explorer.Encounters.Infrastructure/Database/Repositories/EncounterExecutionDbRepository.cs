@@ -52,6 +52,14 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
                            .ToList();
         }
 
+        public List<EncounterExecution> GetByEncounterIds(IEnumerable<long> encounterIds)
+        {
+            var ids = encounterIds.Distinct().ToList();
+            return _context.EncounterExecutions
+                .Where(e => ids.Contains(e.EncounterId))
+                .ToList();
+        }
+
         public void Delete(long id)
         {
             var execution = _context.EncounterExecutions.Find(id);
