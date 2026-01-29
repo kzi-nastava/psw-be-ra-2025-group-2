@@ -50,5 +50,13 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
                            .Where(e => e.EncounterId == encounterId && !e.IsCompleted)
                            .ToList();
         }
+
+        public List<EncounterExecution> GetByEncounterIds(IEnumerable<long> encounterIds)
+        {
+            var ids = encounterIds.Distinct().ToList();
+            return _context.EncounterExecutions
+                .Where(e => ids.Contains(e.EncounterId))
+                .ToList();
+        }
     }
 }

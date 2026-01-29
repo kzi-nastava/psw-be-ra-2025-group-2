@@ -14,5 +14,7 @@ namespace Explorer.Encounters.Core.Domain.RepositoryInterfaces
         EncounterExecution Update(EncounterExecution execution);
 
         List<EncounterExecution> GetActiveByEncounter(long encounterId);
+        List<EncounterExecution> GetByEncounterIds(IEnumerable<long> encounterIds);
+
     }
 }
