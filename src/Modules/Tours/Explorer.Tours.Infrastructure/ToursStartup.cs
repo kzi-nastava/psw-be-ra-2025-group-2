@@ -36,7 +36,7 @@ public static class ToursStartup
         services.AddScoped<ITouristObjectService, TouristObjectService>();
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
-        services.AddScoped<ITourStatisticsService, TourStatisticsService>();
+        services.AddScoped<Explorer.Tours.API.Public.Statistics.ITourStatisticsService, Explorer.Tours.Core.UseCases.Statistics.TourStatisticsService>();
 
         services.AddHttpClient();
         services.AddScoped<ITourChatService, TourChatService>();
@@ -44,7 +44,7 @@ public static class ToursStartup
         services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ITourExecutionService, TourExecutionService>();
-        services.AddScoped<ITourStatisticsService, TourStatisticsService>();
+        services.AddScoped<Explorer.Tours.API.Internal.ITourStatisticsService, Explorer.Tours.Core.UseCases.TourStatisticsService>();
         services.AddScoped<ITourReportService, TourReportService>();
         services.AddScoped<ITourReportAdministrationService, TourReportAdministrationService>();
         services.AddScoped<IBundleService, BundleService>();
