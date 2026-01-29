@@ -1,4 +1,4 @@
-using Explorer.Payments.API.Internal;
+﻿using Explorer.Payments.API.Internal;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Statistics;
 using Explorer.Tours.Core.Domain.Execution;
@@ -70,68 +70,76 @@ namespace Explorer.Tours.Core.UseCases.Statistics
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result;
             if (tour == null)
-                throw new InvalidOperationException($"Tour with id {tourId} not found.");
+                throw new InvalidOperationException("Tour not found.");
 
             if (tour.AuthorId != authorId)
-                throw new UnauthorizedAccessException("You are not authorized to view statistics for this tour.");
+                throw new UnauthorizedAccessException("You are not authorized to view this tour's statistics.");
 
-            var executions = _executionRepository.GetByTourId(tourId);
+            var allExecutions = _executionRepository.GetByTourId(tourId);
+            var touristsByKeyPoint = new Dictionary<int, HashSet<long>>();
 
-            var keyPointVisitCounts = new Dictionary<int, HashSet<long>>();
-
-            foreach (var execution in executions)
+            foreach (var execution in allExecutions)
             {
                 foreach (var visit in execution.KeyPointVisits)
                 {
-                    if (!keyPointVisitCounts.ContainsKey(visit.KeyPointOrdinal))
-                        keyPointVisitCounts[visit.KeyPointOrdinal] = new HashSet<long>();
+                    if (!touristsByKeyPoint.ContainsKey(visit.KeyPointOrdinal))
+                        touristsByKeyPoint[visit.KeyPointOrdinal] = new HashSet<long>();
 
-                    keyPointVisitCounts[visit.KeyPointOrdinal].Add(execution.TouristId);
+                    touristsByKeyPoint[visit.KeyPointOrdinal].Add(execution.TouristId);
                 }
             }
 
             var encounterIds = tour.KeyPoints
                 .Where(kp => kp.EncounterId.HasValue)
-                .Select(kp => kp.EncounterId!.Value)
+                .Select(kp => kp.EncounterId.Value)
                 .Distinct()
                 .ToList();
 
-            var encounterStats = _encounterStatisticsService.GetEncounterStatistics(encounterIds);
+            var encounterStats = encounterIds.Count > 0
+                ? _encounterStatisticsService.GetEncounterStatistics(encounterIds)
+                : new Dictionary<long, EncounterStatisticsData>();
 
-            var keyPointStats = tour.KeyPoints.OrderBy(kp => kp.OrdinalNo).Select(kp =>
-            {
-                var stat = new KeyPointStatDto
+            var keyPointStats = tour.KeyPoints
+                .OrderBy(kp => kp.OrdinalNo)
+                .Select(kp =>
                 {
-                    KeyPointId = kp.Id,
-                    Name = kp.Name,
-                    OrdinalNo = kp.OrdinalNo,
-                    TouristsArrived = keyPointVisitCounts.ContainsKey(kp.OrdinalNo)
-                        ? keyPointVisitCounts[kp.OrdinalNo].Count
-                        : 0
-                };
+                    var touristsArrived = touristsByKeyPoint.ContainsKey(kp.OrdinalNo)
+                        ? touristsByKeyPoint[kp.OrdinalNo].Count 
+                        : 0;
 
-                if (kp.EncounterId.HasValue && encounterStats.ContainsKey(kp.EncounterId.Value))
-                {
-                    var encounterData = encounterStats[kp.EncounterId.Value];
+                    EncounterStatDto? encounterStat = null;
 
-                    stat.Encounter = new EncounterStatDto
+                    if (kp.EncounterId.HasValue && encounterStats.ContainsKey(kp.EncounterId.Value))
                     {
-                        EncounterId = kp.EncounterId.Value,
-                        EncounterName = encounterData.EncounterName,
-                        TotalAttempts = encounterData.TotalAttempts,
-                        SuccessfulAttempts = encounterData.SuccessfulAttempts,
-                        SuccessRate = encounterData.TotalAttempts > 0
-                            ? Math.Round((double)encounterData.SuccessfulAttempts / encounterData.TotalAttempts * 100, 2)
-                            : 0
-                    };
-                }
+                        var encData = encounterStats[kp.EncounterId.Value];
+                        var successRate = encData.TotalAttempts > 0
+                            ? Math.Round((double)encData.SuccessfulAttempts / encData.TotalAttempts * 100, 2)
+                            : 0.0;
 
-                return stat;
-            }).ToList();
+                        encounterStat = new EncounterStatDto
+                        {
+                            EncounterId = encData.EncounterId,
+                            EncounterName = encData.EncounterName,
+                            TotalAttempts = encData.TotalAttempts,
+                            SuccessfulAttempts = encData.SuccessfulAttempts,
+                            SuccessRate = successRate
+                        };
+                    }
+
+                    return new KeyPointStatDto
+                    {
+                        KeyPointId = kp.Id,
+                        Name = kp.Name,
+                        OrdinalNo = kp.OrdinalNo,
+                        TouristsArrived = touristsArrived,
+                        Encounter = encounterStat
+                    };
+                })
+                .ToList();
 
             return new KeyPointEncounterStatisticsDto
             {
-                TourId = tourId,
+                TourId = tour.Id,
                 TourName = tour.Name,
                 KeyPoints = keyPointStats
             };
