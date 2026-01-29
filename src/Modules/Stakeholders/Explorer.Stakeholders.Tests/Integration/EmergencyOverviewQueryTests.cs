@@ -91,11 +91,14 @@ namespace Explorer.Stakeholders.Tests.Integration
         private static EmergencyOverviewController CreateControllerWithRole(IServiceScope scope, string userId, string role)
         {
             return new EmergencyOverviewController(
-                scope.ServiceProvider.GetRequiredService<IEmergencyOverviewService>())
+                scope.ServiceProvider.GetRequiredService<IEmergencyOverviewService>(),
+                scope.ServiceProvider.GetRequiredService<IEmergencyTranslationService>()
+            )
             {
                 ControllerContext = BuildContextWithRole(userId, role)
             };
         }
+
 
         private static ControllerContext BuildContextWithRole(string id, string role)
         {
