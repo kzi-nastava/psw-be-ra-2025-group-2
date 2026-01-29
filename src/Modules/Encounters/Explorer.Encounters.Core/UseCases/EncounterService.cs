@@ -488,6 +488,16 @@ namespace Explorer.Encounters.Core.UseCases
             return _executionRepository.IsCompleted(userId, encounterId);
         }
 
+        public void CancelExecution(long userId, long encounterId)
+        {
+            var execution = _executionRepository.Get(userId, encounterId);
+
+            if (execution != null)
+            {
+                _executionRepository.Delete(execution.Id);
+            }
+        }
+
         public List<UserXpDto> GetXpForUsers(IEnumerable<long> userIds)
         {
             var ids = userIds?.Distinct().ToList() ?? new List<long>();

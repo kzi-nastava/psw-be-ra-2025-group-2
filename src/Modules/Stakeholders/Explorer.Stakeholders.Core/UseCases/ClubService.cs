@@ -213,8 +213,6 @@ namespace Explorer.Stakeholders.Core.UseCases
             if (club == null)
                 throw new KeyNotFoundException($"Club {clubId} not found.");
 
-            if (club.OwnerId != ownerId)
-                throw new System.UnauthorizedAccessException("Only the owner can load members.");
 
             var ids = club.Members.Select(m => m.TouristId).ToHashSet();
             var tourists = _userService.GetTourists(null);
