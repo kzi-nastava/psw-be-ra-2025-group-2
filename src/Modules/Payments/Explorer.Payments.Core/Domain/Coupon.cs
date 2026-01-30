@@ -24,6 +24,9 @@ namespace Explorer.Payments.Core.Domain
                 throw new ArgumentException("Invalid discount percentage");
             }
 
+            if (authorId == 0)
+                throw new ArgumentException("AuthorId cannot be 0");
+
             if (validUntil.HasValue && validUntil <= DateTime.UtcNow)
             {
                 throw new ArgumentException("ValidUntil must be in the future");
