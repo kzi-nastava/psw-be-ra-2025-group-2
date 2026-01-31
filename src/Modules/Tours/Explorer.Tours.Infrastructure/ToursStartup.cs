@@ -47,6 +47,8 @@ public static class ToursStartup
 
         // Internal
         services.AddScoped<IInternalTourService, InternalTourService>();
+        services.AddScoped<IAverageCostEstimatorService, AverageCostEstimatorService>();
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
