@@ -46,6 +46,10 @@ public class StakeholderProfile : Profile
             .ForMember(d => d.MyText, o => o.MapFrom(s => s.MyText))
             .ForMember(d => d.LocalText, o => o.MapFrom(s => s.LocalText));
 
+        CreateMap<Message, ClubMessageDto>()
+            .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId))
+            .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
         CreateMap<OnboardingSlide, OnboardingSlideDto>().ReverseMap();
         CreateMap<OnboardingProgress, OnboardingProgressDto>().ReverseMap();

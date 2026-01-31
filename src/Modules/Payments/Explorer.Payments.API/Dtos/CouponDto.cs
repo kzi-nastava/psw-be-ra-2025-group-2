@@ -12,7 +12,7 @@ namespace Explorer.Payments.API.Dtos
         public int DiscountPercentage { get; set; }
         public long? TourId { get; set; }
         public string TourName { get; set; }
-        public long AuthorId { get; set; }
+        public long? AuthorId { get; set; }
         public DateTime? ValidUntil { get; set; }
     }
 }

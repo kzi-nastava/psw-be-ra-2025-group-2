@@ -80,5 +80,21 @@ namespace Explorer.Payments.Core.UseCases
             return _mapper.Map<List<CouponDto>>(coupons);
         }
 
+        public CouponDto CreateRewardCoupon(int discountPercentage, long? tourId, long? authorId, DateTime? validUntil)
+        {
+            // 1. Kreiramo domen objekt
+            var coupon = new Coupon(
+                discountPercentage,
+                authorId,
+                tourId,
+                validUntil
+            );
+
+            // 2. Čuvamo u bazu preko repozitorijuma
+            var savedCoupon = _repository.Create(coupon);
+
+            // 3. Mapiramo spašeni entitet direktno u DTO
+            return _mapper.Map<CouponDto>(savedCoupon);
+        }
     }
 }

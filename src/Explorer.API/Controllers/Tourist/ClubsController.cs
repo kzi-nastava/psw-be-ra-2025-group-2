@@ -7,6 +7,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace Explorer.API.Controllers.Tourist
 {
@@ -28,352 +29,172 @@ namespace Explorer.API.Controllers.Tourist
                 c.Type == "id" || c.Type == ClaimTypes.NameIdentifier);
 
             if (idClaim == null)
-            {
                 throw new Exception("User id claim not found in token.");
-            }
 
             return long.Parse(idClaim.Value);
         }
 
-        // ================== BASIC CRUD ==================
-
-        // GET: api/tourist/clubs
+        // BASIC CRUD
         [HttpGet]
-        public ActionResult<List<ClubDto>> GetAll()
+        public ActionResult<List<ClubDto>> GetAll() => Ok(_clubService.GetAll());
+
+        [HttpGet("{id:long}")]
+        public ActionResult<ClubDto> GetClubById(long id)
         {
-            var result = _clubService.GetAll();
-            return Ok(result);
+            var club = _clubService.Get(id);
+            return club == null ? NotFound() : Ok(club);
         }
 
-        // POST: api/tourist/clubs
         [HttpPost]
         public ActionResult<ClubDto> Create([FromBody] ClubDto dto)
         {
-            var currentUserId = GetCurrentUserId();
-
-            // Ignorišemo ownerId iz body-ja, uvek postavljamo na ulogovanog korisnika
-            dto.OwnerId = currentUserId;
-
-            var created = _clubService.Create(dto);
-            return Ok(created);
+            dto.OwnerId = GetCurrentUserId();
+            return Ok(_clubService.Create(dto));
         }
 
-        // PUT: api/tourist/clubs/{id}
         [HttpPut("{id:long}")]
         public ActionResult<ClubDto> Update(long id, [FromBody] ClubDto dto)
         {
             var currentUserId = GetCurrentUserId();
-
             var existing = _clubService.Get(id);
             if (existing == null) return NotFound();
-
-            if (existing.OwnerId != currentUserId)
-                return Forbid();
+            if (existing.OwnerId != currentUserId) return Forbid();
 
             dto.Id = id;
             dto.OwnerId = currentUserId;
 
-            var updated = _clubService.Update(dto);
-            return Ok(updated);
+            return Ok(_clubService.Update(dto));
         }
 
-        // DELETE: api/tourist/clubs/{id}
         [HttpDelete("{id:long}")]
         public ActionResult Delete(long id)
         {
             var currentUserId = GetCurrentUserId();
-
             var existing = _clubService.Get(id);
             if (existing == null) return NotFound();
-
-            if (existing.OwnerId != currentUserId)
-                return Forbid();
+            if (existing.OwnerId != currentUserId) return Forbid();
 
             _clubService.Delete(id);
             return NoContent();
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<ClubDto> GetClubById(int id)
-        {
-            var club = _clubService.Get(id);
-            if (club == null) return NotFound();
-            return Ok(club);
-        }
-
-        // ================== INVITATIONS (POZIVNICE) ==================
-
+        // INVITE (owner)
         [HttpPost("{clubId:long}/invite/{touristId:long}")]
         public IActionResult InviteTourist(long clubId, long touristId)
         {
             var ownerId = GetCurrentUserId();
-
-            try
-            {
-                _clubService.InviteTourist(clubId, ownerId, touristId);
-                return Ok("Invitation sent.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                // npr. klub ne postoji
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // klub nije aktivan, turist već član, već ima zahtev ili pozivnicu
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            _clubService.InviteTourist(clubId, ownerId, touristId);
+            return Ok("Invitation sent.");
         }
 
-        [HttpPost("{clubId:long}/invitation/{touristId:long}/accept")]
-        public IActionResult AcceptInvitation(long clubId, long touristId)
+        // INVITATION accept/reject (tourist from token)
+        [HttpPost("{clubId:long}/invitation/accept")]
+        public IActionResult AcceptInvitation(long clubId)
         {
-            try
-            {
-                _clubService.AcceptInvitation(clubId, touristId);
-                return Ok("Invitation accepted.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // "Invitation not found."
-                return BadRequest(ex.Message);
-            }
+            var touristId = GetCurrentUserId();
+            _clubService.AcceptInvitation(clubId, touristId);
+            return Ok("Invitation accepted.");
         }
 
-        [HttpPost("{clubId:long}/invitation/{touristId:long}/reject")]
-        public IActionResult RejectInvitation(long clubId, long touristId)
+        [HttpPost("{clubId:long}/invitation/reject")]
+        public IActionResult RejectInvitation(long clubId)
         {
-            try
-            {
-                _clubService.RejectInvitation(clubId, touristId);
-                return Ok("Invitation rejected.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var touristId = GetCurrentUserId();
+            _clubService.RejectInvitation(clubId, touristId);
+            return Ok("Invitation rejected.");
         }
 
-        // ================== MEMBERS ==================
-
+        // MEMBERS (owner)
         [HttpDelete("{clubId:long}/members/{touristId:long}")]
         public IActionResult RemoveMember(long clubId, long touristId)
         {
             var ownerId = GetCurrentUserId();
-
-            try
-            {
-                _clubService.RemoveMember(clubId, ownerId, touristId);
-                return Ok("Member removed.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // "Member not found."
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            _clubService.RemoveMember(clubId, ownerId, touristId);
+            return Ok("Member removed.");
         }
 
-        // ================== MEMBERSHIP REQUESTS (ZAHTEVI) ==================
-
-        // Turista šalje zahtev
+        // JOIN REQUESTS (tourist sends/withdraws)
         [HttpPost("{clubId:long}/join-requests")]
         public IActionResult RequestMembership(long clubId)
         {
             var touristId = GetCurrentUserId();
-
-            try
-            {
-                _clubService.RequestMembership(clubId, touristId);
-                return Ok("Membership request sent.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                // klub ne postoji
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // "Club is not active.", "Tourist is already a member.",
-                // "Join request already exists."
-                return BadRequest(ex.Message);
-            }
+            _clubService.RequestMembership(clubId, touristId);
+            return Ok("Membership request sent.");
         }
 
-        // Turista povlači zahtev
         [HttpDelete("{clubId:long}/join-requests")]
         public IActionResult WithdrawMembershipRequest(long clubId)
         {
             var touristId = GetCurrentUserId();
-
-            try
-            {
-                _clubService.WithdrawMembershipRequest(clubId, touristId);
-                return Ok("Membership request withdrawn.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // "Join request not found."
-                return BadRequest(ex.Message);
-            }
+            _clubService.WithdrawMembershipRequest(clubId, touristId);
+            return Ok("Membership request withdrawn.");
         }
 
-        // Vlasnik prihvata zahtev
+        // JOIN REQUESTS (owner accepts/rejects specific tourist)
         [HttpPost("{clubId:long}/join-requests/{touristId:long}/accept")]
         public IActionResult AcceptMembershipRequest(long clubId, long touristId)
         {
             var ownerId = GetCurrentUserId();
-
-            try
-            {
-                _clubService.AcceptMembershipRequest(clubId, ownerId, touristId);
-                return Ok("Membership request accepted.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // "Join request not found."
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            _clubService.AcceptMembershipRequest(clubId, ownerId, touristId);
+            return Ok("Membership request accepted.");
         }
 
-        // Vlasnik odbija zahtev
         [HttpPost("{clubId:long}/join-requests/{touristId:long}/reject")]
         public IActionResult RejectMembershipRequest(long clubId, long touristId)
         {
             var ownerId = GetCurrentUserId();
-
-            try
-            {
-                _clubService.RejectMembershipRequest(clubId, ownerId, touristId);
-                return Ok("Membership request rejected.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            _clubService.RejectMembershipRequest(clubId, ownerId, touristId);
+            return Ok("Membership request rejected.");
         }
 
+        // LISTS
         [HttpGet("{clubId:long}/invitable-tourists")]
         public ActionResult<List<InvitableTouristDto>> GetInvitableTourists(long clubId, [FromQuery] string? q)
         {
             var ownerId = GetCurrentUserId();
-
-            try
-            {
-                var result = _clubService.GetInvitableTourists(clubId, ownerId, q);
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            return Ok(_clubService.GetInvitableTourists(clubId, ownerId, q));
         }
 
         [HttpGet("{clubId:long}/join-requests/list")]
         public ActionResult<List<TouristBasicDto>> GetJoinRequestsList(long clubId)
         {
             var ownerId = GetCurrentUserId();
-            try
-            {
-                return Ok(_clubService.GetJoinRequests(clubId, ownerId));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            return Ok(_clubService.GetJoinRequests(clubId, ownerId));
         }
 
         [HttpGet("{clubId:long}/members/list")]
         public ActionResult<List<TouristBasicDto>> GetMembersList(long clubId)
         {
             var ownerId = GetCurrentUserId();
-            try
-            {
-                return Ok(_clubService.GetMembers(clubId, ownerId));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            return Ok(_clubService.GetMembers(clubId, ownerId));
         }
 
+        // MY CLUB IDS
         [HttpGet("my-invitations")]
         public ActionResult<List<long>> GetMyInvitations()
         {
             var touristId = GetCurrentUserId();
-            var clubIds = _clubService.GetMyInvitationClubIds(touristId);
-            return Ok(clubIds);
+            return Ok(_clubService.GetMyInvitationClubIds(touristId));
         }
 
         [HttpGet("my-memberships")]
         public ActionResult<List<long>> GetMyMemberships()
         {
             var touristId = GetCurrentUserId();
-            var result = _clubService.GetMyMembershipClubIds(touristId);
-            return Ok(result);
+            return Ok(_clubService.GetMyMembershipClubIds(touristId));
         }
 
         [HttpGet("my-join-requests")]
         public ActionResult<List<long>> GetMyJoinRequests()
         {
             var touristId = GetCurrentUserId();
-            var result = _clubService.GetMyJoinRequestClubIds(touristId);
-            return Ok(result);
+            return Ok(_clubService.GetMyJoinRequestClubIds(touristId));
         }
+
+        // UPLOAD
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("upload-image")]
-        [RequestSizeLimit(10_000_000)] // 10MB
+        [RequestSizeLimit(10_000_000)]
         public async Task<ActionResult<string>> UploadImage([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0) return BadRequest("File is required.");

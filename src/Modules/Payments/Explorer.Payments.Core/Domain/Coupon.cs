@@ -13,11 +13,11 @@ namespace Explorer.Payments.Core.Domain
         public string Code {  get; private set; }
         public int DiscountPercentage { get; private set; }
         public DateTime? ValidUntil { get; private set; }
-        public long AuthorId { get; private set; }
+        public long? AuthorId { get; private set; } //ako je null, globalni kupon, vazi sve turee
         public long? TourId { get; private set; } //Ako je null, onda ce vaziti za sve ture autora
 
         private Coupon() { }
-        public Coupon(int discountPercentage, long authorId, long? tourId, DateTime? validUntil)
+        public Coupon(int discountPercentage, long? authorId, long? tourId, DateTime? validUntil)
         {
             if (discountPercentage < 1 || discountPercentage>100) 
             {
@@ -25,9 +25,7 @@ namespace Explorer.Payments.Core.Domain
             }
 
             if (authorId == 0)
-            {
-                throw new ArgumentException("Invalid AuthorId");
-            }
+                throw new ArgumentException("AuthorId cannot be 0");
 
             if (validUntil.HasValue && validUntil <= DateTime.UtcNow)
             {

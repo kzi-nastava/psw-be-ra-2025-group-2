@@ -42,6 +42,21 @@ public class Tour : AggregateRoot
     public string CoverImageUrl { get; private set; } = string.Empty;
 
     public AverageCost? AverageCost { get; private set; }
+    public int PurchasesCount { get; private set; } = 0;
+    public int StartsCount { get; private set; } = 0;
+
+    public void IncrementPurchases(int delta = 1)
+    {
+        if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        PurchasesCount += delta;
+    }
+
+    public void IncrementStarts(int delta = 1)
+    {
+        if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        StartsCount += delta;
+    }
+
 
     public Tour() { }
 
@@ -227,9 +242,9 @@ public class Tour : AggregateRoot
         if (equipment == null) return;
 
         foreach (var item in equipment)
-    {
+        {
             Equipment.Add(item);
-    }
+        }
     }
 
     public void Publish()
@@ -286,7 +301,7 @@ public class Tour : AggregateRoot
         {
             LengthKm = 0m;
             return;
-    }
+        }
 
 
     }
@@ -312,7 +327,7 @@ public class Tour : AggregateRoot
 
         var existing = _reviews.FirstOrDefault(r => r.TouristId == review.TouristId);
         if (existing != null)
-    {
+        {
             throw new InvalidOperationException("Tourist has already reviewed this tour.");
         }
 

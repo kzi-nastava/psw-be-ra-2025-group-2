@@ -16,10 +16,11 @@ namespace Explorer.API.Controllers.Administrator.Administration
     public class EncounterController : ControllerBase
     {
         private readonly IEncounterService _encounterService;
-
-        public EncounterController(IEncounterService encounterService)
+        private readonly IRewardService _rewardService;
+        public EncounterController(IEncounterService encounterService, IRewardService rewardService)
         {
             _encounterService = encounterService;
+            _rewardService = rewardService;
         }
 
         [Authorize(Roles = "administrator, tourist")]
@@ -204,7 +205,15 @@ namespace Explorer.API.Controllers.Administrator.Administration
             {
                 long userId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
 
+                var progressBefore = _encounterService.GetMyProgress(userId);
+                int oldLevel = progressBefore.Level;
+
                 _encounterService.CompleteEncounter(userId, id);
+
+                var progressAfter = _encounterService.GetMyProgress(userId);
+                int newLevel = progressAfter.Level;
+
+                _rewardService.CheckAndGrantRewards(userId, oldLevel, newLevel);
 
                 return Ok();
             }
@@ -322,6 +331,16 @@ namespace Explorer.API.Controllers.Administrator.Administration
             {
                 return BadRequest(e.Message);
             }
+        }
+
+        [HttpDelete("execution/{encounterId}")]
+        public ActionResult CancelExecution(long encounterId)
+        {
+            var identityId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            _encounterService.CancelExecution(identityId, encounterId);
+
+            return Ok();
         }
     }
 }

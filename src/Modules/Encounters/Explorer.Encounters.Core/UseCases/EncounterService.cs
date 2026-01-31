@@ -17,7 +17,7 @@ using Explorer.Encounters.API.Internal;
 
 namespace Explorer.Encounters.Core.UseCases
 {
-    public class EncounterService : IEncounterService, IInternalEncounterExecutionService
+    public class EncounterService : IEncounterService, IInternalEncounterExecutionService, IInternalTouristProgressService, IInternalEncounterStatisticsService
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
@@ -486,6 +486,64 @@ namespace Explorer.Encounters.Core.UseCases
         public bool IsEncounterCompleted(long userId, long encounterId)
         {
             return _executionRepository.IsCompleted(userId, encounterId);
+        }
+
+        public void CancelExecution(long userId, long encounterId)
+        {
+            var execution = _executionRepository.Get(userId, encounterId);
+
+            if (execution != null)
+            {
+                _executionRepository.Delete(execution.Id);
+            }
+        }
+
+        public List<UserXpDto> GetXpForUsers(IEnumerable<long> userIds)
+        {
+            var ids = userIds?.Distinct().ToList() ?? new List<long>();
+            if (ids.Count == 0) return new List<UserXpDto>();
+
+            // Potrebno: batch metoda u repo (najbolje), ili fallback: loop (ok za mali broj)
+            var progresses = _touristProgressRepository.GetByUserIds(ids); // DODATI u repo
+
+            // Ako neko nema TouristProgress, tretiraj kao 0 XP (da svi članovi budu u listi)
+            var dict = progresses.ToDictionary(p => p.UserId, p => p);
+
+            return ids.Select(id =>
+            {
+                if (!dict.TryGetValue(id, out var p))
+                    return new UserXpDto { UserId = id, TotalXp = 0, Level = 1 };
+
+                return new UserXpDto { UserId = p.UserId, TotalXp = p.TotalXp, Level = p.Level };
+            }).ToList();
+        }
+
+        public Dictionary<long, EncounterStatisticsData> GetEncounterStatistics(IEnumerable<long> encounterIds)
+        {
+            var ids = encounterIds?.Distinct().ToList() ?? new List<long>();
+            if (ids.Count == 0) return new Dictionary<long, EncounterStatisticsData>();
+
+            var encounterExecutions = _executionRepository.GetByEncounterIds(ids);
+
+
+            var stats = encounterExecutions
+                .GroupBy(ee => ee.EncounterId)
+                .ToDictionary(
+                    g => g.Key,
+                    g =>
+                    {
+                        var encounter = _encounterRepository.GetById(g.Key);
+                        return new EncounterStatisticsData
+                        {
+                            EncounterId = g.Key,
+                            EncounterName = encounter?.Name ?? "Unknown",
+                            TotalAttempts = g.Count(),
+                            SuccessfulAttempts = g.Count(e => e.IsCompleted)
+                        };
+                    }
+                );
+
+            return stats;
         }
     }
 }
