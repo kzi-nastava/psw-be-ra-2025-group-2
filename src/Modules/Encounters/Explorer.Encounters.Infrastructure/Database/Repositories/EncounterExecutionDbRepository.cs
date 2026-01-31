@@ -1,5 +1,6 @@
 ﻿using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +50,25 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
             return _context.EncounterExecutions
                            .Where(e => e.EncounterId == encounterId && !e.IsCompleted)
                            .ToList();
+        }
+
+        public List<EncounterExecution> GetByEncounterIds(IEnumerable<long> encounterIds)
+        {
+            var ids = encounterIds.Distinct().ToList();
+            return _context.EncounterExecutions
+                .Where(e => ids.Contains(e.EncounterId))
+                .ToList();
+        }
+
+        public void Delete(long id)
+        {
+            var execution = _context.EncounterExecutions.Find(id);
+
+            if (execution != null)
+            {
+                _context.EncounterExecutions.Remove(execution);
+                _context.SaveChanges();
+            }
         }
     }
 }

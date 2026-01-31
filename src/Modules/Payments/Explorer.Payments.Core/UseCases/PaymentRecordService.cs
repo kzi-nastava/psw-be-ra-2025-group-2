@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.Tours.API.Internal;
 
 namespace Explorer.Payments.Core.UseCases
 {
@@ -16,13 +17,16 @@ namespace Explorer.Payments.Core.UseCases
     {
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly IShoppingCartRepository _cartRepository;
+        private readonly ITourStatisticsService _tourStats;
 
         public PaymentRecordService(
             IPaymentRecordRepository paymentRecordRepository,
-            IShoppingCartRepository cartRepository)
+            IShoppingCartRepository cartRepository,
+            ITourStatisticsService tourStats)
         {
             _paymentRecordRepository = paymentRecordRepository;
             _cartRepository = cartRepository;
+            _tourStats = tourStats;
         }
 
         public void Checkout(long touristId)
@@ -60,6 +64,18 @@ namespace Explorer.Payments.Core.UseCases
 
 
                 _paymentRecordRepository.Create(record);
+                if (item.ItemType == "TOUR")
+                {
+                    _tourStats.IncrementPurchases(item.TourId!.Value);
+                }
+                else
+                {
+                    if (item.TourIds != null && item.TourIds.Count > 0)
+                    {
+                        foreach (var tid in item.TourIds)
+                            _tourStats.IncrementPurchases(tid);
+                    }
+                }
             }
 
             cart.ClearCart();

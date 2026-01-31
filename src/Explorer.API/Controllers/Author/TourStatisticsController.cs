@@ -46,5 +46,23 @@ namespace Explorer.API.Controllers.Author
                 return BadRequest(ex.Message);
             }
         }
+        [HttpGet("{tourId:long}/keypoints-encounters")]
+        public ActionResult<KeyPointEncounterStatisticsDto> GetKeyPointEncounterStatistics(long tourId)
+        {
+            try
+            {
+                var authorId = User.UserId();
+                var result = _statisticsService.GetKeyPointEncounterStatistics(tourId, authorId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

@@ -17,7 +17,7 @@ using Explorer.Encounters.API.Internal;
 
 namespace Explorer.Encounters.Core.UseCases
 {
-    public class EncounterService : IEncounterService, IInternalEncounterExecutionService, IInternalTouristProgressService
+    public class EncounterService : IEncounterService, IInternalEncounterExecutionService, IInternalTouristProgressService, IInternalEncounterStatisticsService
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IEncounterExecutionRepository _executionRepository;
@@ -488,6 +488,16 @@ namespace Explorer.Encounters.Core.UseCases
             return _executionRepository.IsCompleted(userId, encounterId);
         }
 
+        public void CancelExecution(long userId, long encounterId)
+        {
+            var execution = _executionRepository.Get(userId, encounterId);
+
+            if (execution != null)
+            {
+                _executionRepository.Delete(execution.Id);
+            }
+        }
+
         public List<UserXpDto> GetXpForUsers(IEnumerable<long> userIds)
         {
             var ids = userIds?.Distinct().ToList() ?? new List<long>();
@@ -506,6 +516,34 @@ namespace Explorer.Encounters.Core.UseCases
 
                 return new UserXpDto { UserId = p.UserId, TotalXp = p.TotalXp, Level = p.Level };
             }).ToList();
+        }
+
+        public Dictionary<long, EncounterStatisticsData> GetEncounterStatistics(IEnumerable<long> encounterIds)
+        {
+            var ids = encounterIds?.Distinct().ToList() ?? new List<long>();
+            if (ids.Count == 0) return new Dictionary<long, EncounterStatisticsData>();
+
+            var encounterExecutions = _executionRepository.GetByEncounterIds(ids);
+
+
+            var stats = encounterExecutions
+                .GroupBy(ee => ee.EncounterId)
+                .ToDictionary(
+                    g => g.Key,
+                    g =>
+                    {
+                        var encounter = _encounterRepository.GetById(g.Key);
+                        return new EncounterStatisticsData
+                        {
+                            EncounterId = g.Key,
+                            EncounterName = encounter?.Name ?? "Unknown",
+                            TotalAttempts = g.Count(),
+                            SuccessfulAttempts = g.Count(e => e.IsCompleted)
+                        };
+                    }
+                );
+
+            return stats;
         }
     }
 }

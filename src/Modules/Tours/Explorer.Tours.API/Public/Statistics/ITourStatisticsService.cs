@@ -6,5 +6,7 @@ namespace Explorer.Tours.API.Public.Statistics
     {
         TourCompletionStatisticsDto GetTourCompletionStatistics(long tourId);
         AuthorTourStatisticsDto GetAuthorTourStatistics(long authorId);
+        KeyPointEncounterStatisticsDto GetKeyPointEncounterStatistics(long tourId, long authorId);
+
     }
 }
