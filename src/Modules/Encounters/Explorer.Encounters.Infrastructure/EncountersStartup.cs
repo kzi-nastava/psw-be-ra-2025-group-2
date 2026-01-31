@@ -6,6 +6,7 @@ using Explorer.Encounters.Core.Mappers;
 using Explorer.Encounters.Core.UseCases;
 using Explorer.Encounters.Infrastructure.Database;
 using Explorer.Encounters.Infrastructure.Database.Repositories;
+using Explorer.Payments.Core.UseCases.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -31,6 +32,7 @@ namespace Explorer.Encounters.Infrastructure
         private static void SetupCore(IServiceCollection services)
         {
             services.AddScoped<IEncounterService, EncounterService>();
+            services.AddScoped<IRewardService, RewardService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
@@ -40,6 +42,7 @@ namespace Explorer.Encounters.Infrastructure
             services.AddScoped<ITouristProgressRepository, TouristProgressRepository>();
             services.AddScoped<IEncounterPresenceRepository, EncounterPresenceRepository>();
             services.AddScoped<IInternalEncounterExecutionService, EncounterService>();
+            services.AddScoped<IUserRewardRepository, UserRewardRepository>();
             services.AddScoped<IInternalTouristProgressService, EncounterService>();
             services.AddScoped<IInternalEncounterStatisticsService, EncounterService>();
 

@@ -60,12 +60,22 @@ namespace Explorer.Payments.Tests.Unit
         }
 
         [Fact]
-        public void Creation_fails_with_invalid_author_id()
+        public void Creation_fails_with_author_id_zero()
         {
-            // Act & Assert
             Should.Throw<ArgumentException>(() =>
-                new Coupon(20, 0, 10, DateTime.UtcNow.AddDays(30)));
+                new Coupon(20, 0, null, DateTime.UtcNow.AddDays(30)));
         }
+
+        [Fact]
+        public void Creates_global_coupon()
+        {
+            var coupon = new Coupon(20, null, null, DateTime.UtcNow.AddDays(30));
+
+            coupon.AuthorId.ShouldBeNull();
+            coupon.TourId.ShouldBeNull();
+            coupon.DiscountPercentage.ShouldBe(20);
+        }
+
 
         [Fact]
         public void Creation_fails_with_past_valid_until_date()

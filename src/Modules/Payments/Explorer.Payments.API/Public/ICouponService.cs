@@ -15,5 +15,6 @@ namespace Explorer.Payments.API.Public
         void Delete(string code, long authorId);
         CouponDto GetByCode(string code);
         List<CouponDto> GetByAuthor(long authorId, long? tourId);
+        CouponDto CreateRewardCoupon(int discountPercentage, long? tourId, long? authorId, DateTime? validUntil); 
     }
 }
