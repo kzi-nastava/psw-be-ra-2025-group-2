@@ -22,5 +22,8 @@ namespace Explorer.Tours.API.Dtos
 
         public double FirstKeyPointLatitude { get; set; }
         public double FirstKeyPointLongitude { get; set; }
+
+        public AverageCostDto? AverageCost { get; set; }
+
     }
 }

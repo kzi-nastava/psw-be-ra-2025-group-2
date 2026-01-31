@@ -25,6 +25,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IPublicKeyPointRequestRepository? _requestRepository;
         private readonly ITourExecutionRepository _tourExecutionRepository;
         private readonly IInternalTokenService _internalTokenService;
+        private readonly IAverageCostEstimatorService _averageCostEstimator;
+
 
         public TourService(
             ITourRepository tourRepository,
@@ -34,7 +36,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
             IPublicKeyPointService publicKeyPointService,
             IPublicKeyPointRequestRepository requestRepository,
             ITourExecutionRepository tourExecutionRepository,
-            IInternalTokenService tokenService)
+            IInternalTokenService tokenService,
+            IAverageCostEstimatorService averageCostEstimator)
         {
             _tourRepository = tourRepository;
             _userService = userService;
@@ -44,6 +47,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             _requestRepository = requestRepository;
             _tourExecutionRepository = tourExecutionRepository;
             _internalTokenService = tokenService;
+            _averageCostEstimator = averageCostEstimator;
         }
 
         public TourDto Create(CreateTourDto dto)
@@ -88,7 +92,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
                         kpDto.Longitude,
                         dto.AuthorId,
                         kpDto.EncounterId,
-                        kpDto.IsEncounterRequired
+                        kpDto.IsEncounterRequired,
+                        kpDto.OsmClass,
+                        kpDto.OsmType
                     );
                     tour.AddKeyPoint(keyPoint);
                 }
@@ -106,6 +112,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
                 tour.SetRequiredEquipment(requestedEquipment);
             }
+
+            RecalculateAverageCost(tour);
+
 
             _tourRepository.AddAsync(tour).Wait();
             return _mapper.Map<TourDto>(tour);
@@ -187,6 +196,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 ));
             }
 
+            RecalculateAverageCost(tour);
+
 
             _tourRepository.UpdateAsync(tour).Wait();
 
@@ -246,10 +257,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Longitude,
                 dto.AuthorId,
                 dto.EncounterId,
-                dto.IsEncounterRequired
+                dto.IsEncounterRequired,
+                dto.OsmClass,
+                dto.OsmType
             );
 
             tour.AddKeyPoint(keyPoint);
+            RecalculateAverageCost(tour);
+            
             await _tourRepository.UpdateAsync(tour);
 
             if (dto.SuggestForPublicUse && _publicKeyPointService != null)
@@ -280,10 +295,13 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 dto.Latitude,
                 dto.Longitude,
                 dto.EncounterId,
-                dto.IsEncounterRequired
+                dto.IsEncounterRequired,
+                dto.OsmClass,
+                dto.OsmType
             );
 
-        
+
+            RecalculateAverageCost(tour);
 
             await _tourRepository.UpdateAsync(tour);
 
@@ -380,6 +398,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var tour = _tourRepository.GetByIdAsync(tourId).Result ?? throw new Exception("Tour not found.");
             tour.RemoveKeyPoint(ordinalNo);
+
+            RecalculateAverageCost(tour);
+
             _tourRepository.UpdateAsync(tour).Wait();
         }
 
@@ -513,7 +534,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             var tours = _tourRepository.GetAllPublished();
             var totalCount = tours.Count;
-            var pageTours = tours.OrderByDescending(t => t.Id).Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var pageTours = tours.OrderByDescending(t => t.Id)
+                                 .Skip((page - 1) * pageSize)
+                                 .Take(pageSize)
+                                 .ToList();
+
             var results = new List<PublishedTourPreviewDto>();
 
             foreach (var tour in pageTours)
@@ -536,6 +561,10 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     PlaceName = firstKp?.Name,
                     CoverImageUrl = tour.CoverImageUrl,
                     AverageRating = tour.GetAverageRating(),
+
+                    
+                    AverageCost = tour.AverageCost != null ? _mapper.Map<AverageCostDto>(tour.AverageCost) : null,
+
                     Reviews = tour.Reviews.Select(r =>
                     {
                         var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
@@ -591,7 +620,11 @@ namespace Explorer.Tours.Core.UseCases.Administration
             }
 
             var totalCount = tours.Count;
-            var pageTours = tours.OrderByDescending(t => t.Id).Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var pageTours = tours.OrderByDescending(t => t.Id)
+                                 .Skip((page - 1) * pageSize)
+                                 .Take(pageSize)
+                                 .ToList();
+
             var results = new List<PublishedTourPreviewDto>();
 
             foreach (var tour in pageTours)
@@ -614,6 +647,10 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     PlaceName = firstKp?.Name,
                     CoverImageUrl = tour.CoverImageUrl,
                     AverageRating = tour.GetAverageRating(),
+
+                    
+                    AverageCost = tour.AverageCost != null ? _mapper.Map<AverageCostDto>(tour.AverageCost) : null,
+
                     Reviews = tour.Reviews.Select(r =>
                     {
                         var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
@@ -628,6 +665,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             return new PagedResultDto<PublishedTourPreviewDto> { Results = results, TotalCount = totalCount };
         }
+
 
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images)
         {
@@ -690,7 +728,9 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 Equipment = _mapper.Map<List<EquipmentDto>>(tour.Equipment),
 
                 FirstKeyPointLatitude = tour.KeyPoints.First().Latitude,
-                FirstKeyPointLongitude = tour.KeyPoints.First().Longitude
+                FirstKeyPointLongitude = tour.KeyPoints.First().Longitude,
+                AverageCost = tour.AverageCost != null ? _mapper.Map<AverageCostDto>(tour.AverageCost) : null
+
             };
         }
         public List<long> GetUsedEncounterIds()
@@ -707,5 +747,14 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 .Distinct()                                  
                 .ToList();
         }
+
+        private void RecalculateAverageCost(Tour tour)
+        {
+            if (tour.KeyPoints.Count >= 2)
+                tour.SetAverageCost(_averageCostEstimator.Estimate(tour));
+            else
+                tour.ClearAverageCost();
+        }
+
     }
 }

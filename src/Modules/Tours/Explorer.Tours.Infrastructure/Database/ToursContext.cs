@@ -52,6 +52,9 @@ public class ToursContext : DbContext
                 kp.Property(k => k.ImageUrl);
                 kp.Property(k => k.EncounterId).IsRequired(false);
                 kp.Property(k => k.IsEncounterRequired).HasDefaultValue(false);
+                kp.Property(k => k.OsmClass).HasMaxLength(50).IsRequired(false);
+                kp.Property(k => k.OsmType).HasMaxLength(50).IsRequired(false);
+
 
                 kp.Property(k => k.Latitude)
                     .HasColumnType("double precision")
@@ -186,7 +189,32 @@ public class ToursContext : DbContext
                            c => c.ToList()
                        )
                    );
-           
+
+            builder.OwnsOne(t => t.AverageCost, ac =>
+            {
+                ac.Property(x => x.TotalPerPerson).HasColumnName("AverageCost_TotalPerPerson");
+
+                ac.Property(x => x.Currency)
+                  .HasColumnName("AverageCost_Currency")
+                  .HasMaxLength(3)
+                  .IsRequired();
+
+                ac.Property(x => x.Disclaimer)
+                  .HasColumnName("AverageCost_Disclaimer")
+                  .HasMaxLength(500)
+                  .IsRequired();
+
+                ac.OwnsOne(x => x.Breakdown, b =>
+                {
+                    b.Property(x => x.Tickets).HasColumnName("AverageCost_Tickets");
+                    b.Property(x => x.Transport).HasColumnName("AverageCost_Transport");
+                    b.Property(x => x.FoodAndDrink).HasColumnName("AverageCost_FoodAndDrink");
+                    b.Property(x => x.Other).HasColumnName("AverageCost_Other");
+                });
+            });
+
+
+
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>

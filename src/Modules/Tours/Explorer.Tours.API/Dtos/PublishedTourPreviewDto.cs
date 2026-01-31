@@ -25,7 +25,10 @@ namespace Explorer.Tours.API.Dtos
         public string? CoverImageUrl { get; set; }
 
         public bool HasAuthorAward { get; set; }              
-        public string? AuthorAwardName { get; set; }           
+        public string? AuthorAwardName { get; set; }
+
+        public AverageCostDto? AverageCost { get; set; }
+
 
     }
 
