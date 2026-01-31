@@ -26,8 +26,6 @@ public class Tour : AggregateRoot
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
 
-
-
     public TourEnvironmentType? EnvironmentType { get; private set; }
     public List<FoodType> FoodTypes { get; private set; } = new();
     public AdventureLevel? AdventureLevel { get; private set; }
@@ -43,6 +41,7 @@ public class Tour : AggregateRoot
 
     public string CoverImageUrl { get; private set; } = string.Empty;
 
+    public AverageCost? AverageCost { get; private set; }
 
     public Tour() { }
 
@@ -61,8 +60,8 @@ public class Tour : AggregateRoot
         if (tags != null)
         {
             Tags = tags.Select(t => t.Trim())
-                        .Where(t => !string.IsNullOrWhiteSpace(t))
-                        .ToList();
+                       .Where(t => !string.IsNullOrWhiteSpace(t))
+                       .ToList();
         }
 
         Status = TourStatus.Draft;
@@ -196,7 +195,9 @@ public class Tour : AggregateRoot
             update.Latitude,
             update.Longitude,
             update.EncounterId ?? keyPoint.EncounterId,
-            update.IsEncounterRequired
+            update.IsEncounterRequired,
+            update.OsmClass ?? keyPoint.OsmClass,
+            update.OsmType ?? keyPoint.OsmType
         );
     }
 
@@ -226,9 +227,9 @@ public class Tour : AggregateRoot
         if (equipment == null) return;
 
         foreach (var item in equipment)
-        {
+    {
             Equipment.Add(item);
-        }
+    }
     }
 
     public void Publish()
@@ -285,7 +286,7 @@ public class Tour : AggregateRoot
         {
             LengthKm = 0m;
             return;
-        }
+    }
 
 
     }
@@ -311,7 +312,7 @@ public class Tour : AggregateRoot
 
         var existing = _reviews.FirstOrDefault(r => r.TouristId == review.TouristId);
         if (existing != null)
-        {
+    {
             throw new InvalidOperationException("Tourist has already reviewed this tour.");
         }
 
@@ -357,5 +358,15 @@ public class Tour : AggregateRoot
         Durations.Clear();
         Durations.AddRange(durations);
     }
+    public void SetAverageCost(AverageCost cost)
+    {
+        AverageCost = cost ?? throw new ArgumentNullException(nameof(cost));
+    }
+
+    public void ClearAverageCost()
+    {
+        AverageCost = null;
+    }
+
 
 }
