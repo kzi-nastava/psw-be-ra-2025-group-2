@@ -10,5 +10,6 @@ namespace Explorer.Stakeholders.API.Public
     public interface IClubLeaderboardService
     {
         List<ClubLeaderboardRowDto> GetLeaderboard(long clubId, long requesterId);
+        List<ClubLeaderboardClubRowDto> GetClubsLeaderboard(long requesterId);
     }
 }
