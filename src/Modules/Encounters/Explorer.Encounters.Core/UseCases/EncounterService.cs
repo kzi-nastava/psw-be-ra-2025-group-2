@@ -102,6 +102,8 @@ namespace Explorer.Encounters.Core.UseCases
                     break;
             }
 
+            encounter.SetRewards(createDto.FavoriteTourId, createDto.FavoriteBlogId);
+
             var created = _encounterRepository.Create(encounter);
             return _mapper.Map<EncounterDto>(created);
         }
@@ -382,6 +384,10 @@ namespace Explorer.Encounters.Core.UseCases
 
             if (progress.Level < 10)
                 throw new UnauthorizedAccessException("You must reach level 10 to create challenges.");
+
+            if (progress.Level < 20) createDto.FavoriteTourId = null;
+
+            if (progress.Level < 30) createDto.FavoriteBlogId = null;
 
             return Create(createDto);
         }

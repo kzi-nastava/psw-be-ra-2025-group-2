@@ -19,5 +19,7 @@ namespace Explorer.Encounters.API.Dtos.Encounter
         public double? ImageLatitude { get; set; }
         public double? ImageLongitude { get; set; }
         public double? DistanceTreshold { get; set; }
+        public long? FavoriteTourId { get; set; }
+        public long? FavoriteBlogId { get; set; }
     }
 }

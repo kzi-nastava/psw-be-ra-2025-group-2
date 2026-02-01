@@ -27,8 +27,8 @@ namespace Explorer.Encounters.Tests.Unit
                 "Meet locals",
                 ValidLocation(),
                 ValidXp(),
-                5,   
-                10.5 
+                5,
+                10.5
             );
 
             // Assert - Base properties
@@ -218,6 +218,25 @@ namespace Explorer.Encounters.Tests.Unit
             );
 
             Should.Throw<InvalidOperationException>(encounter.Archive);
+        }
+
+        [Fact]
+        public void Sets_rewards_correctly()
+        {
+            // Arrange
+            var encounter = new MiscEncounter(
+                "Reward Encounter",
+                "Description",
+                ValidLocation(),
+                ValidXp()
+            );
+
+            // Act
+            encounter.SetRewards(100, 200);
+
+            // Assert
+            encounter.FavoriteTourId.ShouldBe(100);
+            encounter.FavoriteBlogId.ShouldBe(200);
         }
     }
 }
