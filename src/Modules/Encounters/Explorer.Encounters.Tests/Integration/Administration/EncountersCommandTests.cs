@@ -282,6 +282,42 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             }
         }
 
+        [Fact]
+        public void Creates_Encounter_With_Rewards_Persisted_In_Database()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var controller = CreateControllerWithRole(scope, "-1", "administrator");
+                var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
+
+                var createDto = new CreateEncounterDto
+                {
+                    Name = "Reward Encounter DB Test",
+                    Description = "Testing database persistence",
+                    Latitude = 45.5,
+                    Longitude = 19.5,
+                    XP = 50,
+                    Type = "Miscellaneous",
+                    // Postavljamo nagrade
+                    FavoriteTourId = 99,
+                    FavoriteBlogId = 88
+                };
+
+                var result = controller.Create(createDto).Result.ShouldBeOfType<OkObjectResult>();
+                var encounterDto = result.Value.ShouldBeOfType<EncounterDto>();
+
+                // Provera povratne vrednosti
+                encounterDto.FavoriteTourId.ShouldBe(99);
+                encounterDto.FavoriteBlogId.ShouldBe(88);
+
+                // Provera direktno u bazi
+                var entity = dbContext.Encounters.Find(encounterDto.Id);
+                entity.ShouldNotBeNull();
+                entity.FavoriteTourId.ShouldBe(99);
+                entity.FavoriteBlogId.ShouldBe(88);
+            }
+        }
+
         private static EncounterController CreateControllerWithRole(
             IServiceScope scope,
             string userId,
