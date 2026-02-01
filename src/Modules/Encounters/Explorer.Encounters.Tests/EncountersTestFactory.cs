@@ -1,6 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Tests;
 using Explorer.Encounters.Infrastructure.Database;
-using Explorer.Payments.Infrastructure.Database; 
+using Explorer.Payments.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
@@ -13,6 +13,13 @@ namespace Explorer.Encounters.Tests
         {
             ReplaceDbContext<EncountersContext>(services);
             ReplaceDbContext<PaymentsContext>(services); 
+
+            var paymentsDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<PaymentsContext>));
+            if (paymentsDescriptor != null)
+            {
+                services.Remove(paymentsDescriptor);
+            }
+            services.AddDbContext<PaymentsContext>(SetupTestContext());
 
             return services;
         }

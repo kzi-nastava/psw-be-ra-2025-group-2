@@ -16,6 +16,7 @@ namespace Explorer.Encounters.Core.Domain
         Location = 1,
         Miscellaneous = 2
     }
+
     public abstract class Encounter : AggregateRoot
     {
         public string Name { get; private set; }
@@ -24,6 +25,11 @@ namespace Explorer.Encounters.Core.Domain
         public ExperiencePoints XP { get; private set; }
         public EncounterState State { get; private set; }
         public EncounterType Type { get; private set; }
+
+        // === NOVO: Polja za nagrade ===
+        public long? FavoriteTourId { get; private set; }
+        public long? FavoriteBlogId { get; private set; }
+
         protected Encounter() { }
 
         protected Encounter(string name, string description, GeoLocation location, ExperiencePoints xp, EncounterType type)
@@ -47,6 +53,13 @@ namespace Explorer.Encounters.Core.Domain
             XP = xp;
             Type = type;
             Validate();
+        }
+
+        // === NOVO: Metoda za postavljanje nagrada ===
+        public void SetRewards(long? tourId, long? blogId)
+        {
+            FavoriteTourId = tourId;
+            FavoriteBlogId = blogId;
         }
 
         public void MakeActive()
