@@ -121,7 +121,8 @@ namespace Explorer.Encounters.Tests.Integration.Tourist
 
         private static EncounterController CreateControllerWithRole(IServiceScope scope, string userId, string role)
         {
-            return new EncounterController(scope.ServiceProvider.GetRequiredService<IEncounterService>())
+            return new EncounterController(scope.ServiceProvider.GetRequiredService<IEncounterService>(),
+                                           scope.ServiceProvider.GetRequiredService<IRewardService>())
             {
                 ControllerContext = new ControllerContext
                 {
