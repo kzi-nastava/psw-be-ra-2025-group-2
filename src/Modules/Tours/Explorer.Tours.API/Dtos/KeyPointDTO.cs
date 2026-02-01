@@ -20,5 +20,8 @@
         public long? EncounterId { get; set; }
         public bool IsEncounterRequired { get; set; }
         public string? PublicStatus { get; set; }
+        public string? OsmClass { get; set; }
+        public string? OsmType { get; set; }
+
     }
 }

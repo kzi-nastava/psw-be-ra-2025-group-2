@@ -23,6 +23,10 @@ namespace Explorer.Tours.Core.Domain
         public long? EncounterId { get; private set; }
         public bool IsEncounterRequired { get; private set; }
 
+        
+        public string? OsmClass { get; private set; }
+        public string? OsmType { get; private set; }
+
         private KeyPoint()
         {
             Name = string.Empty;
@@ -30,6 +34,10 @@ namespace Explorer.Tours.Core.Domain
             SecretText = string.Empty;
             ImageUrl = string.Empty;
             IsEncounterRequired = false;
+
+            
+            OsmClass = null;
+            OsmType = null;
         }
 
         public KeyPoint(
@@ -42,7 +50,9 @@ namespace Explorer.Tours.Core.Domain
             double longitude,
             long authorId,
             long? encounterId = null,
-            bool isEncounterRequired = false)
+            bool isEncounterRequired = false,
+            string? osmClass = null,
+            string? osmType = null)
         {
             OrdinalNo = ordinalNo;
             Name = name;
@@ -56,6 +66,9 @@ namespace Explorer.Tours.Core.Domain
             EncounterId = encounterId;
             IsEncounterRequired = isEncounterRequired;
 
+            OsmClass = NormalizeOsm(osmClass);
+            OsmType = NormalizeOsm(osmType);
+
             Validate();
         }
 
@@ -67,7 +80,7 @@ namespace Explorer.Tours.Core.Domain
             string imageUrl,
             double latitude,
             double longitude)
-            : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null, false)
+            : this(ordinalNo, name, description, secretText, imageUrl, latitude, longitude, 0, null, false, null, null)
         {
         }
 
@@ -150,7 +163,9 @@ namespace Explorer.Tours.Core.Domain
             double latitude,
             double longitude,
             long? encounterId,
-            bool isEncounterRequired)
+            bool isEncounterRequired,
+            string? osmClass,
+            string? osmType)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Name is required");
@@ -163,6 +178,9 @@ namespace Explorer.Tours.Core.Domain
             Longitude = longitude;
             EncounterId = encounterId;
             IsEncounterRequired = isEncounterRequired;
+
+            OsmClass = NormalizeOsm(osmClass);
+            OsmType = NormalizeOsm(osmType);
 
             Validate();
         }
@@ -180,6 +198,13 @@ namespace Explorer.Tours.Core.Domain
                 throw new ArgumentOutOfRangeException(nameof(ordinalNo), "Ordinal number must be positive.");
 
             OrdinalNo = ordinalNo;
+        }
+
+        private static string? NormalizeOsm(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            var trimmed = value.Trim();
+            return trimmed.Length == 0 ? null : trimmed;
         }
     }
 }

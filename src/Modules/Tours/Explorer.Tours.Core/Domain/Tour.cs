@@ -26,8 +26,6 @@ public class Tour : AggregateRoot
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
 
-
-
     public TourEnvironmentType? EnvironmentType { get; private set; }
     public List<FoodType> FoodTypes { get; private set; } = new();
     public AdventureLevel? AdventureLevel { get; private set; }
@@ -43,6 +41,7 @@ public class Tour : AggregateRoot
 
     public string CoverImageUrl { get; private set; } = string.Empty;
 
+    public AverageCost? AverageCost { get; private set; }
     public int PurchasesCount { get; private set; } = 0;
     public int StartsCount { get; private set; } = 0;
 
@@ -76,8 +75,8 @@ public class Tour : AggregateRoot
         if (tags != null)
         {
             Tags = tags.Select(t => t.Trim())
-                        .Where(t => !string.IsNullOrWhiteSpace(t))
-                        .ToList();
+                       .Where(t => !string.IsNullOrWhiteSpace(t))
+                       .ToList();
         }
 
         Status = TourStatus.Draft;
@@ -211,7 +210,9 @@ public class Tour : AggregateRoot
             update.Latitude,
             update.Longitude,
             update.EncounterId ?? keyPoint.EncounterId,
-            update.IsEncounterRequired
+            update.IsEncounterRequired,
+            update.OsmClass ?? keyPoint.OsmClass,
+            update.OsmType ?? keyPoint.OsmType
         );
     }
 
@@ -372,5 +373,15 @@ public class Tour : AggregateRoot
         Durations.Clear();
         Durations.AddRange(durations);
     }
+    public void SetAverageCost(AverageCost cost)
+    {
+        AverageCost = cost ?? throw new ArgumentNullException(nameof(cost));
+    }
+
+    public void ClearAverageCost()
+    {
+        AverageCost = null;
+    }
+
 
 }

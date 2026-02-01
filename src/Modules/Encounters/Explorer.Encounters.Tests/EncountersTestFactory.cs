@@ -3,11 +3,7 @@ using Explorer.Encounters.Infrastructure.Database;
 using Explorer.Payments.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Explorer.Encounters.Tests
 {
@@ -15,9 +11,8 @@ namespace Explorer.Encounters.Tests
     {
         protected override IServiceCollection ReplaceNeededDbContexts(IServiceCollection services)
         {
-            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<EncountersContext>));
-            services.Remove(descriptor!);
-            services.AddDbContext<EncountersContext>(SetupTestContext());
+            ReplaceDbContext<EncountersContext>(services);
+            ReplaceDbContext<PaymentsContext>(services); 
 
             var paymentsDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<PaymentsContext>));
             if (paymentsDescriptor != null)
@@ -27,6 +22,15 @@ namespace Explorer.Encounters.Tests
             services.AddDbContext<PaymentsContext>(SetupTestContext());
 
             return services;
+        }
+
+        private void ReplaceDbContext<TContext>(IServiceCollection services)
+            where TContext : DbContext
+        {
+            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TContext>));
+            if (descriptor != null) services.Remove(descriptor);
+
+            services.AddDbContext<TContext>(SetupTestContext());
         }
     }
 }

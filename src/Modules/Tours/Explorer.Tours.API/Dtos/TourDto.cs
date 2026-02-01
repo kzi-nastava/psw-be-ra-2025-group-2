@@ -36,5 +36,8 @@ namespace Explorer.Tours.API.Dtos
         public List<int> FoodTypes { get; set; } = new();
         public List<int> ActivityTypes { get; set; } = new();
 
+        public AverageCostDto? AverageCost { get; set; }
+
+
     }
 }
