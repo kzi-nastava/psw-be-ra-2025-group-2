@@ -13,5 +13,6 @@ namespace Explorer.Tours.API.Internal
 
         IEnumerable<PlannerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds);
         bool Exists(long tourId);
+        void IncrementTourPurchaseCount(long tourId);
     }
 }

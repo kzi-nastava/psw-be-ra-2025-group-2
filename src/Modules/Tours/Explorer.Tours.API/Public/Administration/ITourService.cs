@@ -31,6 +31,7 @@ namespace Explorer.Tours.API.Public.Administration
 
         PagedResultDto<PublishedTourPreviewDto> GetPublishedForTourist(int page, int pageSize);
         PagedResultDto<PublishedTourPreviewDto> GetFilteredTours(TourFilterDto filter);
+        List<PublishedTourPreviewDto> GetTrendingTours();
        
 
         /* Tourist's options */

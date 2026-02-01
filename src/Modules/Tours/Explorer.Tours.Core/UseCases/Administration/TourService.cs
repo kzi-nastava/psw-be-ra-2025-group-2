@@ -562,8 +562,10 @@ namespace Explorer.Tours.Core.UseCases.Administration
                     CoverImageUrl = tour.CoverImageUrl,
                     AverageRating = tour.GetAverageRating(),
 
-                    
+
                     AverageCost = tour.AverageCost != null ? _mapper.Map<AverageCostDto>(tour.AverageCost) : null,
+                    PurchaseCount = tour.PurchasesCount,
+                    IsTrending = tour.IsTrending,
 
                     Reviews = tour.Reviews.Select(r =>
                     {
@@ -650,6 +652,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
                     
                     AverageCost = tour.AverageCost != null ? _mapper.Map<AverageCostDto>(tour.AverageCost) : null,
+                    PurchaseCount = tour.PurchasesCount,
+                    IsTrending = tour.IsTrending,
 
                     Reviews = tour.Reviews.Select(r =>
                     {
@@ -666,6 +670,53 @@ namespace Explorer.Tours.Core.UseCases.Administration
             return new PagedResultDto<PublishedTourPreviewDto> { Results = results, TotalCount = totalCount };
         }
 
+
+        public List<PublishedTourPreviewDto> GetTrendingTours()
+        {
+            var tours = _tourRepository.GetAllPublished()
+                .Where(t => t.IsTrending)
+                .OrderByDescending(t => t.PurchasesCount)
+                .ToList();
+
+            var results = new List<PublishedTourPreviewDto>();
+
+            foreach (var tour in tours)
+            {
+                var orderedKeyPoints = tour.KeyPoints?.OrderBy(k => k.OrdinalNo).ToList() ?? new List<KeyPoint>();
+                var firstKp = orderedKeyPoints.FirstOrDefault();
+
+                var dto = new PublishedTourPreviewDto
+                {
+                    Id = tour.Id,
+                    Name = tour.Name,
+                    Description = tour.Description,
+                    Difficulty = tour.Difficulty,
+                    Price = tour.Price,
+                    Tags = tour.Tags?.ToList() ?? new List<string>(),
+                    FirstKeyPoint = firstKp != null ? _mapper.Map<KeyPointDto>(firstKp) : null,
+                    KeyPointCount = orderedKeyPoints.Count,
+                    TotalDurationMinutes = tour.Durations?.Sum(d => d.Minutes) ?? 0,
+                    LengthKm = tour.LengthKm,
+                    PlaceName = firstKp?.Name,
+                    CoverImageUrl = tour.CoverImageUrl,
+                    AverageRating = tour.GetAverageRating(),
+                    AverageCost = tour.AverageCost != null ? _mapper.Map<AverageCostDto>(tour.AverageCost) : null,
+                    PurchaseCount = tour.PurchasesCount,
+                    IsTrending = tour.IsTrending,
+                    Reviews = tour.Reviews.Select(r =>
+                    {
+                        var reviewDto = _mapper.Map<TourReviewPublicDto>(r);
+                        var u = _userService.GetById(r.TouristId);
+                        reviewDto.TouristName = u?.Username ?? "Unknown";
+                        return reviewDto;
+                    }).ToList()
+                };
+
+                results.Add(dto);
+            }
+
+            return results;
+        }
 
         public TourReviewDto AddReview(long tourId, long touristId, int rating, string comment, List<string> images)
         {
