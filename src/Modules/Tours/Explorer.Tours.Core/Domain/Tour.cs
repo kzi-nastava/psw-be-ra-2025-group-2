@@ -44,6 +44,7 @@ public class Tour : AggregateRoot
     public AverageCost? AverageCost { get; private set; }
     public int PurchasesCount { get; private set; } = 0;
     public int StartsCount { get; private set; } = 0;
+    public bool IsTrending => PurchasesCount >= 10;
 
     public void IncrementPurchases(int delta = 1)
     {

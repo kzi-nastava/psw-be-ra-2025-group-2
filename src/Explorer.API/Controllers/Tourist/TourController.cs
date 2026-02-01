@@ -47,6 +47,12 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(result);
         }
 
+        [HttpGet("trending")]
+        public ActionResult<List<PublishedTourPreviewDto>> GetTrending()
+        {
+            return Ok(_tourService.GetTrendingTours());
+        }
+
         [HttpGet("published")]
         public ActionResult<PagedResultDto<PublishedTourPreviewDto>> GetPublished(
             [FromQuery] int page = 1,

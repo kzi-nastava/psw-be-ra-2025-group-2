@@ -29,6 +29,8 @@ namespace Explorer.Tours.API.Dtos
 
         public AverageCostDto? AverageCost { get; set; }
 
+        public int PurchaseCount { get; set; }
+        public bool IsTrending { get; set; }
 
     }
 

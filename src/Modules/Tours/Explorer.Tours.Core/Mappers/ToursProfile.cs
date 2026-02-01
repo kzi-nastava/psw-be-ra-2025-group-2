@@ -50,6 +50,7 @@ public class ToursProfile : Profile
              .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => src.CoverImageUrl))
              .ForMember(dest => dest.PurchasesCount, opt => opt.MapFrom(src => src.PurchasesCount))
              .ForMember(dest => dest.StartsCount, opt => opt.MapFrom(src => src.StartsCount))
+             .ForMember(dest => dest.IsTrending, opt => opt.MapFrom(src => src.IsTrending))
 
     .ForMember(dest => dest.EnvironmentType,
         opt => opt.MapFrom(src => src.EnvironmentType.HasValue ? (int)src.EnvironmentType.Value : (int?)null))

@@ -19,7 +19,7 @@ namespace Explorer.Payments.Core.UseCases
         private readonly IShoppingCartService _shoppingCartService;
         private readonly IWalletRepository _walletRepository;
         private readonly ICouponService _couponService;
-        private readonly ITourStatisticsService _tourStats;
+        private readonly IInternalTourService _internalTourService;
 
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly ITourPurchaseTokenRepository _tourPurchaseTokenRepository;
@@ -33,7 +33,7 @@ namespace Explorer.Payments.Core.UseCases
             IPaymentRecordRepository paymentRecordRepository,
             ITourPurchaseTokenRepository tourPurchaseTokenRepository,
             IMapper mapper,
-            ITourStatisticsService tourStats)
+            IInternalTourService internalTourService)
         {
             _shoppingCartService = shoppingCartService;
             _walletRepository = walletRepository;
@@ -43,7 +43,7 @@ namespace Explorer.Payments.Core.UseCases
             _tourPurchaseTokenRepository = tourPurchaseTokenRepository;
 
             _mapper = mapper;
-            _tourStats = tourStats;
+            _internalTourService = internalTourService;
         }
 
         public List<TourPurchaseTokenDto> CompletePurchase(long touristId, string? couponCode = null)
@@ -152,7 +152,7 @@ namespace Explorer.Payments.Core.UseCases
                         createdAt: now
                     );
                     _paymentRecordRepository.Create(record);
-                    _tourStats.IncrementPurchases(item.TourId.Value);
+                    _internalTourService.IncrementTourPurchaseCount(item.TourId.Value);
 
                     var token = new TourPurchaseToken(touristId, item.TourId.Value);
                     var savedToken = _tourPurchaseTokenRepository.Create(token);
@@ -176,7 +176,7 @@ namespace Explorer.Payments.Core.UseCases
                         foreach (var tid in item.TourIds)
                         {
                             if (tid <= 0) continue;
-                            _tourStats.IncrementPurchases(tid);
+                            _internalTourService.IncrementTourPurchaseCount(tid);
 
                             var token = new TourPurchaseToken(touristId, tid);
                             var savedToken = _tourPurchaseTokenRepository.Create(token);

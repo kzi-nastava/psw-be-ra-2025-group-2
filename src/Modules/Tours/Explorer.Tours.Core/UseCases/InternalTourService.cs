@@ -14,10 +14,12 @@ namespace Explorer.Tours.Core.UseCases
     public class InternalTourService : IInternalTourService
     {
         private readonly ITourRepository _tourRepository;
+        private readonly ITourStatisticsRepository _statsRepository;
 
-        public InternalTourService(ITourRepository tourRepository)
+        public InternalTourService(ITourRepository tourRepository, ITourStatisticsRepository statsRepository)
         {
             _tourRepository = tourRepository;
+            _statsRepository = statsRepository;
         }
 
         public IEnumerable<PartialTourInfoDto> GetPartialTourInfos(IEnumerable<long> tourIds)
@@ -41,6 +43,11 @@ namespace Explorer.Tours.Core.UseCases
         public bool Exists(long tourId)
         {
             return _tourRepository.GetByIdAsync(tourId).Result == null ? false : true;
+        }
+
+        public void IncrementTourPurchaseCount(long tourId)
+        {
+            _statsRepository.IncrementPurchases(tourId);
         }
 
         public IEnumerable<PlannerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds)
