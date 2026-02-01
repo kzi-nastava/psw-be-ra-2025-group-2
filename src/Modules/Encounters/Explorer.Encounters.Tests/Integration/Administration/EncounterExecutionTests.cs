@@ -299,7 +299,8 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             string role)
         {
             return new EncounterController(
-                scope.ServiceProvider.GetRequiredService<IEncounterService>())
+                scope.ServiceProvider.GetRequiredService<IEncounterService>(),
+                scope.ServiceProvider.GetRequiredService<IRewardService>())
             {
                 ControllerContext = BuildContextWithRole(userId, role)
             };

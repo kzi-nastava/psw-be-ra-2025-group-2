@@ -2,9 +2,11 @@
 using Explorer.Encounters.API.Dtos.Encounter;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
+using Explorer.Encounters.Core.Domain.RepositoryInterfaces;
 using Explorer.Encounters.Infrastructure.Database;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System;
@@ -225,6 +227,62 @@ namespace Explorer.Encounters.Tests.Integration.Administration
         }
 
         [Fact]
+        public void FULL_DIAGNOSIS_Test()
+        {
+            using (var scope = Factory.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<EncountersContext>();
+                var repo = scope.ServiceProvider.GetRequiredService<IEncounterRepository>();
+
+                Console.WriteLine("========== FULL DIAGNOSIS ==========\n");
+
+                // 1. Proveri koliko ima encounters
+                var allEncounters = dbContext.Encounters.ToList();
+                Console.WriteLine($"Total Encounters: {allEncounters.Count}");
+
+                // 2. Proveri SPECIFIČNE ID-jeve koje testovi koriste
+                Console.WriteLine("\n--- Testing specific IDs that FAIL ---");
+
+                // Test Update (koristi -16)
+                var enc16 = repo.GetById(-16);
+                Console.WriteLine($"ID -16 (Draft Misc for Update test): {(enc16 != null ? $"FOUND - {enc16.Name}, State={enc16.State}" : "NULL")}");
+
+                // Test Update_fails (koristi -1)
+                var enc1 = repo.GetById(-1);
+                Console.WriteLine($"ID -1 (Active Social for Update_fails test): {(enc1 != null ? $"FOUND - {enc1.Name}, State={enc1.State}" : "NULL")}");
+
+                // Test Activate (koristi -17)
+                var enc17 = repo.GetById(-17);
+                Console.WriteLine($"ID -17 (Draft Location for Activate test): {(enc17 != null ? $"FOUND - {enc17.Name}, State={enc17.State}" : "NULL")}");
+
+                // Test Archive (koristi -1)
+                Console.WriteLine($"ID -1 already checked above");
+
+                // Test Delete (koristi -2)
+                var enc2 = repo.GetById(-2);
+                Console.WriteLine($"ID -2 (Active Location for Delete test): {(enc2 != null ? $"FOUND - {enc2.Name}, State={enc2.State}" : "NULL")}");
+
+                // 3. Ispiši SVE encounters da vidimo šta postoji
+                Console.WriteLine("\n--- ALL Encounters in DB ---");
+                foreach (var e in allEncounters.OrderBy(x => x.Id))
+                {
+                    Console.WriteLine($"  ID={e.Id}, Name={e.Name}, State={e.State}, Type={e.Type}");
+                }
+
+                // 4. Proveri da li postoje DUPLIKATI
+                var duplicates = allEncounters.GroupBy(e => e.Id).Where(g => g.Count() > 1);
+                if (duplicates.Any())
+                {
+                    Console.WriteLine("\n❌ FOUND DUPLICATES:");
+                    foreach (var dup in duplicates)
+                    {
+                        Console.WriteLine($"  ID {dup.Key} appears {dup.Count()} times!");
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void Creates_Encounter_With_Rewards_Persisted_In_Database()
         {
             using (var scope = Factory.Services.CreateScope())
@@ -266,7 +324,8 @@ namespace Explorer.Encounters.Tests.Integration.Administration
             string role)
         {
             return new EncounterController(
-                scope.ServiceProvider.GetRequiredService<IEncounterService>())
+                scope.ServiceProvider.GetRequiredService<IEncounterService>(),
+                scope.ServiceProvider.GetRequiredService<IRewardService>())
             {
                 ControllerContext = BuildContextWithRole(userId, role)
             };
