@@ -23,5 +23,15 @@ namespace Explorer.API.Controllers.Tourist
             var res = _leaderboardService.GetLeaderboard(clubId, requesterId);
             return Ok(res);
         }
+
+
+        [HttpGet("leaderboard")]
+        public ActionResult<List<ClubLeaderboardClubRowDto>> GetClubsLeaderboard()
+        {
+            var requesterId = long.Parse(User.Claims.First(c => c.Type == "id").Value);
+            var res = _leaderboardService.GetClubsLeaderboard(requesterId);
+            return Ok(res);
+        }
+        
     }
 }
