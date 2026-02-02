@@ -18,6 +18,8 @@ public class StakeholdersContext : DbContext
     public DbSet<AuthorAwards> AuthorAwards { get; set; }
     public DbSet<AppRating> AppRatings { get; set; }
     public DbSet<Club> Clubs { get; set; }
+    public DbSet<ClubBadge> ClubBadges { get; set; }
+
 
     public DbSet<EmergencyDirectory> EmergencyDirectories { get; set; }
     public DbSet<EmergencyPlace> EmergencyPlaces { get; set; }
@@ -112,6 +114,15 @@ public class StakeholdersContext : DbContext
 
             builder.Navigation(c => c.Invitations)
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder.HasMany(c => c.Badges)
+                .WithOne()
+                .HasForeignKey(nameof(ClubBadge.ClubId))
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(c => c.Badges)
+                .HasField("_badges")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         });
 
 
@@ -155,6 +166,20 @@ public class StakeholdersContext : DbContext
 
             builder.HasIndex(x => new { x.ClubId, x.TouristId })
                    .IsUnique();
+        });
+        
+        modelBuilder.Entity<ClubBadge>(builder =>
+        {
+            builder.ToTable("ClubBadges");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.ClubId).IsRequired();
+            builder.Property(x => x.MilestoneXp).IsRequired();
+            builder.Property(x => x.AwardedAt).IsRequired();
+
+            builder.HasIndex(x => new { x.ClubId, x.MilestoneXp })
+                .IsUnique();
         });
 
 
