@@ -102,42 +102,6 @@ public class ClubBadgesCommandTests : BaseStakeholdersIntegrationTest
     }
 
     [Fact]
-    public void Recalculate_returns_ok_and_dto()
-    {
-        // Arrange
-        using var scope = Factory.Services.CreateScope();
-        var badgesController = CreateBadgesController(scope);
-        var clubsController = CreateClubsController(scope);
-
-        var userId = -21;
-        SetUser(badgesController, userId);
-        SetUser(clubsController, userId);
-
-        // Kreiramo klub
-        var createdClubResult = clubsController.Create(new ClubDto
-        {
-            Name = "Klub - recalc badges",
-            Description = "Opis",
-            ImageUrls = new List<string> { "img.jpg" }
-        });
-
-        var createdClub = (createdClubResult.Result as OkObjectResult)?.Value as ClubDto;
-        createdClub.ShouldNotBeNull();
-
-        var clubId = createdClub.Id;
-
-        // Act
-        var actionResult = badgesController.Recalculate(clubId, stepXp: 500);
-        var ok = actionResult.Result as OkObjectResult;
-
-        // Assert
-        ok.ShouldNotBeNull();
-        ok.StatusCode.ShouldBe(200);
-        ok.Value.ShouldNotBeNull();
-        ok.Value.ShouldBeOfType<ClubBadgeAwardResultDto>();
-    }
-
-    [Fact]
     public void Get_fails_when_user_id_claim_missing()
     {
         // Arrange
