@@ -1,4 +1,38 @@
 ﻿{
+
+  "CAT_POL": {
+    "en": "Police",
+    "sr": "Policija",
+    "de": "Polizei",
+    "it": "Polizia",
+    "es": "Policía",
+    "fr": "Police"
+  },
+  "CAT_MED": {
+    "en": "Medical help",
+    "sr": "Medicinska pomoć",
+    "de": "Medizinische Hilfe",
+    "it": "Assistenza medica",
+    "es": "Ayuda médica",
+    "fr": "Aide médicale"
+  },
+  "CAT_FIRE": {
+    "en": "Fire",
+    "sr": "Požar",
+    "de": "Feuer",
+    "it": "Incendio",
+    "es": "Incendio",
+    "fr": "Incendie"
+  },
+  "CAT_DIR": {
+    "en": "Directions",
+    "sr": "Smerovi",
+    "de": "Wegbeschreibung",
+    "it": "Indicazioni",
+    "es": "Indicaciones",
+    "fr": "Itinéraire"
+  },
+
   "POL_HELP": {
     "en": "Help!",
     "sr": "Upomoć!",
