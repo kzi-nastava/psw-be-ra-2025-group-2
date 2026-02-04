@@ -5,7 +5,8 @@ VALUES
  'U hitnim situacijama:
 1) Pozovi lokalni broj za hitne slučajeve.
 2) Ako si povređen, idi u najbližu bolnicu.
-3) U slučaju incidenta, kontaktiraj policiju.',
+3) U slučaju incidenta, kontaktiraj policiju.
+4) U slučaju požara, odmah pozovi vatrogasce.',
  'Prikazani podaci su informativnog karaktera i neobavezujući.',
  'RS'
 );
@@ -16,9 +17,16 @@ VALUES
 -- Hospitals (Type = 0)
 (-101, -100, 0, 'Urgentni centar KCS', 'Pasterova 2, Beograd', '+381 11 361 7777'),
 (-102, -100, 0, 'KBC Zemun', 'Vukova 9, Beograd', '+381 11 377 2222'),
+
 -- Police (Type = 1)
 (-103, -100, 1, 'PS Stari Grad', 'Majke Jevrosime 31, Beograd', '+381 11 333 444'),
-(-104, -100, 1, 'PS Novi Beograd', 'Bulevar Mihajla Pupina 165, Beograd', '+381 11 222 333');
+(-104, -100, 1, 'PS Novi Beograd', 'Bulevar Mihajla Pupina 165, Beograd', '+381 11 222 333'),
+
+-- Fire stations (Type = 2)
+(-105, -100, 2, 'Vatrogasna brigada Zvezdara', 'Volgina 12, Beograd', '+381 11 555 666'),
+(-106, -100, 2, 'Vatrogasna brigada Novi Beograd', 'Jurija Gagarina 45, Beograd', '+381 11 777 888');
+
+
 
 INSERT INTO stakeholders."Embassies"
 ("Id", "DirectoryId", "Name", "Address", "Phone", "Email", "Website")
@@ -35,10 +43,12 @@ VALUES
  'info@ambafrance.rs',
  'https://rs.ambafrance.org');
 
- INSERT INTO stakeholders."EmergencyPhrases"
+
+
+INSERT INTO stakeholders."EmergencyPhrases"
 ("Id", "DirectoryId", "Category", "MyText", "LocalText")
 VALUES
--- Medicine
+-- Medicine (Category = 0)
 (-301, -100, 0,
  'Treba mi hitna medicinska pomoć.',
  'I need urgent medical help.'),
@@ -51,10 +61,12 @@ VALUES
  'Imam jake bolove u stomaku.',
  'I have severe stomach pain.');
 
- INSERT INTO stakeholders."EmergencyPhrases"
+
+
+INSERT INTO stakeholders."EmergencyPhrases"
 ("Id", "DirectoryId", "Category", "MyText", "LocalText")
 VALUES
--- Police
+-- Police (Category = 1)
 (-304, -100, 1,
  'Opljačkan sam.',
  'I have been robbed.'),
@@ -66,3 +78,7 @@ VALUES
 (-306, -100, 1,
  'Treba mi pomoć policije.',
  'I need police assistance.');
+
+
+
+

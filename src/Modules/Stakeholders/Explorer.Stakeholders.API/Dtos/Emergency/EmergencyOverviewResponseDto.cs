@@ -12,6 +12,10 @@ namespace Explorer.Stakeholders.API.Dtos.Emergency
         public string CountryCode { get; set; } = "";
         public List<EmergencyPlaceDto> Hospitals { get; set; } = new();
         public List<EmergencyPlaceDto> PoliceStations { get; set; } = new();
+
+        public List<EmergencyPlaceDto> FireStations { get; set; } = new();
+
+
         public List<EmbassyDto> Embassies { get; set; } = new();
         public List<PhraseCategoryDto> PhraseCategories { get; set; } = new();
 

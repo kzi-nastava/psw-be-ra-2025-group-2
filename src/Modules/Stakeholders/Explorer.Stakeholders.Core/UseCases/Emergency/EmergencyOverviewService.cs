@@ -32,21 +32,23 @@ namespace Explorer.Stakeholders.Core.UseCases.Emergency
                     CountryCode = code.Value,
                     Hospitals = new(),
                     PoliceStations = new(),
+                    FireStations = new(),
                     Embassies = new(),
                     PhraseCategories = new List<PhraseCategoryDto>
             
                         {
-                            new PhraseCategoryDto { Category = "Medicina", Phrases = new() },
-                            new PhraseCategoryDto { Category = "Policija", Phrases = new() }
+                            new PhraseCategoryDto { Category = "Medicine", Phrases = new() },
+                            new PhraseCategoryDto { Category = "Police", Phrases = new() }
                         },
 
-                    Instructions = "Nema dostupnih uputstava za izabranu državu.",
-                    Disclaimer = "Prikazani podaci su informativnog karaktera i neobavezujući."
+                    Instructions = "No available instructions for the selected country.",
+                    Disclaimer = "Shown data is only for informative purpose and non-binding."
                 };
             }
 
             var hospitals = directory.GetHospitals().Select(_mapper.Map<EmergencyPlaceDto>).ToList();
             var police = directory.GetPoliceStations().Select(_mapper.Map<EmergencyPlaceDto>).ToList();
+            var fireStations = directory.GetFireStations().Select(_mapper.Map<EmergencyPlaceDto>).ToList();
             var embassies = directory.Embassies.Select(_mapper.Map<EmbassyDto>).ToList();
 
             var medicine = directory.GetPhrases(EmergencyPhraseCategory.Medicine)
@@ -59,14 +61,14 @@ namespace Explorer.Stakeholders.Core.UseCases.Emergency
             {
                 new PhraseCategoryDto
                 {
-                    Category = "Medicina",
+                    Category = "Medicine",
                     Phrases = directory.GetPhrases(EmergencyPhraseCategory.Medicine)
                         .Select(_mapper.Map<PhraseDto>)
                         .ToList()
                 },
                 new PhraseCategoryDto
                 {
-                    Category = "Policija",
+                    Category = "Police",
                     Phrases = directory.GetPhrases(EmergencyPhraseCategory.Police)
                         .Select(_mapper.Map<PhraseDto>)
                         .ToList()
@@ -79,6 +81,7 @@ namespace Explorer.Stakeholders.Core.UseCases.Emergency
                 CountryCode = directory.Country.Value,
                 Hospitals = hospitals,
                 PoliceStations = police,
+                FireStations = fireStations,
                 Embassies = embassies,
                 PhraseCategories = phraseCategories,
                 Instructions = directory.Instructions,

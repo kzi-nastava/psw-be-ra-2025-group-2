@@ -37,6 +37,7 @@ namespace Explorer.Stakeholders.Tests.Integration
             dto.CountryCode.ShouldBe("RS");
             dto.Hospitals.Count.ShouldBeGreaterThan(0);
             dto.PoliceStations.Count.ShouldBeGreaterThan(0);
+            dto.FireStations.Count.ShouldBeGreaterThan(0);
 
             dto.Embassies.ShouldNotBeNull();
             dto.Embassies.Count.ShouldBeGreaterThan(0);
@@ -44,15 +45,15 @@ namespace Explorer.Stakeholders.Tests.Integration
             dto.PhraseCategories.ShouldNotBeNull();
             dto.PhraseCategories.Count.ShouldBe(2);
 
-            // Medicina category exists and has data
-            dto.PhraseCategories.Any(c => c.Category == "Medicina").ShouldBeTrue();
-            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.ShouldNotBeNull();
-            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.Count.ShouldBeGreaterThan(0);
+            // Medicine category exists and has data
+            dto.PhraseCategories.Any(c => c.Category == "Medicine").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Medicine").Phrases.ShouldNotBeNull();
+            dto.PhraseCategories.First(c => c.Category == "Medicine").Phrases.Count.ShouldBeGreaterThan(0);
 
             // Police category exists and has data
-            dto.PhraseCategories.Any(c => c.Category == "Policija").ShouldBeTrue();
-            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.ShouldNotBeNull();
-            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.Count.ShouldBeGreaterThan(0);
+            dto.PhraseCategories.Any(c => c.Category == "Police").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Police").Phrases.ShouldNotBeNull();
+            dto.PhraseCategories.First(c => c.Category == "Police").Phrases.Count.ShouldBeGreaterThan(0);
 
         }
 
@@ -71,6 +72,7 @@ namespace Explorer.Stakeholders.Tests.Integration
             dto.CountryCode.ShouldBe("DE");
             dto.Hospitals.Count.ShouldBe(0);
             dto.PoliceStations.Count.ShouldBe(0);
+            dto.FireStations.Count.ShouldBe(0);
             dto.Instructions.ShouldNotBeNullOrWhiteSpace();
             dto.Disclaimer.ShouldNotBeNullOrWhiteSpace();
 
@@ -80,11 +82,11 @@ namespace Explorer.Stakeholders.Tests.Integration
             dto.PhraseCategories.ShouldNotBeNull();
             dto.PhraseCategories.Count.ShouldBe(2);
 
-            dto.PhraseCategories.Any(c => c.Category == "Medicina").ShouldBeTrue();
-            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.Count.ShouldBe(0);
+            dto.PhraseCategories.Any(c => c.Category == "Medicine").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Medicine").Phrases.Count.ShouldBe(0);
 
-            dto.PhraseCategories.Any(c => c.Category == "Policija").ShouldBeTrue();
-            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.Count.ShouldBe(0);
+            dto.PhraseCategories.Any(c => c.Category == "Police").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Police").Phrases.Count.ShouldBe(0);
 
         }
 

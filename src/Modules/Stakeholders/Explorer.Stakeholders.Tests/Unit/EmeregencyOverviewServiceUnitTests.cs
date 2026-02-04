@@ -32,6 +32,7 @@ namespace Explorer.Stakeholders.Tests.Unit
             dto.CountryCode.ShouldBe("DE");
             dto.Hospitals.Count.ShouldBe(0);
             dto.PoliceStations.Count.ShouldBe(0);
+            dto.FireStations.Count.ShouldBe(0);
             dto.Disclaimer.ShouldNotBeNullOrWhiteSpace();
             dto.Instructions.ShouldNotBeNullOrWhiteSpace();
 
@@ -41,11 +42,11 @@ namespace Explorer.Stakeholders.Tests.Unit
             dto.PhraseCategories.ShouldNotBeNull();
             dto.PhraseCategories.Count.ShouldBe(2);
 
-            dto.PhraseCategories.Any(c => c.Category == "Medicina").ShouldBeTrue();
-            dto.PhraseCategories.First(c => c.Category == "Medicina").Phrases.Count.ShouldBe(0);
+            dto.PhraseCategories.Any(c => c.Category == "Medicine").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Medicine").Phrases.Count.ShouldBe(0);
 
-            dto.PhraseCategories.Any(c => c.Category == "Policija").ShouldBeTrue();
-            dto.PhraseCategories.First(c => c.Category == "Policija").Phrases.Count.ShouldBe(0);
+            dto.PhraseCategories.Any(c => c.Category == "Police").ShouldBeTrue();
+            dto.PhraseCategories.First(c => c.Category == "Police").Phrases.Count.ShouldBe(0);
 
         }
     }

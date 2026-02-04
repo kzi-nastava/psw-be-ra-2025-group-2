@@ -1,10 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Explorer.BuildingBlocks.Tests;
-using Explorer.Stakeholders.Infrastructure.Database;
-using Explorer.Tours.Infrastructure.Database;
-using Explorer.Payments.Infrastructure.Database;
+﻿using Explorer.BuildingBlocks.Tests;
 using Explorer.Encounters.Infrastructure.Database;
+using Explorer.Payments.Infrastructure.Database;
+using Explorer.Stakeholders.Infrastructure.Database;
+using Explorer.Stakeholders.API.Public.Emergency;
+using Explorer.Tours.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Explorer.Stakeholders.Tests.Integration;
 
 namespace Explorer.Stakeholders.Tests;
 
@@ -16,6 +19,10 @@ public class StakeholdersTestFactory : BaseTestFactory<StakeholdersContext>
         ReplaceDbContext<ToursContext>(services);
         ReplaceDbContext<PaymentsContext>(services);
         ReplaceDbContext<EncountersContext>(services);
+
+        services.RemoveAll(typeof(IEmergencyPhrasebookProviderTransl));
+        services.AddSingleton<IEmergencyPhrasebookProviderTransl, StubEmergencyPhrasebookProvider>();
+
 
         return services;
     }
