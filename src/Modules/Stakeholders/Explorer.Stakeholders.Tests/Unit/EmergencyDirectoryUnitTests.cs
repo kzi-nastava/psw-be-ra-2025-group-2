@@ -12,13 +12,16 @@ namespace Explorer.Stakeholders.Tests.Unit
             var dir = new EmergencyDirectory(new CountryCode("RS"), "instr", "disc");
 
             dir.AddPlace(EmergencyPlaceType.Hospital, "Bolnica 1", "Adresa 1", "123");
-            dir.AddPlace(EmergencyPlaceType.PoliceStation, "Policija 1", "Adresa 2", null);
+            dir.AddPlace(EmergencyPlaceType.PoliceStation, "Police 1", "Adresa 2", null);
+            dir.AddPlace(EmergencyPlaceType.FireStation, "Vatrogasci 1", "Adresa 3", "456");
 
             dir.GetHospitals().Count.ShouldBe(1);
             dir.GetPoliceStations().Count.ShouldBe(1);
+            dir.GetFireStations().Count.ShouldBe(1);
 
             dir.GetHospitals()[0].Name.ShouldBe("Bolnica 1");
-            dir.GetPoliceStations()[0].Name.ShouldBe("Policija 1");
+            dir.GetPoliceStations()[0].Name.ShouldBe("Police 1");
+            dir.GetFireStations()[0].Name.ShouldBe("Vatrogasci 1");
         }
 
         [Fact]

@@ -7,7 +7,8 @@ namespace Explorer.Stakeholders.Core.Domain.Emergency
     public enum EmergencyPlaceType
     {
         Hospital = 0,
-        PoliceStation = 1
+        PoliceStation = 1,
+        FireStation = 2
     }
 
     public class EmergencyPlace : Entity

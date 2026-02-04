@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System.Security.Claims;
 using Xunit;
-
+using Explorer.Stakeholders.API.Dtos.Emergency;
 using Explorer.API.Controllers.Tourist;
 using Explorer.Stakeholders.API.Dtos.Emergency;
 using Explorer.Stakeholders.API.Public.Emergency;

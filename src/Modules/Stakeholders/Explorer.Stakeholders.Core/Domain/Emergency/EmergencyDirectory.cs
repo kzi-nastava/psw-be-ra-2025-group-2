@@ -45,6 +45,9 @@ namespace Explorer.Stakeholders.Core.Domain.Emergency
         public List<EmergencyPlace> GetPoliceStations()
             => _places.Where(p => p.Type == EmergencyPlaceType.PoliceStation).ToList();
 
+        public List<EmergencyPlace> GetFireStations()
+           => _places.Where(p => p.Type == EmergencyPlaceType.FireStation).ToList();
+
         public void UpdateTexts(string instructions, string disclaimer)
         {
             if (string.IsNullOrWhiteSpace(instructions))
