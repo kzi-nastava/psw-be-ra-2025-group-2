@@ -30,7 +30,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public List<MessageDto> GetAllForUser(long userId) 
         {
-            return _repository.GetForUser(userId).Where(m => !m.IsDeleted).Select(_mapper.Map<MessageDto>).ToList();
+            return _repository.GetForUser(userId).Where(m => !m.IsDeleted && m.ReceiverId != null).Select(_mapper.Map<MessageDto>).ToList();
         }
 
         public MessageDto Edit(long userId, long messageId, string content)
