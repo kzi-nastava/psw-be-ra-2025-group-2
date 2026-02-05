@@ -5,6 +5,8 @@ using Explorer.Tours.API.Public.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Encounters.API.Dtos.Encounter;
+using Explorer.Encounters.API.Public;
 
 namespace Explorer.API.Controllers.Author
 {
@@ -338,6 +340,58 @@ namespace Explorer.API.Controllers.Author
             var result = _tourService.GetAllEquipmentForAuthor(authorId);
             return Ok(result);
         }
+
+        [HttpPost("{tourId}/keypoints/{keyPointOrdinalNo}/encounter")]
+        public async Task<ActionResult<EncounterDto>> CreateEncounterFromKeyPoint(
+            long tourId,
+            int keyPointOrdinalNo,
+            [FromBody] CreateEncounterDto encounterDto)
+        {
+            try
+            {
+                var authorIdClaim = User.FindFirst("id");
+                if (authorIdClaim == null) return Unauthorized();
+
+                long authorId = long.Parse(authorIdClaim.Value);
+
+                var tour = await _tourService.GetByIdAsync(tourId, authorId);
+                if (tour == null)
+                    return NotFound(new { error = "Tour not found" });
+
+                var keyPoint = tour.KeyPoints?.FirstOrDefault(kp => kp.OrdinalNo == keyPointOrdinalNo);
+
+                if (keyPoint != null)
+                {
+                    encounterDto.Latitude = keyPoint.Latitude;
+                    encounterDto.Longitude = keyPoint.Longitude;
+                }
+                else
+                {
+                    if (encounterDto.Latitude == 0 || encounterDto.Longitude == 0)
+                    {
+                        return BadRequest(new { error = "Latitude and Longitude are required when creating encounter for new KeyPoint" });
+                    }
+                }
+
+                var encounterService = HttpContext.RequestServices.GetRequiredService<IEncounterService>();
+                var createdEncounter = encounterService.Create(encounterDto);
+                encounterService.MakeActive(createdEncounter.Id);
+
+                return Ok(createdEncounter);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("keypoints/upload-image")]
         [RequestSizeLimit(10_000_000)] // 10MB
@@ -359,5 +413,86 @@ namespace Explorer.API.Controllers.Author
 
             return Ok($"/keypoints-images/{fileName}");
         }
+
+        [HttpPost("{tourId}/keypoints/{ordinalNo}/images")]
+        [RequestSizeLimit(30_000_000)]
+        public async Task<ActionResult<KeyPointDto>> UploadKeyPointImages(long tourId, int ordinalNo, [FromForm] List<IFormFile> files)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            if (files == null || files.Count == 0) return BadRequest("Files are required.");
+
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var urls = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0) return BadRequest("File is required.");
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowed.Contains(ext)) return BadRequest("Unsupported file type.");
+
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "keypoints-images");
+                Directory.CreateDirectory(folder);
+
+                var fullPath = Path.Combine(folder, fileName);
+                await using var stream = System.IO.File.Create(fullPath);
+                await file.CopyToAsync(stream);
+
+                urls.Add($"/keypoints-images/{fileName}");
+            }
+
+            var authorId = long.Parse(authorIdClaim.Value);
+            var result = await _tourService.AddKeyPointImages(tourId, ordinalNo, authorId, urls);
+            return Ok(result);
+        }
+
+        [HttpPut("{tourId}/cover-image")]
+        public async Task<IActionResult> SetTourCoverImage(long tourId, [FromBody] SetCoverImageDto dto)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            var authorId = long.Parse(authorIdClaim.Value);
+            await _tourService.SetCoverImage(tourId, authorId, dto.Url);
+            return NoContent();
+        }
+
+        [HttpDelete("{tourId}/keypoints/{ordinalNo}/images/{imageId:long}")]
+        public async Task<IActionResult> DeleteKeyPointImage(long tourId, int ordinalNo, long imageId)
+        {
+            var authorIdClaim = User.FindFirst("id");
+            if (authorIdClaim == null) return Unauthorized();
+
+            var authorId = long.Parse(authorIdClaim.Value);
+
+            try
+            {
+                await _tourService.RemoveKeyPointImage(tourId, ordinalNo, authorId, imageId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while deleting the image." });
+            }
+        }
+
+        [HttpGet("used-encounters")]
+        public ActionResult<List<long>> GetUsedEncounterIds()
+        {
+            var result = _tourService.GetUsedEncounterIds();
+            return Ok(result);
+        }
     }
+
 }

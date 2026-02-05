@@ -19,36 +19,53 @@ public class Tour : AggregateRoot
     public decimal Price { get; private set; }
     public long AuthorId { get; private set; }
 
-    public decimal? LengthKm { get;  set; }
+    public decimal? LengthKm { get; set; }
 
     public List<TourDuration> Durations { get; private set; } = new();
     public DateTime? PublishedAt { get; private set; }
     public ICollection<Equipment> Equipment { get; private set; } = new List<Equipment>();
     public DateTime? ArchivedAt { get; private set; }
 
-    
-   
     public TourEnvironmentType? EnvironmentType { get; private set; }
     public List<FoodType> FoodTypes { get; private set; } = new();
     public AdventureLevel? AdventureLevel { get; private set; }
     public List<ActivityType> ActivityTypes { get; private set; } = new();
     public List<SuitableFor> SuitableForGroups { get; private set; } = new();
-   
-    
+
+
     private readonly List<KeyPoint> _keyPoints = new();
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints.AsReadOnly();
 
     private readonly List<TourReview> _reviews = new();
     public IReadOnlyList<TourReview> Reviews => _reviews.AsReadOnly();
 
+    public string CoverImageUrl { get; private set; } = string.Empty;
+
+    public AverageCost? AverageCost { get; private set; }
+    public int PurchasesCount { get; private set; } = 0;
+    public int StartsCount { get; private set; } = 0;
+    public bool IsTrending => PurchasesCount >= 10;
+
+    public void IncrementPurchases(int delta = 1)
+    {
+        if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        PurchasesCount += delta;
+    }
+
+    public void IncrementStarts(int delta = 1)
+    {
+        if (delta <= 0) throw new ArgumentOutOfRangeException(nameof(delta));
+        StartsCount += delta;
+    }
+
 
     public Tour() { }
 
     public Tour(string name, string description, int difficulty, long authorId, IEnumerable<string>? tags = null)
     {
-        if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("Name is required.", nameof(name));
-        if(string.IsNullOrEmpty(description)) throw new ArgumentNullException("Description is required.", nameof(description));
-        if(difficulty<1 || difficulty>5) throw new ArgumentOutOfRangeException("Difficulty must be between 1 and 5.", nameof(difficulty));
+        if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("Name is required.", nameof(name));
+        if (string.IsNullOrEmpty(description)) throw new ArgumentNullException("Description is required.", nameof(description));
+        if (difficulty < 1 || difficulty > 5) throw new ArgumentOutOfRangeException("Difficulty must be between 1 and 5.", nameof(difficulty));
         if (authorId == 0) throw new ArgumentOutOfRangeException("AuthorId must be greater than 0.", nameof(authorId));
 
         Name = name;
@@ -59,8 +76,8 @@ public class Tour : AggregateRoot
         if (tags != null)
         {
             Tags = tags.Select(t => t.Trim())
-                        .Where(t => !string.IsNullOrWhiteSpace(t))
-                        .ToList();
+                       .Where(t => !string.IsNullOrWhiteSpace(t))
+                       .ToList();
         }
 
         Status = TourStatus.Draft;
@@ -86,7 +103,7 @@ public class Tour : AggregateRoot
         Tags = tags != null ? tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)).ToList() : new List<string>();
     }
 
-  
+
     public void SetEnvironmentType(TourEnvironmentType? environmentType)
     {
         if (Status == TourStatus.Archived)
@@ -121,7 +138,7 @@ public class Tour : AggregateRoot
             throw new InvalidOperationException("Archived tours cannot be updated.");
         SuitableForGroups = suitableFor?.ToList() ?? new List<SuitableFor>();
     }
-   
+
     public void SetStatus(TourStatus status) => Status = status;
 
     public void Archive(DateTime now)
@@ -136,7 +153,7 @@ public class Tour : AggregateRoot
         ArchivedAt = now;
     }
 
-    
+
     public void Reactivate()
     {
         if (Status != TourStatus.Archived)
@@ -186,17 +203,18 @@ public class Tour : AggregateRoot
         if (keyPoint == null)
             throw new InvalidOperationException($"KeyPoint with OrdinalNo {ordinalNo} does not exist.");
 
-        var updatedKeyPoint = new KeyPoint(
-            ordinalNo,
+        keyPoint.Update(
             update.Name ?? keyPoint.Name,
             update.Description ?? keyPoint.Description,
             update.SecretText ?? keyPoint.SecretText,
             update.ImageUrl ?? keyPoint.ImageUrl,
             update.Latitude,
-            update.Longitude
+            update.Longitude,
+            update.EncounterId ?? keyPoint.EncounterId,
+            update.IsEncounterRequired,
+            update.OsmClass ?? keyPoint.OsmClass,
+            update.OsmType ?? keyPoint.OsmType
         );
-
-        _keyPoints[_keyPoints.IndexOf(keyPoint)] = updatedKeyPoint;
     }
 
     public void ClearKeyPoints()
@@ -215,7 +233,7 @@ public class Tour : AggregateRoot
         _keyPoints.Clear();
         _keyPoints.AddRange(ordered);
     }
-    
+
     public void SetRequiredEquipment(IEnumerable<Equipment> equipment)
     {
         if (Status == TourStatus.Archived)
@@ -286,7 +304,7 @@ public class Tour : AggregateRoot
             return;
         }
 
-        
+
     }
 
 
@@ -338,4 +356,33 @@ public class Tour : AggregateRoot
         if (_reviews.Count == 0) return 0;
         return _reviews.Average(r => r.Rating);
     }
+
+    public void SetCoverImage(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            throw new ArgumentException("Cover image url is required.", nameof(url));
+
+        CoverImageUrl = url;
+    }
+
+    public void ClearCoverImage()
+    {
+        CoverImageUrl = string.Empty;
+    }
+    public void ReplaceDurations(IEnumerable<TourDuration> durations)
+    {
+        Durations.Clear();
+        Durations.AddRange(durations);
+    }
+    public void SetAverageCost(AverageCost cost)
+    {
+        AverageCost = cost ?? throw new ArgumentNullException(nameof(cost));
+    }
+
+    public void ClearAverageCost()
+    {
+        AverageCost = null;
+    }
+
+
 }

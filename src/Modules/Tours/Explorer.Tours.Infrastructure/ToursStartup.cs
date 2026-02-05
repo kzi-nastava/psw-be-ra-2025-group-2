@@ -1,12 +1,15 @@
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
+using Explorer.Tours.API.Public.Statistics;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
 using Explorer.Tours.Core.UseCases;
 using Explorer.Tours.Core.UseCases.Administration;
 using Explorer.Tours.Core.UseCases.Execution;
+using Explorer.Tours.Core.UseCases.Statistics;
 using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -33,18 +36,22 @@ public static class ToursStartup
         services.AddScoped<ITouristObjectService, TouristObjectService>();
         services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<ITourService, TourService>();
+        services.AddScoped<Explorer.Tours.API.Public.Statistics.ITourStatisticsService, Explorer.Tours.Core.UseCases.Statistics.TourStatisticsService>();
 
         services.AddHttpClient();
         services.AddScoped<ITourChatService, TourChatService>();
 
         services.AddScoped<IPublicKeyPointService, PublicKeyPointService>();
         services.AddScoped<INotificationService, NotificationService>();
-
         services.AddScoped<ITourExecutionService, TourExecutionService>();
+        services.AddScoped<Explorer.Tours.API.Internal.ITourStatisticsService, Explorer.Tours.Core.UseCases.TourStatisticsService>();
         services.AddScoped<ITourReportService, TourReportService>();
         services.AddScoped<ITourReportAdministrationService, TourReportAdministrationService>();
         services.AddScoped<IBundleService, BundleService>();
-        
+
+        // Internal
+        services.AddScoped<IInternalTourService, InternalTourService>();
+        services.AddScoped<IAverageCostEstimatorService, AverageCostEstimatorService>();
 
     }
 
@@ -57,10 +64,10 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<ITourRepository, TourDbRepository>();
         services.AddScoped<ITourReportRepository, TourReportDbRepository>();
+        services.AddScoped<ITourStatisticsRepository, TourStatisticsRepository>();
 
         services.AddScoped<IPublicKeyPointRequestRepository, PublicKeyPointRequestRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
-
         services.AddScoped<ITourExecutionRepository, TourExecutionDbRepository>();
         services.AddScoped<IBundleRepository, BundleDbRepository>();
 

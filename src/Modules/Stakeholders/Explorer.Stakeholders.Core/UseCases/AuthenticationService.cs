@@ -24,7 +24,8 @@ public class AuthenticationService : IAuthenticationService
         var user = _userRepository.GetActiveByName(credentials.Username);
         if (user == null || credentials.Password != user.Password)
         {
-            throw new UnauthorizedAccessException("Invalid credentials");
+            //throw new UnauthorizedAccessException("Invalid credentials");
+            return null;
         }
 
         long personId;

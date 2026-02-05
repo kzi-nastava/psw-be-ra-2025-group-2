@@ -104,21 +104,31 @@ namespace Explorer.Payments.Tests.Integration
         [Fact]
         public void Create_fails_when_tour_belongs_to_different_author()
         {
-            // Arrange
             using var scope = Factory.Services.CreateScope();
             var controller = CreateControllerWithRole(scope, "-11", "author");
+
+            var toursContext = scope.ServiceProvider.GetRequiredService<Explorer.Tours.Infrastructure.Database.ToursContext>();
+
+            var tourByDifferentAuthor = new Explorer.Tours.Core.Domain.Tour(
+                "Tour by Author -12",
+                "Test description",
+                1,
+                -12,
+                new List<string> { "test" }
+            );
+
+            toursContext.Tours.Add(tourByDifferentAuthor);
+            toursContext.SaveChanges();
 
             var createDto = new CouponCreateDto
             {
                 DiscountPercentage = 20,
-                TourId = -13,
+                TourId = tourByDifferentAuthor.Id,
                 ValidUntil = DateTime.UtcNow.AddDays(30)
             };
 
-            // Act
             var actionResult = controller.Create(createDto);
 
-            // Assert
             actionResult.Result.ShouldBeOfType<ForbidResult>();
         }
 
@@ -196,10 +206,12 @@ namespace Explorer.Payments.Tests.Integration
             // Assert
             result.ShouldBeOfType<NoContentResult>();
 
+
             //dbContext.ChangeTracker.Clear();
             //dbContext.Coupons.Find(coupon.Id).ShouldBeNull();
             var deletedCoupon = dbContext.Coupons.FirstOrDefault(c => c.Code == couponToDelete.Code);
             deletedCoupon.ShouldBeNull();
+
         }
 
         [Fact]

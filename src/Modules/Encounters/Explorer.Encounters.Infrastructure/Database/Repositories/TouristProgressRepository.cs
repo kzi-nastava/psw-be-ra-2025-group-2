@@ -32,5 +32,12 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
             _context.SaveChanges();
             return progress;
         }
+
+        public List<TouristProgress> GetByUserIds(IEnumerable<long> userIds)
+        {
+            var ids = userIds.Distinct().ToList();
+            return _context.TouristProgresses.Where(tp => ids.Contains(tp.UserId)).ToList();
+        }
+
     }
 }

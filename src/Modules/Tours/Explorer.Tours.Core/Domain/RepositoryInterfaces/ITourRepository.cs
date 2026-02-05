@@ -26,5 +26,6 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         Task<Tour?> GetTourWithKeyPointsAsync(long tourId);
         Task<Tour?> GetTourByKeyPointIdAsync(long keyPointId);
         Task<IEnumerable<Tour?>> GetAllAsync();
+        Task<Tour?> GetTourWithKeyPointsAndImagesAsync(long tourId);
     }
 }

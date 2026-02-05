@@ -4,6 +4,8 @@ using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.Quizzes;
 using Explorer.Stakeholders.API.Dtos.Quizzes;
 using Explorer.Stakeholders.API.Dtos.Messages;
+using Explorer.Stakeholders.Core.Domain.Emergency;
+using Explorer.Stakeholders.API.Dtos.Emergency;
 
 
 
@@ -37,6 +39,20 @@ public class StakeholderProfile : Profile
         CreateMap<QuizOption, QuizOptionDto>();
         CreateMap<Quiz, QuizDto>();
 
+
+        CreateMap<EmergencyPlace, EmergencyPlaceDto>();
+        CreateMap<Embassy, EmbassyDto>();
+        CreateMap<EmergencyPhrase, PhraseDto>()
+            .ForMember(d => d.MyText, o => o.MapFrom(s => s.MyText))
+            .ForMember(d => d.LocalText, o => o.MapFrom(s => s.LocalText));
+
+        CreateMap<Message, ClubMessageDto>()
+            .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId))
+            .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
+        CreateMap<OnboardingSlide, OnboardingSlideDto>().ReverseMap();
+        CreateMap<OnboardingProgress, OnboardingProgressDto>().ReverseMap();
         CreateMap<Message, MessageDto>().ReverseMap();
         CreateMap<SendMessageDto, Message>()
             .ForMember(dest => dest.SenderId, opt => opt.Ignore())

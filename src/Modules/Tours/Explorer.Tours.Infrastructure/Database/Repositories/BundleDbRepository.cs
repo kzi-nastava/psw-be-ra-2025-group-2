@@ -39,6 +39,14 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
                 .ToList();
         }
 
+        public List<Bundle> GetPublished()
+        {
+            return _dbSet
+                .Where(b => b.Status == BundleStatus.Published)
+                .ToList();
+        }
+
+
         public Bundle Update(Bundle bundle)
         {
             DbContext.Update(bundle);

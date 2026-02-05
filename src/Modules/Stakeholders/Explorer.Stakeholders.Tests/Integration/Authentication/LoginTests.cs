@@ -22,7 +22,8 @@ public class LoginTests : BaseStakeholdersIntegrationTest
         var loginSubmission = new CredentialsDto { Username = "turista1@gmail.com", Password = "turista1" };
 
         // Act
-        var authenticationResponse = ((ObjectResult)controller.Login(loginSubmission).Result).Value as AuthenticationTokensDto;
+        var result = controller.Login(loginSubmission);
+        var authenticationResponse = ((ObjectResult)result.Result).Value as AuthenticationTokensDto;
 
         // Assert
         authenticationResponse.ShouldNotBeNull();
@@ -36,25 +37,29 @@ public class LoginTests : BaseStakeholdersIntegrationTest
     [Fact]
     public void Not_registered_user_fails_login()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
         var loginSubmission = new CredentialsDto { Username = "turistaY@gmail.com", Password = "turista1" };
 
-        // Act & Assert
-        Should.Throw<UnauthorizedAccessException>(() => controller.Login(loginSubmission));
+        var result = controller.Login(loginSubmission);
+
+        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        unauthorizedResult.ShouldNotBeNull();
+        unauthorizedResult.StatusCode.ShouldBe(401);
     }
 
     [Fact]
     public void Invalid_password_fails_login()
     {
-        // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
         var loginSubmission = new CredentialsDto { Username = "turista3@gmail.com", Password = "123" };
 
-        // Act & Assert
-        Should.Throw<UnauthorizedAccessException>(() => controller.Login(loginSubmission));
+        var result = controller.Login(loginSubmission);
+
+        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+        unauthorizedResult.ShouldNotBeNull();
+        unauthorizedResult.StatusCode.ShouldBe(401);
     }
 
     private static AuthenticationController CreateController(IServiceScope scope)

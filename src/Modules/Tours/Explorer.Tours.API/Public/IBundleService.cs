@@ -9,6 +9,7 @@ namespace Explorer.Tours.API.Public
 {
     public interface IBundleService
     {
+        // AUTHOR
         BundleDto Create(long authorId, CreateBundleDto dto);
         BundleDto GetById(long id);
         List<BundleDto> GetByAuthorId(long authorId);
@@ -16,5 +17,9 @@ namespace Explorer.Tours.API.Public
         void Publish(long authorId, long bundleId);
         void Archive(long authorId, long bundleId);
         void Delete(long authorId, long bundleId);
+
+        // TOURIST 
+        List<BundleDto> GetPublished();              // svi published bundle-ovi
+        BundleDto GetPublishedById(long id);         // detalj published bundle-a
     }
 }

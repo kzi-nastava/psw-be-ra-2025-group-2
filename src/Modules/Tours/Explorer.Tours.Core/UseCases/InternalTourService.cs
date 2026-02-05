@@ -1,0 +1,76 @@
+﻿using AutoMapper;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Internal;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Explorer.Tours.Core.UseCases
+{
+    public class InternalTourService : IInternalTourService
+    {
+        private readonly ITourRepository _tourRepository;
+        private readonly ITourStatisticsRepository _statsRepository;
+
+        public InternalTourService(ITourRepository tourRepository, ITourStatisticsRepository statsRepository)
+        {
+            _tourRepository = tourRepository;
+            _statsRepository = statsRepository;
+        }
+
+        public IEnumerable<PartialTourInfoDto> GetPartialTourInfos(IEnumerable<long> tourIds)
+        {
+            var tours = _tourRepository.GetByIds(tourIds);
+
+            var ret = new List<PartialTourInfoDto>();
+
+            foreach (var tour in tours)
+            {
+                ret.Add(new PartialTourInfoDto
+                {
+                    Id = tour.Id,
+                    Name = tour.Name
+                });
+            }
+
+            return ret;
+        }
+
+        public bool Exists(long tourId)
+        {
+            return _tourRepository.GetByIdAsync(tourId).Result == null ? false : true;
+        }
+
+        public void IncrementTourPurchaseCount(long tourId)
+        {
+            _statsRepository.IncrementPurchases(tourId);
+        }
+
+        public IEnumerable<PlannerSuggestionMetadataDto> GetMetadataByIds(IEnumerable<long> tourIds)
+        {
+            var tours = _tourRepository.GetByIds(tourIds);
+
+            var ret = new List<PlannerSuggestionMetadataDto>();
+
+            foreach(var tour in tours)
+            {
+                ret.Add(new PlannerSuggestionMetadataDto
+                {
+                    TourId = tour.Id,
+                    TourName = tour.Name,
+                    TotalDurationMinutes = tour.Durations.Select(d => d.Minutes).Sum(),
+                    FirstKeyPointLatitude = tour.KeyPoints.First().Latitude,
+                    FirstKeyPointLongitude = tour.KeyPoints.First().Longitude,
+                    LastKeyPointLatitude = tour.KeyPoints.Last().Latitude,
+                    LastKeyPointLongitude = tour.KeyPoints.Last().Longitude
+                });
+            }
+
+            return ret;
+        }
+    }
+}

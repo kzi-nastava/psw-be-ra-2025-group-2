@@ -11,5 +11,9 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
         List<Club> GetAll();
         List<long> GetMemberClubIds(long touristId);
         List<long> GetMyJoinRequestClubIds(long touristId);
+        List<long> GetInvitationClubIds(long touristId);
+        void AddBadges(IEnumerable<ClubBadge> badges);
+
+
     }
 }

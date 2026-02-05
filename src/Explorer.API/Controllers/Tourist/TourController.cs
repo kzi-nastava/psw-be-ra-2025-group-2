@@ -1,8 +1,11 @@
 ﻿using Explorer.Payments.API.Public;
+using Explorer.Payments.Core.UseCases;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Execution;
+using Explorer.Tours.Core.UseCases.Execution;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +18,19 @@ namespace Explorer.API.Controllers.Tourist
     public class TourController : ControllerBase
     {
         private readonly ITourService _tourService;
+        private readonly IPaymentRecordService _paymentRecordService;
+        private readonly ITourExecutionService _tourExecutionService;
+        private readonly ITourPurchaseTokenRepository _tourPurchaseTokenRepository;
 
-        public TourController(ITourService tourService)
+
+
+        public TourController(ITourService tourService, IPaymentRecordService recordService, ITourExecutionService executionService, ITourPurchaseTokenRepository tourPurchaseTokenRepository)
         {
             _tourService = tourService;
+            _paymentRecordService = recordService;
+            _tourExecutionService = executionService;
+            _tourPurchaseTokenRepository = tourPurchaseTokenRepository;
+
         }
 
         [HttpGet]
@@ -35,6 +47,12 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(result);
         }
 
+        [HttpGet("trending")]
+        public ActionResult<List<PublishedTourPreviewDto>> GetTrending()
+        {
+            return Ok(_tourService.GetTrendingTours());
+        }
+
         [HttpGet("published")]
         public ActionResult<PagedResultDto<PublishedTourPreviewDto>> GetPublished(
             [FromQuery] int page = 1,
@@ -49,8 +67,8 @@ namespace Explorer.API.Controllers.Tourist
         {
             var filter = new TourFilterDto
             {
-                Page = page,                    
-                PageSize = pageSize,          
+                Page = page,
+                PageSize = pageSize,
                 EnvironmentType = environmentType,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
@@ -131,13 +149,64 @@ namespace Explorer.API.Controllers.Tourist
             }
         }
 
-        // GET api/tourist/tours/mine
-        [HttpGet("mine")]
-        public ActionResult<IEnumerable<TourDto>> GetMyPurchasedTours()
+        //// GET api/tourist/tours/available
+        [HttpGet("available")]
+        public ActionResult<IEnumerable<TourDto>> GetAvailableTours()
         {
+
             return Ok(_tourService.GetAvailableForTourist(User.UserId()));
         }
 
+        // GET api/tourist/tours/mine/partial
+        [HttpGet("mine/partial")]
+        public ActionResult<IEnumerable<PartialTourInfoDto>> GetMyPurchasedTourPartials()
+        {
+            return Ok(_tourService.GetAvailableForTouristPartials(User.UserId()));
+        }
+
+        // GET api/tourist/tours/{id}/planner-details
+        [HttpGet("{id}/planner-details")]
+        public ActionResult<FullTourInfoDto> GetTourInfo(long id)
+        {
+            return Ok(_tourService.GetFullTourInfo(id));
+        }
+
+        // GET api/tourist/tours/mine-tour
+        [HttpGet("mine-tour")]
+        public ActionResult<IEnumerable<TourDto>> GetMyTours()
+        {
+
+            /*var touristId = User.UserId();
+
+            var tokens = _tourPurchaseTokenRepository.GetByTouristId(touristId);
+
+            var tourIds = tokens
+                .Select(t => t.TourId)   
+                .Distinct()
+                .ToList();
+
+            if (!tourIds.Any())
+                return Ok(new List<TourDto>());
+
+            var tours = tourIds
+                .Select(id => _tourService.Get(id))
+                .Where(t => t != null)
+                .ToList();
+
+            foreach (var tour in tours)
+            {
+                var execution = _tourExecutionService.GetExecution(touristId, tour.Id);
+
+                tour.IsActive = execution != null;
+                tour.CanBeStarted = execution == null || execution.CompletedPercentage < 100;
+
+                tour.KeyPoints = new List<KeyPointDto>();
+            }
+
+            return Ok(tours);*/
+
+            return Ok(_tourService.GetAvailableForTourist(User.UserId()));
+        }
 
     }
 }

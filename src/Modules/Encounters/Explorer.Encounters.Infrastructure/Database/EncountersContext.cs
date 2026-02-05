@@ -10,6 +10,8 @@ namespace Explorer.Encounters.Infrastructure.Database
         public DbSet<EncounterExecution> EncounterExecutions { get; set; }
         public DbSet<TouristProgress> TouristProgresses { get; set; }
         public DbSet<EncounterPresence> EncounterPresences { get; set; }
+        public DbSet<UserReward> UserRewards { get; set; }
+
         public EncountersContext(DbContextOptions<EncountersContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,6 +47,20 @@ namespace Explorer.Encounters.Infrastructure.Database
                 b.Property(x => x.IsCompleted).IsRequired();
 
                 b.Property(x => x.XpAwarded).IsRequired();
+            });
+
+            modelBuilder.Entity<UserReward>(b =>
+            {
+                b.ToTable("UserRewards");
+                b.HasKey(r => r.Id);
+                b.Property(r => r.UserId).IsRequired();
+                b.Property(r => r.Level).IsRequired();
+                b.Property(r => r.CouponCode).IsRequired();
+                b.Property(r => r.DiscountPercentage).IsRequired();
+                b.Property(r => r.GrantedAt).IsRequired();
+                b.Property(r => r.ValidUntil);
+                b.Property(r => r.IsUsed).IsRequired();
+                b.Property(r => r.Description).IsRequired();
             });
 
             modelBuilder.Entity<TouristProgress>()

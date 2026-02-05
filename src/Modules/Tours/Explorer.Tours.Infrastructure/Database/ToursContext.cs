@@ -43,11 +43,18 @@ public class ToursContext : DbContext
             builder.OwnsMany(t => t.KeyPoints, kp =>
             {
                 kp.WithOwner().HasForeignKey("TourId");
+                kp.Property<long>("Id");
+                kp.HasKey("Id");
                 kp.Property(k => k.OrdinalNo).IsRequired();
                 kp.Property(k => k.Name).IsRequired();
                 kp.Property(k => k.Description).IsRequired();
                 kp.Property(k => k.SecretText).IsRequired();
                 kp.Property(k => k.ImageUrl);
+                kp.Property(k => k.EncounterId).IsRequired(false);
+                kp.Property(k => k.IsEncounterRequired).HasDefaultValue(false);
+                kp.Property(k => k.OsmClass).HasMaxLength(50).IsRequired(false);
+                kp.Property(k => k.OsmType).HasMaxLength(50).IsRequired(false);
+
 
                 kp.Property(k => k.Latitude)
                     .HasColumnType("double precision")
@@ -61,7 +68,31 @@ public class ToursContext : DbContext
 
                 kp.Property(k => k.AuthorId).IsRequired();
                 kp.Property(k => k.IsPublic).IsRequired();
+
+                kp.OwnsMany(k => k.Images, img =>
+                {
+                    img.WithOwner().HasForeignKey("KeyPointId");
+                    img.Property<long>("Id");
+                    img.HasKey("Id");
+                    img.Property(i => i.Url).IsRequired().HasMaxLength(500);
+                    img.Property(i => i.IsCover).IsRequired();
+                    img.Property(i => i.OrderIndex).IsRequired();
+                    img.ToTable("KeyPointImages");
+                });
+
+                kp.Navigation(k => k.Images)
+                    .HasField("_images")
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+                builder.Property(t => t.PurchasesCount)
+                       .HasColumnName("purchases_count")
+                       .IsRequired();
+
+                builder.Property(t => t.StartsCount)
+                       .HasColumnName("starts_count")
+                       .IsRequired();
             });
+
 
             builder.OwnsMany(t => t.Durations, duration =>
             {
@@ -89,8 +120,12 @@ public class ToursContext : DbContext
                    .WithMany()
                    .UsingEntity(j => { j.ToTable("TourEquipment"); });
 
-            
-            
+            builder.Property(t => t.CoverImageUrl)
+                   .HasMaxLength(500)
+                   .IsRequired(false);
+
+
+
             // EnvironmentType - nullable enum stored as int
             builder.Property(t => t.EnvironmentType)
                    .HasConversion<int?>()
@@ -154,7 +189,32 @@ public class ToursContext : DbContext
                            c => c.ToList()
                        )
                    );
-           
+
+            builder.OwnsOne(t => t.AverageCost, ac =>
+            {
+                ac.Property(x => x.TotalPerPerson).HasColumnName("AverageCost_TotalPerPerson");
+
+                ac.Property(x => x.Currency)
+                  .HasColumnName("AverageCost_Currency")
+                  .HasMaxLength(3)
+                  .IsRequired();
+
+                ac.Property(x => x.Disclaimer)
+                  .HasColumnName("AverageCost_Disclaimer")
+                  .HasMaxLength(500)
+                  .IsRequired();
+
+                ac.OwnsOne(x => x.Breakdown, b =>
+                {
+                    b.Property(x => x.Tickets).HasColumnName("AverageCost_Tickets");
+                    b.Property(x => x.Transport).HasColumnName("AverageCost_Transport");
+                    b.Property(x => x.FoodAndDrink).HasColumnName("AverageCost_FoodAndDrink");
+                    b.Property(x => x.Other).HasColumnName("AverageCost_Other");
+                });
+            });
+
+
+
         });
 
         modelBuilder.Entity<PublicKeyPoint>(entity =>

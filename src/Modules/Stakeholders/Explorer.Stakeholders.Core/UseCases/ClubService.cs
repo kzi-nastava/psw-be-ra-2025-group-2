@@ -16,7 +16,11 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly INotificationService _notificationService;
         private readonly IUserService _userService;
 
-        public ClubService(IClubRepository clubRepository, IMapper mapper, INotificationService notificationService, IUserService userService)
+        public ClubService(
+            IClubRepository clubRepository,
+            IMapper mapper,
+            INotificationService notificationService,
+            IUserService userService)
         {
             _clubRepository = clubRepository;
             _mapper = mapper;
@@ -26,10 +30,9 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public ClubDto Get(long id)
         {
-            var club = _clubRepository.Get(id); 
+            var club = _clubRepository.Get(id);
             return club == null ? null : _mapper.Map<ClubDto>(club);
         }
-
 
         public ClubDto Create(ClubDto club)
         {
@@ -40,18 +43,13 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public ClubDto Update(ClubDto club)
         {
-            // 1) Učitaj postojeći klub iz baze (EF ga već prati)
             var existing = _clubRepository.Get(club.Id);
             if (existing == null)
                 throw new KeyNotFoundException($"Club {club.Id} not found.");
 
-            // 2) Izmeni vrednosti preko domenske metode koju već imaš u Club.cs
             existing.Update(club.Name, club.Description, club.ImageUrls);
 
-            // 3) Sačuvaj promene
             var updated = _clubRepository.Update(existing);
-
-            // 4) Vrati DTO
             return _mapper.Map<ClubDto>(updated);
         }
 
@@ -88,7 +86,6 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new KeyNotFoundException($"Club {clubId} not found.");
 
             club.AcceptInvitation(touristId);
-
             _clubRepository.Update(club);
         }
 
@@ -99,7 +96,6 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new KeyNotFoundException($"Club {clubId} not found.");
 
             club.RejectInvitation(touristId);
-
             _clubRepository.Update(club);
         }
 
@@ -113,9 +109,9 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new System.UnauthorizedAccessException("Only the owner can remove members.");
 
             club.RemoveMember(touristId);
-
             _clubRepository.Update(club);
         }
+
         public void RequestMembership(long clubId, long touristId)
         {
             var club = _clubRepository.Get(clubId);
@@ -123,7 +119,6 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new KeyNotFoundException($"Club {clubId} not found.");
 
             club.RequestMembership(touristId);
-
             _clubRepository.Update(club);
         }
 
@@ -134,9 +129,9 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new KeyNotFoundException($"Club {clubId} not found.");
 
             club.WithdrawRequest(touristId);
-
             _clubRepository.Update(club);
         }
+
         public void AcceptMembershipRequest(long clubId, long ownerId, long touristId)
         {
             var club = _clubRepository.Get(clubId);
@@ -151,6 +146,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             _clubRepository.Update(club);
         }
+
         public void RejectMembershipRequest(long clubId, long ownerId, long touristId)
         {
             var club = _clubRepository.Get(clubId);
@@ -165,6 +161,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             _clubRepository.Update(club);
         }
+
         public List<InvitableTouristDto> GetInvitableTourists(long clubId, long ownerId, string? query)
         {
             var club = _clubRepository.Get(clubId);
@@ -174,8 +171,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             if (club.OwnerId != ownerId)
                 throw new System.UnauthorizedAccessException("Only the owner can load invitable tourists.");
 
-            var excluded = new HashSet<long>();
-            excluded.Add(ownerId);
+            var excluded = new HashSet<long> { ownerId };
 
             foreach (var m in club.Members) excluded.Add(m.TouristId);
             foreach (var i in club.Invitations) excluded.Add(i.TouristId);
@@ -192,6 +188,7 @@ namespace Explorer.Stakeholders.Core.UseCases
                 })
                 .ToList();
         }
+
         public List<TouristBasicDto> GetJoinRequests(long clubId, long ownerId)
         {
             var club = _clubRepository.Get(clubId);
@@ -202,7 +199,6 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new System.UnauthorizedAccessException("Only the owner can load join requests.");
 
             var ids = club.JoinRequests.Select(r => r.TouristId).ToHashSet();
-
             var tourists = _userService.GetTourists(null);
 
             return tourists
@@ -217,11 +213,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             if (club == null)
                 throw new KeyNotFoundException($"Club {clubId} not found.");
 
-            if (club.OwnerId != ownerId)
-                throw new System.UnauthorizedAccessException("Only the owner can load members.");
 
             var ids = club.Members.Select(m => m.TouristId).ToHashSet();
-
             var tourists = _userService.GetTourists(null);
 
             return tourists
@@ -232,13 +225,9 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public List<long> GetMyInvitationClubIds(long touristId)
         {
-            var clubs = _clubRepository.GetAll();
-
-            return clubs
-                .Where(c => c.Invitations.Any(i => i.TouristId == touristId))
-                .Select(c => c.Id)
-                .ToList();
+            return _clubRepository.GetInvitationClubIds(touristId);
         }
+
         public List<long> GetMyMembershipClubIds(long touristId)
         {
             return _clubRepository.GetMemberClubIds(touristId);
@@ -248,6 +237,5 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             return _clubRepository.GetMyJoinRequestClubIds(touristId);
         }
-
     }
 }

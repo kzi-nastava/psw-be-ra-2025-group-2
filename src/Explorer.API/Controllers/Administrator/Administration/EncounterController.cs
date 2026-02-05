@@ -16,10 +16,11 @@ namespace Explorer.API.Controllers.Administrator.Administration
     public class EncounterController : ControllerBase
     {
         private readonly IEncounterService _encounterService;
-
-        public EncounterController(IEncounterService encounterService)
+        private readonly IRewardService _rewardService;
+        public EncounterController(IEncounterService encounterService, IRewardService rewardService)
         {
             _encounterService = encounterService;
+            _rewardService = rewardService;
         }
 
         [Authorize(Roles = "administrator, tourist")]
@@ -162,7 +163,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
             }
         }
 
-        
+
         [Authorize(Policy = "touristPolicy")]
         [HttpPost("location/{id:long}")]
         public ActionResult<EncounterExecutionStatusDto> PingLocation(long id, [FromBody] EncounterLocationPingDto dto)
@@ -185,21 +186,14 @@ namespace Explorer.API.Controllers.Administrator.Administration
                     IsCompleted = result.IsCompleted,
                     SecondsInsideZone = result.SecondsInsideZone,
                     RequiredSeconds = result.RequiredSeconds,
-                    CompletionTime = result.CompletionTime?.ToString("O")
+                    CompletionTime = result.CompletionTime?.ToString("O"),
+
+                    InRange = result.IsInRange
                 });
             }
-            catch (NotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (InvalidOperationException e)
-            {
-                return BadRequest(e.Message);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            catch (NotFoundException e) { return NotFound(e.Message); }
+            catch (InvalidOperationException e) { return BadRequest(e.Message); }
+            catch (Exception e) { return BadRequest(e.Message); }
         }
 
 
@@ -211,7 +205,15 @@ namespace Explorer.API.Controllers.Administrator.Administration
             {
                 long userId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
 
+                var progressBefore = _encounterService.GetMyProgress(userId);
+                int oldLevel = progressBefore.Level;
+
                 _encounterService.CompleteEncounter(userId, id);
+
+                var progressAfter = _encounterService.GetMyProgress(userId);
+                int newLevel = progressAfter.Level;
+
+                _rewardService.CheckAndGrantRewards(userId, oldLevel, newLevel);
 
                 return Ok();
             }
@@ -282,7 +284,7 @@ namespace Explorer.API.Controllers.Administrator.Administration
             catch (InvalidOperationException e) { return BadRequest(e.Message); }
         }
         [ApiExplorerSettings(IgnoreApi = true)]
-        [Authorize(Policy = "administratorPolicy")]
+        [Authorize(Roles = "administrator, author, tourist")]
         [HttpPost("upload-image")]
         [RequestSizeLimit(10_000_000)] // 10MB
         public async Task<ActionResult<string>> UploadImage([FromForm] IFormFile file)
@@ -329,6 +331,16 @@ namespace Explorer.API.Controllers.Administrator.Administration
             {
                 return BadRequest(e.Message);
             }
+        }
+
+        [HttpDelete("execution/{encounterId}")]
+        public ActionResult CancelExecution(long encounterId)
+        {
+            var identityId = long.Parse(HttpContext.User.Claims.First(i => i.Type.Equals("id", StringComparison.OrdinalIgnoreCase)).Value);
+
+            _encounterService.CancelExecution(identityId, encounterId);
+
+            return Ok();
         }
     }
 }

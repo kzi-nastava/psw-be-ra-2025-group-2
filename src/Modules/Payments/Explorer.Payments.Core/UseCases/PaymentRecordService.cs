@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.Tours.API.Internal;
 
 namespace Explorer.Payments.Core.UseCases
 {
@@ -16,13 +17,16 @@ namespace Explorer.Payments.Core.UseCases
     {
         private readonly IPaymentRecordRepository _paymentRecordRepository;
         private readonly IShoppingCartRepository _cartRepository;
+        private readonly ITourStatisticsService _tourStats;
 
         public PaymentRecordService(
             IPaymentRecordRepository paymentRecordRepository,
-            IShoppingCartRepository cartRepository)
+            IShoppingCartRepository cartRepository,
+            ITourStatisticsService tourStats)
         {
             _paymentRecordRepository = paymentRecordRepository;
             _cartRepository = cartRepository;
+            _tourStats = tourStats;
         }
 
         public void Checkout(long touristId)
@@ -38,14 +42,40 @@ namespace Explorer.Payments.Core.UseCases
 
             foreach (var item in cart.Items)
             {
-                var record = new PaymentRecord(
+                PaymentRecord record;
+                if (item.ItemType == "TOUR")
+                { 
+                    record = new PaymentRecord(
                     touristId,
-                    item.TourId,
+                    item.TourId.Value,
                     item.Price.Amount,
                     now
-                );
+                    );
+                }
+                else
+                {
+                    record = new PaymentRecord(
+                    touristId,
+                    item.Price.Amount,
+                    now,
+                    item.BundleId.Value
+                    );
+                }
+
 
                 _paymentRecordRepository.Create(record);
+                if (item.ItemType == "TOUR")
+                {
+                    _tourStats.IncrementPurchases(item.TourId!.Value);
+                }
+                else
+                {
+                    if (item.TourIds != null && item.TourIds.Count > 0)
+                    {
+                        foreach (var tid in item.TourIds)
+                            _tourStats.IncrementPurchases(tid);
+                    }
+                }
             }
 
             cart.ClearCart();
@@ -60,11 +90,15 @@ namespace Explorer.Payments.Core.UseCases
             {
                 Id = r.Id,
                 TouristId = r.TouristId,
-                TourId = r.TourId,
+
+                TourId = r.TourId,       
+                BundleId = r.BundleId,  
+
                 Price = r.Price,
                 CreatedAt = r.CreatedAt
             }).ToList();
         }
+
 
         public PaymentRecordDto GetMineById(long touristId, long id)
         {

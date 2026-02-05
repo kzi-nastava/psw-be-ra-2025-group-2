@@ -24,13 +24,13 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public MessageDto Send(long senderId, SendMessageDto dto)
         {
-            var message = new Message(senderId, dto.ReceiverId, dto.Content);
+            var message = Message.CreatePrivate(senderId, dto.ReceiverId, dto.Content);
             return _mapper.Map<MessageDto>(_repository.Create(message));
         }
 
         public List<MessageDto> GetAllForUser(long userId) 
         {
-            return _repository.GetForUser(userId).Where(m => !m.IsDeleted).Select(_mapper.Map<MessageDto>).ToList();
+            return _repository.GetForUser(userId).Where(m => !m.IsDeleted && m.ReceiverId != null).Select(_mapper.Map<MessageDto>).ToList();
         }
 
         public MessageDto Edit(long userId, long messageId, string content)

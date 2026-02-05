@@ -17,7 +17,6 @@ namespace Explorer.Encounters.Core.Domain
         Miscellaneous = 2
     }
 
-    // Abstraktna bazna klasa - Aggregate Root
     public abstract class Encounter : AggregateRoot
     {
         public string Name { get; private set; }
@@ -27,7 +26,10 @@ namespace Explorer.Encounters.Core.Domain
         public EncounterState State { get; private set; }
         public EncounterType Type { get; private set; }
 
-        // Prazan konstruktor za EF Core (mora postojati)
+        // === NOVO: Polja za nagrade ===
+        public long? FavoriteTourId { get; private set; }
+        public long? FavoriteBlogId { get; private set; }
+
         protected Encounter() { }
 
         protected Encounter(string name, string description, GeoLocation location, ExperiencePoints xp, EncounterType type)
@@ -38,7 +40,6 @@ namespace Explorer.Encounters.Core.Domain
             XP = xp;
             Type = type;
             State = EncounterState.Draft;
-
         }
 
         public void Update(string name, string description, GeoLocation location, ExperiencePoints xp, EncounterType type)
@@ -52,6 +53,13 @@ namespace Explorer.Encounters.Core.Domain
             XP = xp;
             Type = type;
             Validate();
+        }
+
+        // === NOVO: Metoda za postavljanje nagrada ===
+        public void SetRewards(long? tourId, long? blogId)
+        {
+            FavoriteTourId = tourId;
+            FavoriteBlogId = blogId;
         }
 
         public void MakeActive()
@@ -79,7 +87,6 @@ namespace Explorer.Encounters.Core.Domain
         }
     }
 
-    // 1. Social Encounter
     public class SocialEncounter : Encounter
     {
         public int RequiredPeople { get; private set; }
@@ -94,6 +101,16 @@ namespace Explorer.Encounters.Core.Domain
             Validate();
         }
 
+        public void UpdateSocialEncounter(int requiredPeople, double range)
+        {
+            if (State != EncounterState.Draft)
+                throw new InvalidOperationException("Cannot update social fields when encounter is not in Draft state.");
+
+            RequiredPeople = requiredPeople;
+            Range = range;
+            Validate();
+        }
+
         protected override void Validate()
         {
             base.Validate();
@@ -102,7 +119,6 @@ namespace Explorer.Encounters.Core.Domain
         }
     }
 
-    // 2. Hidden Location Encounter
     public class HiddenLocationEncounter : Encounter
     {
         public string ImageUrl { get; private set; }
@@ -130,6 +146,7 @@ namespace Explorer.Encounters.Core.Domain
             DistanceTreshold = distanceTreshold;
             Validate();
         }
+
         protected override void Validate()
         {
             base.Validate();
@@ -137,7 +154,7 @@ namespace Explorer.Encounters.Core.Domain
             if (ImageLocation == null) throw new EntityValidationException("Image location cannot be null.");
             if (DistanceTreshold <= 0) throw new EntityValidationException("Distance treshold must be greater than 0.");
         }
-        
+
         public void UpdateHiddenLocation(string imageUrl, GeoLocation imageLocation, double distanceTreshold)
         {
             ImageUrl = imageUrl;
@@ -145,9 +162,7 @@ namespace Explorer.Encounters.Core.Domain
             DistanceTreshold = distanceTreshold;
             Validate();
         }
-
     }
-
     public class MiscEncounter : Encounter
     {
         protected MiscEncounter() { }

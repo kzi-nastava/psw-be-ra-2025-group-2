@@ -29,7 +29,7 @@ public class TourDbRepository : ITourRepository
     {
         return await _dbSet
             .Include(t => t.Equipment)
-            .Include(t => t.KeyPoints)
+            .Include(t => t.KeyPoints).ThenInclude(kp => kp.Images)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -37,13 +37,13 @@ public class TourDbRepository : ITourRepository
 
     public IEnumerable<Tour> GetByIds(IEnumerable<long> ids)
     {
-        return _dbSet.Where(t => ids.Contains(t.Id)).ToList();
+        return _dbSet.Where(t => ids.Contains(t.Id)).Include(t => t.KeyPoints).ToList();
     }
     public async Task<IEnumerable<Tour>> GetByAuthorAsync(long authorId)
     {
         return await _dbSet
             .Include(t => t.KeyPoints)
-            .Include(t => t.Durations)
+            .Include(t => t.KeyPoints).ThenInclude(kp => kp.Images)
             .Include(t => t.Reviews)
             .Where(t => t.AuthorId == authorId)
             .ToListAsync();
@@ -117,7 +117,7 @@ public class TourDbRepository : ITourRepository
     public async Task<Tour?> GetTourWithKeyPointsAsync(long tourId)
     {
         return await _dbSet
-            .Include(t => t.KeyPoints)
+            .Include(t => t.KeyPoints).ThenInclude(kp => kp.Images)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
             .FirstOrDefaultAsync(t => t.Id == tourId);
@@ -126,7 +126,7 @@ public class TourDbRepository : ITourRepository
     public async Task<Tour?> GetTourByKeyPointIdAsync(long keyPointId)
     {
         return await _dbSet
-            .Include(t => t.KeyPoints)
+            .Include(t => t.KeyPoints).ThenInclude(kp => kp.Images)
             .Include(t => t.Durations)
             .FirstOrDefaultAsync(t => t.KeyPoints.Any(kp => kp.Id == keyPointId));
     }
@@ -134,7 +134,7 @@ public class TourDbRepository : ITourRepository
     public async Task<IEnumerable<Tour?>> GetAllAsync()
     {
         return await _dbSet
-            .Include(t => t.KeyPoints)
+            .Include(t => t.KeyPoints).ThenInclude(kp => kp.Images)
             .Include(t => t.Durations)
             .Include(t => t.Reviews)
             .ToListAsync();
@@ -152,5 +152,12 @@ public class TourDbRepository : ITourRepository
             entry.State = EntityState.Modified;
         }
 
+    }
+    public async Task<Tour?> GetTourWithKeyPointsAndImagesAsync(long tourId)
+    {
+        return await DbContext.Tours
+            .Include(t => t.KeyPoints)
+                .ThenInclude(kp => kp.Images)
+            .FirstOrDefaultAsync(t => t.Id == tourId);
     }
 }

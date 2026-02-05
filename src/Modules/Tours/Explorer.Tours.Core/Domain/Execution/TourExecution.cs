@@ -123,12 +123,11 @@ namespace Explorer.Tours.Core.Domain.Execution
         public bool HasTouristVisitedKeyPoint(int ordinal)
         {
             if (ordinal < 1 || ordinal > KeyPointsCount)
-                throw new ArgumentException("Invalid key point ordinal.");
+            {
+                return false;
+            }
 
-            if(_keyPointVisits.Any(kpv => kpv.KeyPointOrdinal == ordinal))
-                    return true;
-
-            return false;
+            return _keyPointVisits.Any(kpv => kpv.KeyPointOrdinal == ordinal);
         }
 
         public bool ShouldShowKeyPointSecret(int ordinal)

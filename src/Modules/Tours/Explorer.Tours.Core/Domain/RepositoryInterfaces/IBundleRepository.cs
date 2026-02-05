@@ -13,6 +13,8 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         Bundle GetById(long id);
         List<Bundle> GetByAuthorId(long authorId);
 
+        List<Bundle> GetPublished();
+
         Bundle Update(Bundle bundle);
 
         void Delete(long id);

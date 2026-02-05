@@ -60,16 +60,20 @@ namespace Explorer.Tours.Tests.Unit.Domain
             var tour = new Tour("Test Tour", "Desc", 3, 1);
             var kp = new KeyPoint(1, "KP1", "Desc", "Secret", "img.png", 45, 19);
             tour.AddKeyPoint(kp);
-
+            
             var update = new KeyPointUpdate(
-                 "Updated KP",
-                 "Updated Desc",
-                 "Updated Secret",
-                 "updated-img.png",
-                 50,
-                 20,
-                 null
+                Name: "Updated KP",
+                Description: "Updated Desc",
+                SecretText: "Updated Secret",
+                ImageUrl: "updated-img.png",
+                Latitude: 50,
+                Longitude: 20,
+                EncounterId: null,
+                IsEncounterRequired: false,
+                OsmClass: "",
+                OsmType: ""
             );
+
 
             tour.UpdateKeyPoint(1, update);
 
@@ -84,17 +88,21 @@ namespace Explorer.Tours.Tests.Unit.Domain
         [Fact]
         public void UpdateKeyPoint_fails_whenOrdinalNotFound()
         {
-            var tour = new Tour("Test Tour", "Desc", 3, 1);
+                var tour = new Tour("Test Tour", "Desc", 3, 1);
 
-            var update = new KeyPointUpdate(
-                 "Updated KP",
-                 "Updated Desc",
-                 "Updated Secret",
-                 "updated-img.png",
-                 50,
-                 20,
-                 null
-             );
+                var update = new KeyPointUpdate(
+                    Name: "Updated KP",
+                    Description: "Updated Desc",
+                    SecretText: "Updated Secret",
+                    ImageUrl: "updated-img.png",
+                    Latitude: 50,
+                    Longitude: 20,
+                    EncounterId: null,
+                    IsEncounterRequired: false,
+                    OsmClass: null,
+                    OsmType: null
+                );
+
             Should.Throw<InvalidOperationException>(() => tour.UpdateKeyPoint(1, update));
         }
 
@@ -156,7 +164,6 @@ namespace Explorer.Tours.Tests.Unit.Domain
                 Should.Throw<InvalidOperationException>(() => tour.SetLength(10m));
             }
         
-    
 
 
     [Fact]
