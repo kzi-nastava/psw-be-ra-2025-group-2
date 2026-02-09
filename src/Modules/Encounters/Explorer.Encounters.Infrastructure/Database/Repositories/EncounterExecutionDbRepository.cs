@@ -24,12 +24,15 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
             _context.SaveChanges();
             return execution;
         }
-        public EncounterExecution? Get(long userId, long encounterId)
+        public EncounterExecution? GetUnfinishedByUserId(long userId, long encounterId)
         {
             return _context.EncounterExecutions
-                       .FirstOrDefault(e => e.UserId == userId && e.EncounterId == encounterId && !e.IsCompleted)
-                   ?? _context.EncounterExecutions
-                       .FirstOrDefault(e => e.UserId == userId && e.EncounterId == encounterId);
+                       .FirstOrDefault(e => e.UserId == userId && e.EncounterId == encounterId && !e.IsCompleted);
+        }
+
+        public EncounterExecution? GetFirstFinishedByUserId(long userId, long encounterId)
+        {
+            return _context.EncounterExecutions.FirstOrDefault(e => e.UserId == userId && e.EncounterId == encounterId);
         }
 
         public EncounterExecution Update(EncounterExecution execution)

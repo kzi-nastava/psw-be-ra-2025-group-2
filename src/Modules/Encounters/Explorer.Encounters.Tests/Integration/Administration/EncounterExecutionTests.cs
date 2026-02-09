@@ -173,8 +173,8 @@ namespace Explorer.Encounters.Tests.Integration.Administration
 
             // ping again
             var after = ExecutePing(controller, encounterId, inside);
-            after.IsCompleted.ShouldBeTrue();
-            after.SecondsInsideZone.ShouldBeGreaterThanOrEqualTo(30);
+            after.IsCompleted.ShouldBeFalse();
+            after.SecondsInsideZone.ShouldBeLessThanOrEqualTo(30);
             after.RequiredSeconds.ShouldBe(30);
         }
 

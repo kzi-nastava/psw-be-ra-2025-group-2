@@ -242,9 +242,9 @@ namespace Explorer.Encounters.Core.UseCases
 
             if (!encounter.IsActive()) throw new InvalidOperationException("Encounter is not active.");
 
-            if (_executionRepository.IsCompleted(userId, encounterId)) return;
+            //if (_executionRepository.IsCompleted(userId, encounterId)) return;
 
-            var existing = _executionRepository.Get(userId, encounterId);
+            var existing = _executionRepository.GetUnfinishedByUserId(userId, encounterId);
             if (existing != null && !existing.IsCompleted) return;
 
             if (encounter.Type == EncounterType.Location)
@@ -277,7 +277,7 @@ namespace Explorer.Encounters.Core.UseCases
             var hidden = encounter as HiddenLocationEncounter;
             if (hidden == null) throw new InvalidOperationException("Not a hidden encounter.");
 
-            var execution = _executionRepository.Get(userId, encounterId);
+            var execution = _executionRepository.GetUnfinishedByUserId(userId, encounterId);
 
             // 1. IZRAČUNAJ DISTANCU DO SLIKE
             var distanceToImage = CalculateDistanceMeters(
@@ -353,7 +353,7 @@ namespace Explorer.Encounters.Core.UseCases
             if (_executionRepository.IsCompleted(userId, encounterId))
                 return;
 
-            var execution = _executionRepository.Get(userId, encounterId);
+            var execution = _executionRepository.GetUnfinishedByUserId(userId, encounterId);
 
             if (execution == null)
             {
@@ -412,7 +412,7 @@ namespace Explorer.Encounters.Core.UseCases
             if (encounter == null)
                 throw new NotFoundException("Encounter not found");
 
-            var exec = _executionRepository.Get(userId, encounterId);
+            var exec = _executionRepository.GetFirstFinishedByUserId(userId, encounterId);
 
             if (exec == null)
                 throw new InvalidOperationException("Encounter is not activated.");
@@ -431,7 +431,7 @@ namespace Explorer.Encounters.Core.UseCases
             var requiredPeople = socialEncounter.RequiredPeople;
             var range = socialEncounter.Range;
 
-            var myExecution = _executionRepository.Get(userId, encounterId);
+            var myExecution = _executionRepository.GetUnfinishedByUserId(userId, encounterId);
             if (myExecution == null)
                 throw new InvalidOperationException("You haven't activated this encounter.");
 
@@ -473,18 +473,21 @@ namespace Explorer.Encounters.Core.UseCases
 
                         progress.AddXp(socialEncounter.XP.Value);
                         _touristProgressRepository.Update(progress);
+
+                        if(validExec.UserId == myExecution.UserId)
+                        {
+                            myExecution = validExec;
+                        }
                     }
                 }
             }
 
-            var updatedMyExecution = _executionRepository.Get(userId, encounterId);
-
             return new EncounterExecutionStatusDto
             {
-                IsCompleted = updatedMyExecution.IsCompleted,
+                IsCompleted = myExecution.IsCompleted,
                 SecondsInsideZone = 0,
                 RequiredSeconds = 0,
-                CompletionTime = updatedMyExecution.CompletionTime?.ToString("O"),
+                CompletionTime = myExecution.CompletionTime?.ToString("O"),
                 ActiveTourists = validExecutions.Count,
                 InRange = true
             };
@@ -496,7 +499,7 @@ namespace Explorer.Encounters.Core.UseCases
 
         public void CancelExecution(long userId, long encounterId)
         {
-            var execution = _executionRepository.Get(userId, encounterId);
+            var execution = _executionRepository.GetUnfinishedByUserId(userId, encounterId);
 
             if (execution != null)
             {

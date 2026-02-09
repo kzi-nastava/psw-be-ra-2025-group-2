@@ -37,7 +37,7 @@ namespace Explorer.Encounters.Infrastructure.Database
                 b.ToTable("EncounterExecutions");
 
                 // Unique per user+encounter (prevents duplicates)
-                b.HasIndex(e => new { e.UserId, e.EncounterId }).IsUnique();
+                // b.HasIndex(e => new { e.UserId, e.EncounterId }).IsUnique();
 
                 b.Property(x => x.StartedAt).IsRequired();
                 b.Property(x => x.LastPingAt).IsRequired(false);
